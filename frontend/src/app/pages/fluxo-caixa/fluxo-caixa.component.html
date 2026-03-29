@@ -1,0 +1,66 @@
+<div class="fluxo-caixa-container">
+  <h1>Fluxo de Caixa</h1>
+  <p>Acompanhe o movimento de entrada e saída de recursos</p>
+
+  <div class="filtros">
+    <h3>Período</h3>
+    <div class="filtros-grid">
+      <div class="filtro-item">
+        <label>Data Inicial</label>
+        <input type="date" [(ngModel)]="dataInicial">
+      </div>
+      <div class="filtro-item">
+        <label>Data Final</label>
+        <input type="date" [(ngModel)]="dataFinal">
+      </div>
+      <div class="filtro-item">
+        <button class="btn-primary" (click)="aplicarFiltro()">Aplicar Filtro</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card receitas">
+      <h3>Receitas</h3>
+      <p class="stat-value">{{ formatarMoeda(receitas) }}</p>
+    </div>
+
+    <div class="stat-card despesas">
+      <h3>Despesas</h3>
+      <p class="stat-value">{{ formatarMoeda(despesas) }}</p>
+    </div>
+
+    <div class="stat-card fluxo">
+      <h3>Fluxo Líquido</h3>
+      <p class="stat-value" [ngClass]="fluxoLiquido >= 0 ? 'positive' : 'negative'">
+        {{ formatarMoeda(fluxoLiquido) }}
+      </p>
+    </div>
+
+    <div class="stat-card saldo">
+      <h3>Saldo</h3>
+      <p class="stat-value">{{ formatarMoeda(saldo) }}</p>
+    </div>
+  </div>
+
+  <div class="transacoes-section">
+    <h2>Transações do Período</h2>
+    <div *ngIf="getTransacoesFiltrads().length === 0; else transacoesList" class="empty-state">
+      <p>Nenhuma transação no período selecionado</p>
+    </div>
+
+    <ng-template #transacoesList>
+      <div class="transacoes-list">
+        <div *ngFor="let transacao of getTransacoesFiltrads()" class="transacao-item">
+          <div class="transacao-info">
+            <p class="transacao-description">{{ transacao.descricao }}</p>
+            <p class="transacao-date">{{ transacao.data | date: 'dd/MM/yyyy' }}</p>
+          </div>
+          <p class="transacao-value" [ngClass]="transacao.tipo === 'Receita' ? 'receita' : 'despesa'">
+            {{ transacao.tipo === 'Receita' ? '+' : '-' }} {{ formatarMoeda(transacao.valor) }}
+          </p>
+        </div>
+      </div>
+    </ng-template>
+  </div>
+</div>

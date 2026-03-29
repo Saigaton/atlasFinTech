@@ -1,0 +1,125 @@
+<div class="transacoes-container">
+  <div class="page-header">
+    <div>
+      <h1>Transações</h1>
+      <p>Registre e acompanhe todas as suas movimentações</p>
+    </div>
+    <button class="btn-primary" (click)="abrirModal()">+ Nova Transação</button>
+  </div>
+
+  <div class="filtros">
+    <h3>Filtros</h3>
+    <div class="filtros-grid">
+      <div class="filtro-item">
+        <label>Tipo</label>
+        <select [(ngModel)]="filtroTipo">
+          <option value="Todas">Todas</option>
+          <option value="Receita">Receita</option>
+          <option value="Despesa">Despesa</option>
+        </select>
+      </div>
+      <div class="filtro-item">
+        <label>Conta</label>
+        <select [(ngModel)]="filtroContaId">
+          <option value="">Todas as contas</option>
+          <option *ngFor="let conta of contas" [value]="conta.id">{{ conta.nome }}</option>
+        </select>
+      </div>
+      <div class="filtro-item">
+        <label>Buscar por descrição...</label>
+        <input type="text" placeholder="Buscar por descrição...">
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="getTransacoesFiltrads().length === 0; else transacoesList" class="empty-state">
+    <p>Nenhuma transação encontrada</p>
+  </div>
+
+  <ng-template #transacoesList>
+    <div class="transacoes-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Conta</th>
+            <th>Descrição</th>
+            <th>Data</th>
+            <th>Valor</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let transacao of getTransacoesFiltrads()" [ngClass]="transacao.tipo === 'Receita' ? 'receita' : 'despesa'">
+            <td>
+              <span class="badge" [ngClass]="transacao.tipo === 'Receita' ? 'badge-success' : 'badge-danger'">
+                {{ transacao.tipo }}
+              </span>
+            </td>
+            <td>{{ getNomeConta(transacao.contaId) }}</td>
+            <td>{{ transacao.descricao }}</td>
+            <td>{{ transacao.data | date: 'dd/MM/yyyy' }}</td>
+            <td class="valor" [ngClass]="transacao.tipo === 'Receita' ? 'receita' : 'despesa'">
+              {{ transacao.tipo === 'Receita' ? '+' : '-' }} {{ formatarMoeda(transacao.valor) }}
+            </td>
+            <td class="acoes">
+              <button class="btn-edit" (click)="editarTransacao(transacao)" title="Editar">Editar</button>
+              <button class="btn-delete" (click)="deletarTransacao(transacao.id)" title="Deletar">Deletar</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </ng-template>
+
+  <!-- Modal -->
+  <div *ngIf="mostrarModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>{{ editando ? 'Editar Transação' : 'Nova Transação' }}</h2>
+        <button class="modal-close" (click)="fecharModal()">✕</button>
+      </div>
+
+      <form (ngSubmit)="salvarTransacao()">
+        <div class="form-group">
+          <label>Tipo</label>
+          <select [(ngModel)]="transacaoAtual.tipo" name="tipo">
+            <option value="Receita">Receita</option>
+            <option value="Despesa">Despesa</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Conta</label>
+          <select [(ngModel)]="transacaoAtual.contaId" name="contaId" required>
+            <option value="">Selecione uma conta</option>
+            <option *ngFor="let conta of contas" [value]="conta.id">{{ conta.nome }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Descrição</label>
+          <input type="text" [(ngModel)]="transacaoAtual.descricao" name="descricao" placeholder="Ex: Venda de produto" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Valor</label>
+            <input type="number" [(ngModel)]="transacaoAtual.valor" name="valor" step="0.01" required>
+          </div>
+          <div class="form-group">
+            <label>Data</label>
+            <input type="date" [(ngModel)]="transacaoAtual.data" name="data" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Categoria</label>
+          <input type="text" [(ngModel)]="transacaoAtual.categoria" name="categoria" placeholder="Ex: Vendas">
+        </div>
+
+        <button type="submit" class="btn-primary">{{ editando ? 'Atualizar Transação' : 'Criar Transação' }}</button>
+      </form>
+    </div>
+  </div>
+</div>

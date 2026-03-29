@@ -1,0 +1,116 @@
+<div class="configuracoes-container">
+  <h1>Configurações</h1>
+  <p>Gerencie suas preferências e informações do perfil</p>
+
+  <div class="config-section" *ngIf="usuario">
+    <div class="section-header">
+      <h2>Perfil do Usuário</h2>
+      <p>Informações da sua conta</p>
+    </div>
+
+    <div class="section-content">
+      <div *ngIf="!editando; else editarPerfil" class="perfil-info">
+        <div class="info-item">
+          <span class="label">Nome</span>
+          <p>{{ usuario.nome }}</p>
+        </div>
+        <div class="info-item">
+          <span class="label">Email</span>
+          <p>{{ usuario.email }}</p>
+        </div>
+        <div class="info-item">
+          <span class="label">Tipo de Conta</span>
+          <p>{{ usuario.tipoConta }}</p>
+        </div>
+        <button class="btn-primary" (click)="iniciarEdicao()">Editar Perfil</button>
+      </div>
+
+      <ng-template #editarPerfil>
+        <form (ngSubmit)="salvarAlteracoes()">
+          <div class="form-group">
+            <label>Nome</label>
+            <input type="text" [(ngModel)]="usuarioEditado!.nome" name="nome" required>
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" [(ngModel)]="usuarioEditado!.email" name="email" required>
+          </div>
+          <div class="form-group">
+            <label>Tipo de Conta</label>
+            <select [(ngModel)]="usuarioEditado!.tipoConta" name="tipoConta">
+              <option value="Usuário">Usuário</option>
+              <option value="Administrador">Administrador</option>
+            </select>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Salvar Alterações</button>
+            <button type="button" class="btn-secondary" (click)="cancelarEdicao()">Cancelar</button>
+          </div>
+        </form>
+      </ng-template>
+    </div>
+  </div>
+
+  <div class="config-section" *ngIf="usuario">
+    <div class="section-header">
+      <h2>Preferências</h2>
+      <p>Personalize sua experiência</p>
+    </div>
+
+    <div class="section-content">
+      <div class="pref-item">
+        <div class="pref-info">
+          <p class="pref-label">Moeda Padrão</p>
+          <p class="pref-value">{{ usuario.moedaPadrao }}</p>
+        </div>
+        <span class="pref-badge">{{ usuario.moedaPadrao }}</span>
+      </div>
+      <div class="pref-item">
+        <div class="pref-info">
+          <p class="pref-label">Formato de Data</p>
+          <p class="pref-value">{{ usuario.formatoData }}</p>
+        </div>
+        <span class="pref-badge">{{ usuario.formatoData }}</span>
+      </div>
+      <div class="pref-item">
+        <div class="pref-info">
+          <p class="pref-label">Fuso Horário</p>
+          <p class="pref-value">Brasília (GMT-3)</p>
+        </div>
+        <span class="pref-badge">{{ usuario.fusoHorario }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="config-section">
+    <div class="section-header">
+      <h2>Segurança</h2>
+      <p>Gerencie sua segurança e sessões</p>
+    </div>
+
+    <div class="section-content">
+      <div class="security-item">
+        <div class="security-info">
+          <p class="security-label">Autenticação</p>
+          <p class="security-status">Manus OAuth</p>
+        </div>
+        <span class="badge-success">Ativo</span>
+      </div>
+      <button class="btn-secondary" (click)="sairDasTodas()">Sair de Todas as Sessões</button>
+    </div>
+  </div>
+
+  <div class="config-section">
+    <div class="section-header">
+      <h2>Sobre</h2>
+      <p>Informações sobre o sistema</p>
+    </div>
+
+    <div class="section-content">
+      <div class="about-item">
+        <span>Versão</span>
+        <p>1.0.0</p>
+      </div>
+    </div>
+  </div>
+</div>

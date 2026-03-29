@@ -1,0 +1,75 @@
+<div class="analise-container">
+  <h1>Análise Financeira</h1>
+  <p>Visualize seus dados financeiros em gráficos</p>
+
+  <div class="filtros">
+    <h3>Período</h3>
+    <div class="filtros-grid">
+      <div class="filtro-item">
+        <label>Data Inicial</label>
+        <input type="date" [(ngModel)]="dataInicial">
+      </div>
+      <div class="filtro-item">
+        <label>Data Final</label>
+        <input type="date" [(ngModel)]="dataFinal">
+      </div>
+      <div class="filtro-item">
+        <button class="btn-primary" (click)="aplicarFiltro()">Aplicar Filtro</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card receitas">
+      <h3>Receitas</h3>
+      <p class="value">{{ formatarMoeda(getReceitasTotal()) }}</p>
+      <div class="progress-bar">
+        <div class="progress" [style.width.%]="getPercentualReceitas()"></div>
+      </div>
+      <p class="percentage">{{ getPercentualReceitas().toFixed(1) }}%</p>
+    </div>
+
+    <div class="stat-card despesas">
+      <h3>Despesas</h3>
+      <p class="value">{{ formatarMoeda(getDespesasTotal()) }}</p>
+      <div class="progress-bar">
+        <div class="progress" [style.width.%]="getPercentualDespesas()"></div>
+      </div>
+      <p class="percentage">{{ getPercentualDespesas().toFixed(1) }}%</p>
+    </div>
+
+    <div class="stat-card fluxo">
+      <h3>Fluxo Líquido</h3>
+      <p class="value" [ngClass]="getFluxoLiquido() >= 0 ? 'positive' : 'negative'">
+        {{ formatarMoeda(getFluxoLiquido()) }}
+      </p>
+      <p class="subtitle">Receitas - Despesas</p>
+    </div>
+  </div>
+
+  <div class="chart-container">
+    <h2>Distribuição de Transações</h2>
+    <div *ngIf="getTransacoesFiltrads().length === 0; else chartContent" class="empty-state">
+      <p>Nenhuma transação no período selecionado</p>
+    </div>
+
+    <ng-template #chartContent>
+      <div class="chart-info">
+        <div class="chart-item receitas">
+          <div class="chart-color"></div>
+          <div class="chart-label">
+            <p>Receitas</p>
+            <p class="value">{{ formatarMoeda(getReceitasTotal()) }}</p>
+          </div>
+        </div>
+        <div class="chart-item despesas">
+          <div class="chart-color"></div>
+          <div class="chart-label">
+            <p>Despesas</p>
+            <p class="value">{{ formatarMoeda(getDespesasTotal()) }}</p>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+  </div>
+</div>

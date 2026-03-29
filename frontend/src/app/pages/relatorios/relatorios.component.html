@@ -1,0 +1,30 @@
+<div class="relatorios-container">
+  <div class="page-header">
+    <div>
+      <h1>Relatórios</h1>
+      <p>Gere e acompanhe seus relatórios financeiros</p>
+    </div>
+    <button class="btn-primary">+ Novo Relatório</button>
+  </div>
+
+  <div *ngIf="relatorios.length === 0; else relatoriosList" class="empty-state">
+    <p>Nenhum relatório gerado ainda</p>
+  </div>
+
+  <ng-template #relatoriosList>
+    <div class="relatorios-grid">
+      <div *ngFor="let relatorio of relatorios" class="relatorio-card">
+        <div class="relatorio-header">
+          <h3>{{ relatorio.nome }}</h3>
+          <span class="relatorio-tipo">{{ relatorio.tipo }}</span>
+        </div>
+        <p class="relatorio-descricao">{{ relatorio.descricao }}</p>
+        <p class="relatorio-data">{{ relatorio.data | date: 'dd/MM/yyyy HH:mm' }}</p>
+        <div class="relatorio-actions">
+          <button class="btn-secondary" (click)="baixarRelatorio(relatorio.id)">Baixar</button>
+          <button class="btn-secondary" (click)="gerarRelatorio(relatorio.tipo)">Regenerar</button>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+</div>

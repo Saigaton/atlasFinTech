@@ -1,0 +1,52 @@
+<div class="dashboard">
+  <div class="stats-grid">
+    <div class="stat-card">
+      <h3>Saldo Total</h3>
+      <p class="stat-value">{{ formatarMoeda(saldoTotal) }}</p>
+      <p class="stat-subtitle">{{ contas.length }} conta(s) ativa(s)</p>
+    </div>
+
+    <div class="stat-card">
+      <h3>Receitas (Mês)</h3>
+      <p class="stat-value">{{ formatarMoeda(receitasTotal) }}</p>
+      <p class="stat-subtitle">0 transação(ões)</p>
+    </div>
+
+    <div class="stat-card">
+      <h3>Despesas (Mês)</h3>
+      <p class="stat-value">{{ formatarMoeda(despesasTotal) }}</p>
+      <p class="stat-subtitle">0 transação(ões)</p>
+    </div>
+
+    <div class="stat-card">
+      <h3>Fluxo Líquido</h3>
+      <p class="stat-value" [ngClass]="fluxoLiquido >= 0 ? 'positive' : 'negative'">
+        {{ formatarMoeda(fluxoLiquido) }}
+      </p>
+      <p class="stat-subtitle">Receitas - Despesas</p>
+    </div>
+  </div>
+
+  <div class="recent-transactions">
+    <h2>Transações Recentes</h2>
+    <p class="subtitle">Últimas movimentações</p>
+
+    <div *ngIf="transacoes.length === 0; else transacoesList" class="empty-state">
+      <p>Nenhuma transação registrada ainda</p>
+    </div>
+
+    <ng-template #transacoesList>
+      <div class="transactions-list">
+        <div *ngFor="let transacao of getTransacoesRecentes()" class="transaction-item">
+          <div class="transaction-info">
+            <p class="transaction-description">{{ transacao.descricao }}</p>
+            <p class="transaction-date">{{ transacao.data | date: 'dd/MM/yyyy' }}</p>
+          </div>
+          <p class="transaction-value" [ngClass]="transacao.tipo === 'Receita' ? 'receita' : 'despesa'">
+            {{ transacao.tipo === 'Receita' ? '+' : '-' }} {{ formatarMoeda(transacao.valor) }}
+          </p>
+        </div>
+      </div>
+    </ng-template>
+  </div>
+</div>

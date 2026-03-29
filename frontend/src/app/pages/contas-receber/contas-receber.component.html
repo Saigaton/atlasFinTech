@@ -1,0 +1,97 @@
+<div class="contas-receber-container">
+  <div class="page-header">
+    <div>
+      <h1>Contas a Receber</h1>
+      <p>Gerencie suas receitas esperadas</p>
+    </div>
+    <button class="btn-primary" (click)="abrirModal()">+ Nova Conta a Receber</button>
+  </div>
+
+  <div *ngIf="contasReceber.length === 0; else contasReceberList" class="empty-state">
+    <p>Nenhuma conta a receber registrada</p>
+  </div>
+
+  <ng-template #contasReceberList>
+    <div class="contas-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Descrição</th>
+            <th>Cliente</th>
+            <th>Valor</th>
+            <th>Vencimento</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let conta of contasReceber">
+            <td>{{ conta.descricao }}</td>
+            <td>{{ conta.cliente || '-' }}</td>
+            <td>{{ formatarMoeda(conta.valor) }}</td>
+            <td>{{ conta.dataVencimento | date: 'dd/MM/yyyy' }}</td>
+            <td>
+              <span class="badge" [ngClass]="'badge-' + getStatusClass(conta.status)">
+                {{ conta.status }}
+              </span>
+            </td>
+            <td class="acoes">
+              <button class="btn-edit" (click)="editarContaReceber(conta)" title="Editar">Editar</button>
+              <button class="btn-delete" (click)="deletarContaReceber(conta.id)" title="Deletar">Deletar</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </ng-template>
+
+  <!-- Modal -->
+  <div *ngIf="mostrarModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>{{ editando ? 'Editar Conta a Receber' : 'Nova Conta a Receber' }}</h2>
+        <button class="modal-close" (click)="fecharModal()">✕</button>
+      </div>
+
+      <form (ngSubmit)="salvarContaReceber()">
+        <div class="form-group">
+          <label>Descrição</label>
+          <input type="text" [(ngModel)]="contaReceberAtual.descricao" name="descricao" placeholder="Ex: Venda de produto" required>
+        </div>
+
+        <div class="form-group">
+          <label>Cliente</label>
+          <input type="text" [(ngModel)]="contaReceberAtual.cliente" name="cliente" placeholder="Ex: Empresa XYZ">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Valor</label>
+            <input type="number" [(ngModel)]="contaReceberAtual.valor" name="valor" step="0.01" required>
+          </div>
+          <div class="form-group">
+            <label>Data de Vencimento</label>
+            <input type="date" [(ngModel)]="contaReceberAtual.dataVencimento" name="dataVencimento" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Status</label>
+            <select [(ngModel)]="contaReceberAtual.status" name="status">
+              <option value="Pendente">Pendente</option>
+              <option value="Recebido">Recebido</option>
+              <option value="Atrasado">Atrasado</option>
+            </select>
+          </div>
+          <div class="form-group" *ngIf="contaReceberAtual.status === 'Recebido'">
+            <label>Data de Recebimento</label>
+            <input type="date" [(ngModel)]="contaReceberAtual.dataRecebimento" name="dataRecebimento">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary">{{ editando ? 'Atualizar' : 'Criar' }}</button>
+      </form>
+    </div>
+  </div>
+</div>
