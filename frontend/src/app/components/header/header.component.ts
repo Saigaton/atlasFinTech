@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UsuarioService } from '../../services/usuario.service';
-import { Usuario } from '../../models/usuario.model';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { filter, map, mergeMap } from 'rxjs/operators';
 
@@ -14,7 +13,7 @@ import { filter, map, mergeMap } from 'rxjs/operators';
 })
 export class HeaderComponent implements OnInit {
   tituloPagina = 'Dashboard';
-  dataAtual = '';
+  dataAtual = new Date().toLocaleDateString('pt-BR');
   usuario$;
 
   constructor(private usuarioService: UsuarioService, private router: Router,
@@ -24,17 +23,14 @@ export class HeaderComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.atualizarData();
-    setInterval(() => this.atualizarData(), 60000);
-
     this.router.events.pipe(
-      filter(event => event instanceof NavigationEnd), // Quando a navegação termina
-      map(() => this.activatedRoute),                 // Pega a rota atual
-      map(route => {                                  // Navega até a rota filha ativa
+      filter(event => event instanceof NavigationEnd), // Quando a navegação termina - Davi Pereira dos Santos
+      map(() => this.activatedRoute),                 // Pega a rota atual - Davi Pereira dos Santos
+      map(route => {                                  // Navega até a rota filha ativa - Davi Pereira dos Santos
         while (route.firstChild) route = route.firstChild;
         return route;
       }),
-      mergeMap(route => route.data)                   // Pega o objeto 'data'
+      mergeMap(route => route.data)                   // Pega o objeto 'data' - Davi Pereira dos Santos
     ).subscribe(data => {
       this.tituloPagina = data['titulo'] || 'Dashboard';
     });
@@ -51,12 +47,13 @@ export class HeaderComponent implements OnInit {
     this.dataAtual = agora.toLocaleDateString('pt-BR', opcoes);
   }
 
-  getInitials(nome: string): string {
+  obterIniciaisPorNome(nome: string): string {
     return nome
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  }
+    .split(/\s+/)
+    .filter(n => !['de', 'do', 'da', 'dos', 'das', 'e'].includes(n.toLowerCase()))
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+    }
 }
