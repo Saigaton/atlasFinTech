@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UsuarioService } from '../../services/usuario.service';
 import { Usuario } from '../../models/usuario.model';
+import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
+import { filter, map, mergeMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-header',
@@ -11,17 +13,31 @@ import { Usuario } from '../../models/usuario.model';
   styleUrl: './header.component.css'
 })
 export class HeaderComponent implements OnInit {
-  titulo = 'Dashboard';
+  tituloPagina = 'Dashboard';
   dataAtual = '';
   usuario$;
 
-  constructor(private usuarioService: UsuarioService) {
+  constructor(private usuarioService: UsuarioService, private router: Router,
+     private activatedRoute: ActivatedRoute
+  ) {
     this.usuario$ = this.usuarioService.getUsuario();
   }
 
   ngOnInit(): void {
     this.atualizarData();
     setInterval(() => this.atualizarData(), 60000);
+
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd), // Quando a navegação termina
+      map(() => this.activatedRoute),                 // Pega a rota atual
+      map(route => {                                  // Navega até a rota filha ativa
+        while (route.firstChild) route = route.firstChild;
+        return route;
+      }),
+      mergeMap(route => route.data)                   // Pega o objeto 'data'
+    ).subscribe(data => {
+      this.tituloPagina = data['titulo'] || 'Dashboard';
+    });
   }
 
   private atualizarData(): void {

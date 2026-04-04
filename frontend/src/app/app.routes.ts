@@ -8,38 +8,47 @@ export const routes: Routes = [
   },
   {
     path: 'dashboard',
-    loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent)
+    loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent),
+    data: { titulo: 'Dashboard' }
   },
   {
     path: 'contas',
-    loadComponent: () => import('./pages/contas/contas.component').then(m => m.ContasComponent)
+    loadComponent: () => import('./pages/contas/contas.component').then(m => m.ContasComponent),
+    data: { titulo: 'Contas' }
   },
   {
     path: 'transacoes',
-    loadComponent: () => import('./pages/transacoes/transacoes.component').then(m => m.TransacoesComponent)
+    loadComponent: () => import('./pages/transacoes/transacoes.component').then(m => m.TransacoesComponent),
+    data: { titulo: 'Transações' }
   },
   {
     path: 'contas-pagar',
-    loadComponent: () => import('./pages/contas-pagar/contas-pagar.component').then(m => m.ContasPagarComponent)
+    loadComponent: () => import('./pages/contas-pagar/contas-pagar.component').then(m => m.ContasPagarComponent),
+    data: { titulo: 'Contas a Pagar' }
   },
   {
     path: 'contas-receber',
-    loadComponent: () => import('./pages/contas-receber/contas-receber.component').then(m => m.ContasReceberComponent)
+    loadComponent: () => import('./pages/contas-receber/contas-receber.component').then(m => m.ContasReceberComponent),
+    data: { titulo: 'Contas a Receber' }
   },
   {
     path: 'fluxo-caixa',
-    loadComponent: () => import('./pages/fluxo-caixa/fluxo-caixa.component').then(m => m.FluxoCaixaComponent)
+    loadComponent: () => import('./pages/fluxo-caixa/fluxo-caixa.component').then(m => m.FluxoCaixaComponent),
+    data: { titulo: 'Fluxo de Caixa' }
   },
   {
     path: 'analise',
-    loadComponent: () => import('./pages/analise/analise.component').then(m => m.AnaliseComponent)
+    loadComponent: () => import('./pages/analise/analise.component').then(m => m.AnaliseComponent),
+    data: { titulo: 'Análise' }
   },
   {
     path: 'relatorios',
-    loadComponent: () => import('./pages/relatorios/relatorios.component').then(m => m.RelatoriosComponent)
+    loadComponent: () => import('./pages/relatorios/relatorios.component').then(m => m.RelatoriosComponent),
+    data: { titulo: 'Relatórios' }
   },
   {
     path: 'configuracoes',
-    loadComponent: () => import('./pages/configuracoes/configuracoes.component').then(m => m.ConfiguracoesComponent)
+    loadComponent: () => import('./pages/configuracoes/configuracoes.component').then(m => m.ConfiguracoesComponent),
+    data: { titulo: 'Configurações' }
   }
 ];
