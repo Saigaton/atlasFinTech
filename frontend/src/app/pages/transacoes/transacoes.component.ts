@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TransacaoService } from '../../services/transacao.service';
 import { ContaService } from '../../services/conta.service';
-import { Transacao } from '../../models/transacao.model';
+import { TipoTransacao, Transacao } from '../../models/transacao.model';
 import { Conta } from '../../models/conta.model';
 
 @Component({
@@ -19,8 +19,9 @@ export class TransacoesComponent implements OnInit {
   mostrarModal = false;
   editando = false;
   transacaoAtual: Transacao = this.criarTransacaoVazia();
-  filtroTipo = 'Todas';
+  filtroTipo = 3;
   filtroContaId = '';
+  tipoTransacao = TipoTransacao;
 
   constructor(
     private transacaoService: TransacaoService,
@@ -45,7 +46,7 @@ export class TransacoesComponent implements OnInit {
     return {
       id: '',
       contaId: '',
-      tipo: 'Receita',
+      tipo: TipoTransacao.Receita,
       descricao: '',
       valor: 0,
       data: new Date(),
@@ -94,7 +95,7 @@ export class TransacoesComponent implements OnInit {
 
   getTransacoesFiltrads(): Transacao[] {
     return this.transacoes.filter(t => {
-      const filtroTipoOk = this.filtroTipo === 'Todas' || t.tipo === this.filtroTipo;
+      const filtroTipoOk = this.filtroTipo === 3 || t.tipo === this.filtroTipo;
       const filtroContaOk = !this.filtroContaId || t.contaId === this.filtroContaId;
       return filtroTipoOk && filtroContaOk;
     });

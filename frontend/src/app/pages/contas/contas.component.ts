@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ContaService } from '../../services/conta.service';
-import { Conta } from '../../models/conta.model';
+import { Conta, TipoConta } from '../../models/conta.model';
 
 @Component({
   selector: 'app-contas',
@@ -33,7 +33,7 @@ export class ContasComponent implements OnInit {
     return {
       id: '',
       nome: '',
-      tipo: 'Banco',
+      tipo: TipoConta.Banco,
       saldoInicial: 0,
       saldoAtual: 0,
       descricao: '',
@@ -92,7 +92,6 @@ export class ContasComponent implements OnInit {
   getCorIcon(tipo: string): string {
     const cores: { [key: string]: string } = {
       'Banco': '🏦',
-      'Caixa': '💵',
       'Cartão de Crédito': '💳',
       'Poupança': '🏦'
     };

@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ContaPagarService } from '../../services/conta-pagar.service';
-import { ContaPagar } from '../../models/conta-pagar.model';
+import { ContaPagar, SituacaoPagar } from '../../models/conta-pagar.model';
 
 @Component({
   selector: 'app-contas-pagar',
@@ -16,6 +16,7 @@ export class ContasPagarComponent implements OnInit {
   mostrarModal = false;
   editando = false;
   contaPagarAtual: ContaPagar = this.criarContaPagarVazia();
+  situacaoPagar = SituacaoPagar;
 
   constructor(private contaPagarService: ContaPagarService) {}
 
@@ -36,7 +37,7 @@ export class ContasPagarComponent implements OnInit {
       valor: 0,
       dataVencimento: new Date(),
       dataPagamento: undefined,
-      status: 'Pendente',
+      status: SituacaoPagar.Pendente,
       categoria: ''
     };
   }
@@ -87,7 +88,14 @@ export class ContasPagarComponent implements OnInit {
     }).format(valor);
   }
 
-  getStatusClass(status: string): string {
-    return status.toLowerCase().replace(' ', '-');
+  obterStatusClasse(status: SituacaoPagar): string {
+    switch (status) {
+      case SituacaoPagar.Pendente:
+        return 'pendente';
+      case SituacaoPagar.Atrasado:
+        return 'atrasado';
+      case SituacaoPagar.Pago:
+        return 'pago';
+    }
   }
 }

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { Usuario } from '../models/usuario.model';
+import { TipoMoeda, TipoUsuario, Usuario } from '../models/usuario.model';
 
 @Injectable({
   providedIn: 'root'
@@ -24,8 +24,8 @@ export class UsuarioService {
         id: '1',
         nome: 'Usuário Demo',
         email: 'demo@example.com',
-        tipoConta: 'Usuário',
-        moedaPadrao: 'BRL',
+        tipoConta: TipoUsuario.Usuario,
+        moedaPadrao: TipoMoeda.BRL,
         formatoData: 'DD/MM/YYYY',
         fusoHorario: 'GMT-3'
       };

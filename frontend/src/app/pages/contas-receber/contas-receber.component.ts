@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ContaReceberService } from '../../services/conta-receber.service';
-import { ContaReceber } from '../../models/conta-receber.model';
+import { ContaReceber, SituacaoReceber } from '../../models/conta-receber.model';
 
 @Component({
   selector: 'app-contas-receber',
@@ -16,6 +16,7 @@ export class ContasReceberComponent implements OnInit {
   mostrarModal = false;
   editando = false;
   contaReceberAtual: ContaReceber = this.criarContaReceberVazia();
+  situacaoReceber = SituacaoReceber;
 
   constructor(private contaReceberService: ContaReceberService) {}
 
@@ -36,7 +37,7 @@ export class ContasReceberComponent implements OnInit {
       valor: 0,
       dataVencimento: new Date(),
       dataRecebimento: undefined,
-      status: 'Pendente',
+      status: SituacaoReceber.Pendente,
       categoria: ''
     };
   }
@@ -87,7 +88,14 @@ export class ContasReceberComponent implements OnInit {
     }).format(valor);
   }
 
-  getStatusClass(status: string): string {
-    return status.toLowerCase().replace(' ', '-');
+  obterStatusClasse(status: SituacaoReceber): string {
+    switch (status) {
+      case SituacaoReceber.Pendente:
+        return 'pendente';
+      case SituacaoReceber.Atrasado:
+        return 'atrasado';
+      case SituacaoReceber.Recebido:
+        return 'recebido';
+    }
   }
 }

@@ -13,9 +13,9 @@
       <div class="filtro-item">
         <label>Tipo</label>
         <select [(ngModel)]="filtroTipo">
-          <option value="Todas">Todas</option>
-          <option value="Receita">Receita</option>
-          <option value="Despesa">Despesa</option>
+          <option [value]="3">Todas</option>
+          <option [value]="tipoTransacao.Receita">Receita</option>
+          <option [value]="tipoTransacao.Despesa">Despesa</option>
         </select>
       </div>
       <div class="filtro-item">
@@ -50,17 +50,17 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let transacao of getTransacoesFiltrads()" [ngClass]="transacao.tipo === 'Receita' ? 'receita' : 'despesa'">
+          <tr *ngFor="let transacao of getTransacoesFiltrads()" [ngClass]="transacao.tipo === tipoTransacao.Receita ? 'receita' : 'despesa'">
             <td>
-              <span class="badge" [ngClass]="transacao.tipo === 'Receita' ? 'badge-success' : 'badge-danger'">
+              <span class="badge" [ngClass]="transacao.tipo === tipoTransacao.Receita ? 'badge-success' : 'badge-danger'">
                 {{ transacao.tipo }}
               </span>
             </td>
             <td>{{ getNomeConta(transacao.contaId) }}</td>
             <td>{{ transacao.descricao }}</td>
             <td>{{ transacao.data | date: 'dd/MM/yyyy' }}</td>
-            <td class="valor" [ngClass]="transacao.tipo === 'Receita' ? 'receita' : 'despesa'">
-              {{ transacao.tipo === 'Receita' ? '+' : '-' }} {{ formatarMoeda(transacao.valor) }}
+            <td class="valor" [ngClass]="transacao.tipo === tipoTransacao.Receita ? 'receita' : 'despesa'">
+              {{ transacao.tipo === tipoTransacao.Receita ? '+' : '-' }} {{ formatarMoeda(transacao.valor) }}
             </td>
             <td class="acoes">
               <button class="btn-edit" (click)="editarTransacao(transacao)" title="Editar">Editar</button>

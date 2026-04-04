@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TransacaoService } from '../../services/transacao.service';
-import { Transacao } from '../../models/transacao.model';
+import { TipoTransacao, Transacao } from '../../models/transacao.model';
 
 @Component({
   selector: 'app-analise',
@@ -61,13 +61,13 @@ export class AnaliseComponent implements OnInit {
 
   getReceitasTotal(): number {
     return this.getTransacoesFiltrads()
-      .filter(t => t.tipo === 'Receita')
+      .filter(t => t.tipo === TipoTransacao.Receita)
       .reduce((total, t) => total + t.valor, 0);
   }
 
   getDespesasTotal(): number {
     return this.getTransacoesFiltrads()
-      .filter(t => t.tipo === 'Despesa')
+      .filter(t => t.tipo === TipoTransacao.Despesa)
       .reduce((total, t) => total + t.valor, 0);
   }
 

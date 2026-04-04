@@ -56,8 +56,8 @@
             <p class="transacao-description">{{ transacao.descricao }}</p>
             <p class="transacao-date">{{ transacao.data | date: 'dd/MM/yyyy' }}</p>
           </div>
-          <p class="transacao-value" [ngClass]="transacao.tipo === 'Receita' ? 'receita' : 'despesa'">
-            {{ transacao.tipo === 'Receita' ? '+' : '-' }} {{ formatarMoeda(transacao.valor) }}
+          <p class="transacao-value" [ngClass]="transacao.tipo === tipoTransacao.Receita ? 'receita' : 'despesa'">
+            {{ transacao.tipo === tipoTransacao.Receita ? '+' : '-' }} {{ formatarMoeda(transacao.valor) }}
           </p>
         </div>
       </div>

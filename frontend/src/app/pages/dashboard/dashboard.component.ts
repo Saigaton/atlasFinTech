@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ContaService } from '../../services/conta.service';
 import { TransacaoService } from '../../services/transacao.service';
 import { Conta } from '../../models/conta.model';
-import { Transacao } from '../../models/transacao.model';
+import { TipoTransacao, Transacao } from '../../models/transacao.model';
 
 @Component({
   selector: 'app-dashboard',
@@ -15,6 +15,7 @@ import { Transacao } from '../../models/transacao.model';
 export class DashboardComponent implements OnInit {
   contas: Conta[] = [];
   transacoes: Transacao[] = [];
+  tipoTransacao = TipoTransacao;
   saldoTotal = 0;
   receitasTotal = 0;
   despesasTotal = 0;
@@ -47,11 +48,11 @@ export class DashboardComponent implements OnInit {
 
   private calcularTotais(): void {
     this.receitasTotal = this.transacoes
-      .filter(t => t.tipo === 'Receita')
+      .filter(t => t.tipo === TipoTransacao.Receita)
       .reduce((total, t) => total + t.valor, 0);
 
     this.despesasTotal = this.transacoes
-      .filter(t => t.tipo === 'Despesa')
+      .filter(t => t.tipo === TipoTransacao.Despesa)
       .reduce((total, t) => total + t.valor, 0);
 
     this.fluxoLiquido = this.receitasTotal - this.despesasTotal;

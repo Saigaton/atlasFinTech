@@ -31,7 +31,7 @@
             <td>{{ formatarMoeda(conta.valor) }}</td>
             <td>{{ conta.dataVencimento | date: 'dd/MM/yyyy' }}</td>
             <td>
-              <span class="badge" [ngClass]="'badge-' + getStatusClass(conta.status)">
+              <span class="badge" [ngClass]="'badge-' + obterStatusClasse(conta.status)">
                 {{ conta.status }}
               </span>
             </td>
@@ -84,7 +84,7 @@
               <option value="Atrasado">Atrasado</option>
             </select>
           </div>
-          <div class="form-group" *ngIf="contaReceberAtual.status === 'Recebido'">
+          <div class="form-group" *ngIf="contaReceberAtual.status === situacaoReceber.Recebido">
             <label>Data de Recebimento</label>
             <input type="date" [(ngModel)]="contaReceberAtual.dataRecebimento" name="dataRecebimento">
           </div>
