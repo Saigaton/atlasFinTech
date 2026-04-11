@@ -1,8 +1,7 @@
 .header {
   background: var(--card);
   border-bottom: 1px solid var(--border);
-  padding: 20px 30px;
-  margin-left: 250px;
+  padding: 16px 20px;
   box-shadow: none;
   position: sticky;
   top: 0;
@@ -53,19 +52,6 @@
   font-size: 14px;
   color: var(--foreground);
   font-weight: 500;
-}
-
-.user-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary) 0%, #1e40af 100%);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 13px;
 }
 
 @media (max-width: 768px) {

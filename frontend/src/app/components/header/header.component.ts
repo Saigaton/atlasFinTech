@@ -14,13 +14,8 @@ import { filter, map, mergeMap } from 'rxjs/operators';
 export class HeaderComponent implements OnInit {
   tituloPagina = 'Dashboard';
   dataAtual = new Date().toLocaleDateString('pt-BR');
-  usuario$;
 
-  constructor(private usuarioService: UsuarioService, private router: Router,
-     private activatedRoute: ActivatedRoute
-  ) {
-    this.usuario$ = this.usuarioService.getUsuario();
-  }
+  constructor(private router: Router, private activatedRoute: ActivatedRoute) {}
 
   ngOnInit(): void {
     this.router.events.pipe(
@@ -35,25 +30,4 @@ export class HeaderComponent implements OnInit {
       this.tituloPagina = data['titulo'] || 'Dashboard';
     });
   }
-
-  private atualizarData(): void {
-    const agora = new Date();
-    const opcoes: Intl.DateTimeFormatOptions = {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    };
-    this.dataAtual = agora.toLocaleDateString('pt-BR', opcoes);
-  }
-
-  obterIniciaisPorNome(nome: string): string {
-    return nome
-    .split(/\s+/)
-    .filter(n => !['de', 'do', 'da', 'dos', 'das', 'e'].includes(n.toLowerCase()))
-    .map(n => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-    }
 }

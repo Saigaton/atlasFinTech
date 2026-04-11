@@ -55,4 +55,9 @@
         </li>
       </ul>
     </nav>
+      <div class="user-info" *ngIf="usuario$ | async as usuario">
+        <span class="user-name">{{ usuario?.nome }}</span>
+        <div class="user-email">{{ usuario?.email }}</div>
+      </div>
+    
   </aside>

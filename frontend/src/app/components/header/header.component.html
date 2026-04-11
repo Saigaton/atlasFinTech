@@ -2,13 +2,9 @@
     <div class="header-content">
       <div class="header-left">
         <h1 class="page-title">{{ tituloPagina }}</h1>
-        <p class="date">{{ dataAtual | date:'fullDate'}}</p>
       </div>
       <div class="header-right">
-        <div class="user-info" *ngIf="usuario$ | async as usuario">
-          <span class="user-name">{{ usuario?.nome }}</span>
-          <div class="user-avatar">{{ obterIniciaisPorNome(usuario?.nome || '') }}</div>
-        </div>
+        <p class="date">{{ dataAtual | date:'fullDate'}}</p>
       </div>
     </div>
   </header>
