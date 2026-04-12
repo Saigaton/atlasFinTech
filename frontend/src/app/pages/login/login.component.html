@@ -1,0 +1,69 @@
+<div class="login-container">
+  <div class="login-box">
+    <div class="login-header">
+      <h1>Gestão Financeira</h1>
+      <p>Faça login para continuar</p>
+    </div>
+
+    <div *ngIf="erro" class="error-message" (click)="limparErro()">
+      <p>{{ erro }}</p>
+      <span class="close-btn">✕</span>
+    </div>
+
+    <form (ngSubmit)="login()" class="login-form">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input
+          type="email"
+          id="email"
+          [(ngModel)]="email"
+          name="email"
+          placeholder="seu@email.com"
+          required
+          [disabled]="carregando"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="senha">Senha</label>
+        <div class="password-input">
+          <input
+            [type]="mostrarSenha ? 'text' : 'password'"
+            id="senha"
+            [(ngModel)]="senha"
+            name="senha"
+            placeholder="Sua senha"
+            required
+            [disabled]="carregando"
+          >
+          <button
+            type="button"
+            class="toggle-password"
+            (click)="toggleMostrarSenha()"
+            [disabled]="carregando"
+          >
+            {{ mostrarSenha ? 'Ocultar' : 'Mostrar' }}
+          </button>
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        class="btn-login"
+        [disabled]="carregando"
+      >
+        {{ carregando ? 'Entrando...' : 'Entrar' }}
+      </button>
+    </form>
+
+    <div class="login-footer">
+      <p>Não tem conta? <a href="javascript:void(0)" (click)="irParaRegistro()">Registre-se aqui</a></p>
+    </div>
+
+    <div class="demo-info">
+      <p class="demo-title">Demo</p>
+      <p>Email: <strong>demo@example.com</strong></p>
+      <p>Senha: <strong>demo123</strong></p>
+    </div>
+  </div>
+</div>

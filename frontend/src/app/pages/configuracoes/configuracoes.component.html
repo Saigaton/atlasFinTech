@@ -20,7 +20,7 @@
         </div>
         <div class="info-item">
           <span class="label">Tipo de Conta</span>
-          <p>{{ usuario.tipoConta }}</p>
+          <!-- <p>{{ usuario.tipoConta }}</p> -->
         </div>
         <button class="btn-primary" (click)="iniciarEdicao()">Editar Perfil</button>
       </div>
@@ -37,10 +37,10 @@
           </div>
           <div class="form-group">
             <label>Tipo de Conta</label>
-            <select [(ngModel)]="usuarioEditado!.tipoConta" name="tipoConta">
+            <!-- <select [(ngModel)]="usuarioEditado!.tipoConta" name="tipoConta">
               <option value="Usuário">Usuário</option>
               <option value="Administrador">Administrador</option>
-            </select>
+            </select> -->
           </div>
           <div class="form-actions">
             <button type="submit" class="btn-primary">Salvar Alterações</button>
@@ -61,23 +61,23 @@
       <div class="pref-item">
         <div class="pref-info">
           <p class="pref-label">Moeda Padrão</p>
-          <p class="pref-value">{{ usuario.moedaPadrao }}</p>
+          <!-- <p class="pref-value">{{ usuario.moedaPadrao }}</p> -->
         </div>
-        <span class="pref-badge">{{ usuario.moedaPadrao }}</span>
+        <!-- <span class="pref-badge">{{ usuario.moedaPadrao }}</span> -->
       </div>
       <div class="pref-item">
         <div class="pref-info">
           <p class="pref-label">Formato de Data</p>
-          <p class="pref-value">{{ usuario.formatoData }}</p>
+          <!-- <p class="pref-value">{{ usuario.formatoData }}</p> -->
         </div>
-        <span class="pref-badge">{{ usuario.formatoData }}</span>
+        <!-- <span class="pref-badge">{{ usuario.formatoData }}</span> -->
       </div>
       <div class="pref-item">
         <div class="pref-info">
           <p class="pref-label">Fuso Horário</p>
           <p class="pref-value">Brasília (GMT-3)</p>
         </div>
-        <span class="pref-badge">{{ usuario.fusoHorario }}</span>
+        <!-- <span class="pref-badge">{{ usuario.fusoHorario }}</span> -->
       </div>
     </div>
   </div>

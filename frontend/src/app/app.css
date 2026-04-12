@@ -12,11 +12,20 @@
   height: 100vh;
 }
 
+.main-container.full-width {
+  margin-left: 0;
+}
+
 .main-content {
   flex: 1;
   overflow-y: auto;
   padding: 30px;
   background-color: #f9fafb;
+}
+
+.main-content.auth-page {
+  padding: 0;
+  background-color: #ffffff;
 }
 
 @media (max-width: 768px) {

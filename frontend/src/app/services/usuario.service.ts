@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { TipoMoeda, TipoUsuario, Usuario } from '../models/usuario.model';
+import { UsuarioAuth } from '../models/usuario-auth.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UsuarioService {
-  private usuario$ = new BehaviorSubject<Usuario | null>(null);
+  private usuario$ = new BehaviorSubject<UsuarioAuth | null>(null);
   private usuarioObservable = this.usuario$.asObservable();
 
   constructor() {
@@ -14,31 +15,18 @@ export class UsuarioService {
   }
 
   private carregarUsuario(): void {
-    const usuarioArmazenado = localStorage.getItem('usuario');
+    const usuarioArmazenado = localStorage.getItem('usuarioLogado');
     if (usuarioArmazenado) {
       const usuario = JSON.parse(usuarioArmazenado);
       this.usuario$.next(usuario);
-    } else {
-      // Usuário padrão de demonstração
-      const usuarioPadrao: Usuario = {
-        id: '1',
-        nome: 'Usuário Demo',
-        email: 'demo@example.com',
-        tipoConta: TipoUsuario.Usuario,
-        moedaPadrao: TipoMoeda.BRL,
-        formatoData: 'DD/MM/YYYY',
-        fusoHorario: 'GMT-3'
-      };
-      this.usuario$.next(usuarioPadrao);
-      localStorage.setItem('usuario', JSON.stringify(usuarioPadrao));
     }
   }
 
-  getUsuario(): Observable<Usuario | null> {
+  getUsuario(): Observable<UsuarioAuth | null> {
     return this.usuarioObservable;
   }
 
-  atualizarUsuario(usuarioAtualizado: Usuario): void {
+  atualizarUsuario(usuarioAtualizado: UsuarioAuth): void {
     this.usuario$.next(usuarioAtualizado);
     localStorage.setItem('usuario', JSON.stringify(usuarioAtualizado));
   }

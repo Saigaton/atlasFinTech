@@ -29,7 +29,7 @@
 }
 
 .date {
-  margin: 6px 0 0 0;
+  margin: 0;
   font-size: 13px;
   color: var(--muted-foreground);
   text-transform: capitalize;
@@ -40,18 +40,6 @@
   display: flex;
   align-items: center;
   gap: 20px;
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.user-name {
-  font-size: 14px;
-  color: var(--foreground);
-  font-weight: 500;
 }
 
 @media (max-width: 768px) {

@@ -1,0 +1,103 @@
+<div class="registro-container">
+  <div class="registro-box">
+    <div class="registro-header">
+      <h1>Criar Conta</h1>
+      <p>Registre-se para começar</p>
+    </div>
+
+    <div *ngIf="sucesso" class="success-message">
+      <p>Conta criada com sucesso! Redirecionando...</p>
+    </div>
+
+    <div *ngIf="erro" class="error-message" (click)="limparErro()">
+      <p>{{ erro }}</p>
+      <span class="close-btn">✕</span>
+    </div>
+
+    <form (ngSubmit)="registro()" class="registro-form" *ngIf="!sucesso">
+      <div class="form-group">
+        <label for="nome">Nome Completo</label>
+        <input
+          type="text"
+          id="nome"
+          [(ngModel)]="nome"
+          name="nome"
+          placeholder="Seu nome"
+          required
+          [disabled]="carregando"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input
+          type="email"
+          id="email"
+          [(ngModel)]="email"
+          name="email"
+          placeholder="seu@email.com"
+          required
+          [disabled]="carregando"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="senha">Senha</label>
+        <div class="password-input">
+          <input
+            [type]="mostrarSenha ? 'text' : 'password'"
+            id="senha"
+            [(ngModel)]="senha"
+            name="senha"
+            placeholder="Mínimo 6 caracteres"
+            required
+            [disabled]="carregando"
+          >
+          <button
+            type="button"
+            class="toggle-password"
+            (click)="toggleMostrarSenha()"
+            [disabled]="carregando"
+          >
+            {{ mostrarSenha ? 'Ocultar' : 'Mostrar' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="confirmarSenha">Confirmar Senha</label>
+        <div class="password-input">
+          <input
+            [type]="mostrarConfirmarSenha ? 'text' : 'password'"
+            id="confirmarSenha"
+            [(ngModel)]="confirmarSenha"
+            name="confirmarSenha"
+            placeholder="Confirme sua senha"
+            required
+            [disabled]="carregando"
+          >
+          <button
+            type="button"
+            class="toggle-password"
+            (click)="toggleMostrarConfirmarSenha()"
+            [disabled]="carregando"
+          >
+            {{ mostrarConfirmarSenha ? 'Ocultar' : 'Mostrar' }}
+          </button>
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        class="btn-registro"
+        [disabled]="carregando"
+      >
+        {{ carregando ? 'Registrando...' : 'Registrar' }}
+      </button>
+    </form>
+
+    <div class="registro-footer">
+      <p>Já tem conta? <a href="javascript:void(0)" (click)="irParaLogin()">Faça login aqui</a></p>
+    </div>
+  </div>
+</div>

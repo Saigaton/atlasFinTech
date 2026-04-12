@@ -129,7 +129,7 @@
   margin-bottom: 12px;
   margin-left: 12px;
   padding: 12px;
-  background-color: var(--secondary-foreground);
+  background-color: var(--muted);
   border-radius: var(--radius);
 }
 
