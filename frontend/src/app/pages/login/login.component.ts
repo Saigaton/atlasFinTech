@@ -18,7 +18,6 @@ import { AuthPanelComponent } from '../../shared/components/auth-panel/auth-pane
 })
 export class LoginComponent implements OnInit {
   carregando = false;
-  sucesso = false;
   mostrarSenha = false;
   formLogin!: FormGroup;
 

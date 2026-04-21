@@ -1,0 +1,83 @@
+<!-- Tela de recuperação de senha -->
+<div class="auth-wrap">
+  <div class="auth-shell">
+
+    <!-- Painel azul esquerdo (reutilizável) -->
+    <app-auth-panel />
+
+    <div class="auth-form-side">
+      <div class="auth-topbar">
+        <app-theme-toggle />
+      </div>
+
+      <div class="auth-scroll">
+
+        <!-- Estado: formulário de envio -->
+        @if (!enviado) {
+          <h1 class="form-title">Recuperar senha</h1>
+          <p class="form-desc">
+            Lembrou?
+            <a routerLink="/login">Voltar ao login</a>
+          </p>
+
+          <form [formGroup]="formRecuperarSenha" (ngSubmit)="onSubmit()" novalidate>
+            <div class="fld">
+              <label class="fld-lbl" for="fp-email">Seu e-mail cadastrado</label>
+              <div class="inp-w">
+                <input
+                  id="fp-email"
+                  type="email"
+                  formControlName="email"
+                  placeholder="seu@email.com"
+                  [class.bad]="formRecuperarSenha.get('email')?.invalid && formRecuperarSenha.get('email')?.touched"
+                  [class.good]="formRecuperarSenha.get('email')?.valid && formRecuperarSenha.get('email')?.touched"
+                  autocomplete="email"
+                  inputmode="email"
+                >
+                <span class="ico-s" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                </span>
+              </div>
+              @if (formRecuperarSenha.get('email')?.invalid && formRecuperarSenha.get('email')?.touched) {
+                <div class="ferr" role="alert">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                  @if (formRecuperarSenha.get('email')?.errors?.['required']) { E-mail obrigatório }
+                  @else { Formato de e-mail inválido }
+                </div>
+              }
+            </div>
+          </form>
+        }
+
+        <!-- Estado: e-mail enviado com sucesso -->
+        @if (enviado) {
+          <div class="state-box">
+            <div class="state-icon info">
+              <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+            </div>
+            <h2>E-mail enviado!</h2>
+            <p>
+              Se o e-mail <strong>{{ formRecuperarSenha.get('email')?.value }}</strong> estiver cadastrado,
+              você receberá as instruções em breve.
+            </p>
+            <p class="spam-note">Verifique também a pasta de spam.</p>
+            <a routerLink="/login" class="btn-state-action">Voltar ao login</a>
+          </div>
+        }
+
+      </div>
+
+      <!-- Botão principal — visível apenas no estado de formulário -->
+      @if (!enviado) {
+        <div class="auth-bottom">
+          <button class="btn-primary" type="submit" (click)="onSubmit()" [disabled]="carregando || formRecuperarSenha.invalid">
+            @if (carregando) { <span class="spin" aria-hidden="true"></span> }
+            @else { <span>Enviar link de recuperação</span> }
+          </button>
+          <div class="btn-note">Verifique também a caixa de spam</div>
+        </div>
+      }
+
+    </div>
+  </div>
+</div>

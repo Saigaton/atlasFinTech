@@ -46,9 +46,9 @@ export interface RequisicaoRegistroUsuario {
 }
 
 /** Resposta genérica de operações sem retorno de dados */
-export interface MessageResponse {
-  message: string;
-  success: boolean;
+export interface MensagemResposta {
+  mensagem: string;
+  sucesso: boolean;
 }
 
 /** Estrutura de erro retornado pela API FastAPI */

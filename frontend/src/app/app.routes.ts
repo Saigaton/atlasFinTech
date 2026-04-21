@@ -11,6 +11,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/registro/registro.component').then(m => m.RegistroComponent)
   },
   {
+    path: 'recuperar-senha',
+    loadComponent: () =>
+      import('./pages/recuperar-senha/recuperar-senha.component').then(m => m.RecuperarSenhaComponent),
+  },
+  {
     path: '',
     redirectTo: 'dashboard',
     pathMatch: 'full'

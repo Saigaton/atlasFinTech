@@ -20,7 +20,6 @@ import { PasswordChecklistComponent } from '../../shared/components/password-che
 })
 export class RegistroComponent implements OnInit {
   carregando = false;
-  sucesso = false;
   mostrarSenha = false;
   mostrarConfirmarSenha = false;
   formRegistro!: FormGroup;
@@ -49,7 +48,7 @@ export class RegistroComponent implements OnInit {
 
   onSubmit(): void {
     this.carregando = true;
-    this.authService.register(this.formRegistro.value as RequisicaoRegistroUsuario).subscribe({
+    this.authService.registro(this.formRegistro.value as RequisicaoRegistroUsuario).subscribe({
       next: () => {
         this.toast.success('Conta criada! Verifique seu e-mail para ativar. 📧');
         this.router.navigate(['/pending-verification']);

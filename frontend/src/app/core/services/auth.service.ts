@@ -5,7 +5,7 @@ import { Observable, tap, BehaviorSubject } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   RespostaToken, AccessTokenResponse,
-  RequisicaoRegistroUsuario, Usuario, MessageResponse, PostLoginRoute,
+  RequisicaoRegistroUsuario, Usuario, MensagemResposta, PostLoginRoute,
   RequisicaoLoginUsuario,
 } from '../../core/models/auth.models';
 
@@ -50,8 +50,8 @@ export class AuthService {
 
   // ── Autenticação ───────────────────────────────────────────────────────────
 
-  register(data: RequisicaoRegistroUsuario): Observable<RespostaToken> {
-    return this.http.post<RespostaToken>(`${this.API}/auth/register`, data).pipe(
+  registro(data: RequisicaoRegistroUsuario): Observable<RespostaToken> {
+    return this.http.post<RespostaToken>(`${this.API}/auth/registro`, data).pipe(
       tap(res => this.saveSession(res)),
     );
   }
@@ -94,28 +94,28 @@ export class AuthService {
 
   // ── Verificação de e-mail ──────────────────────────────────────────────────
 
-  verifyEmail(token: string): Observable<MessageResponse> {
-    return this.http.post<MessageResponse>(`${this.API}/auth/verify-email`, { token });
+  verifyEmail(token: string): Observable<MensagemResposta> {
+    return this.http.post<MensagemResposta>(`${this.API}/auth/verify-email`, { token });
   }
 
-  resendVerification(email: string): Observable<MessageResponse> {
-    return this.http.post<MessageResponse>(
+  resendVerification(email: string): Observable<MensagemResposta> {
+    return this.http.post<MensagemResposta>(
       `${this.API}/auth/resend-verification`, { email }
     );
   }
 
   // ── Recuperação de senha ───────────────────────────────────────────────────
 
-  forgotPassword(email: string): Observable<MessageResponse> {
-    return this.http.post<MessageResponse>(`${this.API}/auth/forgot-password`, { email });
+  recuperarSenha(email: string): Observable<MensagemResposta> {
+    return this.http.post<MensagemResposta>(`${this.API}/auth/recuperar-senha`, { email });
   }
 
   resetPassword(
     token: string,
     new_password: string,
     confirm_password: string
-  ): Observable<MessageResponse> {
-    return this.http.post<MessageResponse>(
+  ): Observable<MensagemResposta> {
+    return this.http.post<MensagemResposta>(
       `${this.API}/auth/reset-password`,
       { token, new_password, confirm_password }
     );
