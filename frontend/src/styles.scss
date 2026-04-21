@@ -1,0 +1,619 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+// ─── Reset ────────────────────────────────────────────────────────────────────
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+// ─── Breakpoints (mobile-first) ───────────────────────────────────────────────
+// xs  < 480px    mobile pequeno (iPhone SE, Galaxy A)
+// sm  480–767px  mobile grande  (iPhone Pro Max, Galaxy S)
+// md  768–1023px tablet         (iPad, Galaxy Tab)
+// lg  1024px+    desktop
+
+// ─── Variáveis de tema ────────────────────────────────────────────────────────
+:root {
+  // Gradientes de marca
+  --grad:          linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  --grad-h:        linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  --shadow-btn:    0 4px 16px rgba(37, 99, 235, 0.35);
+  --shadow-btn-h:  0 8px 24px rgba(37, 99, 235, 0.5);
+
+  // Superfícies
+  --bg-page:       #f1f4f9;
+  --bg-form:       #ffffff;
+
+  // Texto
+  --text-h:        #0f172a;
+  --text-body:     #334155;
+  --text-muted:    #94a3b8;
+  --text-label:    #1e293b;
+
+  // Bordas
+  --border:        #94a3b8;
+  --border-focus:  #3b82f6;
+
+  // Estados
+  --err:           #dc2626;
+  --err-bg:        #fef2f2;
+  --ok:            #16a34a;
+
+  // Tipografia responsiva (clamp: mín | preferido | máx)
+  --font-xs:    11px;
+  --font-sm:    12px;
+  --font-base:  14px;
+  --font-md:    16px;
+  --font-lg:    20px;
+  --font-xl:    24px;
+
+  // Espaçamento
+  --space-xs:   4px;
+  --space-sm:   8px;
+  --space-md:   16px;
+  --space-lg:   24px;
+  --space-xl:   32px;
+
+  // Raios
+  --radius-sm:  8px;
+  --radius-md:  12px;
+  --radius-lg:  14px;
+  --radius-xl:  20px;
+
+  // Touch targets — mínimo Apple/Google: 44px
+  --touch-min:  44px;
+  --input-h:    48px;
+  --btn-h:      52px;
+}
+
+// Tema escuro
+[data-theme='dark'] {
+  --grad:         linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  --grad-h:       linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
+  --shadow-btn:   0 4px 16px rgba(79, 70, 229, 0.4);
+  --shadow-btn-h: 0 8px 24px rgba(79, 70, 229, 0.55);
+
+  --bg-page:      #0b0d14;
+  --bg-form:      #111318;
+  --text-h:       #f1f5f9;
+  --text-body:    #94a3b8;
+  --text-muted:   #475569;
+  --text-label:   #cbd5e1;
+  --border:       #2a2d3e;
+  --border-focus: #6366f1;
+  --err:          #f87171;
+  --err-bg:       #1c0f10;
+  --ok:           #34d399;
+}
+
+// ─── Base global ──────────────────────────────────────────────────────────────
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%; // Evita zoom automático de fonte no iOS
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg-page);
+  color: var(--text-body);
+  transition: background 0.2s, color 0.2s;
+  min-height: 100vh;
+  min-height: 100dvh; // dvh = dynamic viewport height (corrige barra mobile)
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// ─── Utilitários de visibilidade responsiva ───────────────────────────────────
+.hide-mobile  { @media (max-width: 767px)  { display: none !important; } }
+.hide-tablet  { @media (max-width: 1023px) { display: none !important; } }
+.show-mobile  { @media (min-width: 768px)  { display: none !important; } }
+
+// ─── Spinner de loading ───────────────────────────────────────────────────────
+.spin {
+  width: 17px; height: 17px;
+  border: 2.5px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.65s linear infinite;
+  display: inline-block;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+// ─── Toast de notificação global ──────────────────────────────────────────────
+.atlas-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  padding: 12px 22px;
+  border-radius: var(--radius-md);
+  font-size: var(--font-base);
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
+  z-index: 9999;
+  opacity: 0;
+  transition: all 0.3s ease;
+  pointer-events: none;
+  color: #fff;
+  max-width: calc(100vw - 48px);
+  text-align: center;
+  word-break: break-word;
+
+  &.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  &.success { background: #065f46; border-left: 4px solid #10b981; }
+  &.error   { background: #7f1d1d; border-left: 4px solid #ef4444; }
+  &.info    { background: #1e3a5f; border-left: 4px solid #3b82f6; }
+
+  // Em mobile: toast ocupa a largura toda
+  @media (max-width: 480px) {
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    transform: translateY(80px);
+    max-width: unset;
+    &.show { transform: translateY(0); }
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════════
+// LAYOUT COMPARTILHADO DE AUTENTICAÇÃO
+// Usado por: login, register, forgot-password, reset-password,
+//            pending-verification, verify-email
+// ════════════════════════════════════════════════════════════════════════════════
+
+.auth-wrap {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+  background: var(--bg-page);
+  transition: background 0.2s;
+
+  // Mobile: sem padding, ocupa tela inteira
+  @media (max-width: 767px) {
+    padding: 0;
+    align-items: stretch;
+  }
+}
+
+.auth-shell {
+  display: flex;
+  width: 100%;
+  max-width: 1000px;
+  min-height: 640px;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,.07), 0 20px 48px -8px rgba(0,0,0,.14);
+  border: 1px solid rgba(0,0,0,.06);
+
+  // Tablet: borda e sombra menores
+  @media (max-width: 1023px) {
+    min-height: 560px;
+    max-width: 860px;
+  }
+
+  // Mobile: sem border-radius, ocupa tela inteira em coluna
+  @media (max-width: 767px) {
+    min-height: 100vh;
+    min-height: 100dvh;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    flex-direction: column;
+  }
+}
+
+.auth-form-side {
+  flex: 1;
+  background: var(--bg-form);
+  display: flex;
+  flex-direction: column;
+  transition: background 0.2s;
+  min-height: 0;
+  min-width: 0; // Evita overflow em flex
+}
+
+.auth-topbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px 20px 0;
+  flex-shrink: 0;
+}
+
+.auth-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 44px 12px;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch; // Scroll inercial iOS
+
+  @media (max-width: 1023px) { padding: 24px 32px 12px; }
+  @media (max-width: 767px)  { padding: 24px 24px 12px; }
+  @media (max-width: 480px)  { padding: 20px 16px 12px; }
+}
+
+.auth-bottom {
+  padding: 16px 44px 28px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-form);
+  flex-shrink: 0;
+  transition: background 0.2s, border-color 0.2s;
+
+  @media (max-width: 1023px) { padding: 14px 32px 24px; }
+  @media (max-width: 767px)  { padding: 14px 24px 24px; }
+  @media (max-width: 480px)  { padding: 12px 16px 20px; }
+
+  // Safe area iPhone com notch/Dynamic Island
+  padding-bottom: max(28px, env(safe-area-inset-bottom));
+}
+
+// ─── Tipografia dos formulários ───────────────────────────────────────────────
+
+.form-title {
+  font-size: clamp(20px, 4vw, 26px); // Responsivo: menor em mobile
+  font-weight: 800;
+  color: var(--text-h);
+  letter-spacing: -0.5px;
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+
+.form-desc {
+  font-size: var(--font-base);
+  color: var(--text-body);
+  margin-bottom: 24px;
+  line-height: 1.5;
+
+  a {
+    color: #2563eb;
+    font-weight: 600;
+    text-decoration: none;
+    &:hover { text-decoration: underline; }
+  }
+
+  [data-theme='dark'] & a { color: #818cf8; }
+}
+
+// ─── Botões ───────────────────────────────────────────────────────────────────
+
+.btn-google,
+.btn-primary {
+  width: 100%;
+  min-height: var(--btn-h);
+  border: none !important;
+  background: var(--grad) !important;
+  color: #fff !important;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-btn);
+  transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
+  position: relative;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--grad-h);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-btn-h);
+    filter: brightness(1.05);
+    &::before { opacity: 1; }
+  }
+
+  &:active:not(:disabled) { transform: translateY(0); filter: none; }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+    filter: none;
+  }
+
+  // Touch: garantir área mínima
+  @media (max-width: 767px) { min-height: max(var(--btn-h), 48px); }
+}
+
+.btn-google {
+  gap: 12px;
+  margin-bottom: 18px;
+  font-size: 15px;
+
+  @media (max-width: 480px) { font-size: 14px; gap: 10px; }
+}
+
+.btn-primary {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  span { position: relative; z-index: 1; }
+}
+
+.g-icon-wrap {
+  width: 32px; height: 32px;
+  background: #fff;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  position: relative; z-index: 1;
+  svg { width: 18px; height: 18px; }
+}
+
+.btn-g-txt {
+  position: relative; z-index: 1;
+  font-size: 15px; font-weight: 600; color: #fff !important;
+}
+
+// ─── Separador "ou" ───────────────────────────────────────────────────────────
+
+.sep-or {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+
+  &::before, &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  span {
+    font-size: var(--font-sm);
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+}
+
+// ─── Campos de formulário ─────────────────────────────────────────────────────
+
+.fld {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+}
+
+.fld-lbl {
+  font-size: var(--font-sm);
+  font-weight: 700;
+  color: var(--text-label);
+  margin-bottom: 6px;
+  display: block;
+}
+
+.lnk {
+  font-size: var(--font-sm);
+  color: #2563eb;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-min); // Touch-friendly
+
+  &:hover { text-decoration: underline; }
+  [data-theme='dark'] & { color: #818cf8; }
+}
+
+// ─── Linha: Lembrar-me + Esqueci a senha ─────────────────────────────────────
+// Posicionados lado a lado na mesma linha
+
+.remember-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 4px;
+  flex-wrap: wrap; // Em telas muito pequenas, quebra a linha
+
+  // Em xs pode empilhar se necessário
+  @media (max-width: 360px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  // Mantém o link alinhado à direita
+  .lnk {
+    margin-left: auto;
+    min-height: auto; // Dentro do remember-row não precisa do min-height completo
+    font-size: var(--font-sm);
+
+    @media (max-width: 360px) { margin-left: 0; }
+  }
+}
+
+// ─── Input ────────────────────────────────────────────────────────────────────
+
+.inp-w {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  input {
+    width: 100%;
+    min-height: var(--input-h);
+    padding: 0 46px 0 16px;
+    font-size: var(--font-base);
+    font-family: 'Inter', sans-serif;
+    background: #ffffff !important;
+    border: 2px solid #64748b !important;
+    border-radius: var(--radius-md);
+    color: #0f172a !important;
+    -webkit-text-fill-color: #0f172a;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+
+    &::placeholder { color: #94a3b8; font-size: 13px; }
+    &:hover:not(:focus) { border-color: #3b82f6 !important; }
+    &:focus {
+      border-color: #3b82f6 !important;
+      box-shadow: 0 0 0 3.5px rgba(59,130,246,.18) !important;
+    }
+    &.bad  { border-color: #dc2626 !important; background: #fef2f2 !important; }
+    &.good { border-color: #16a34a !important; }
+
+    // 16px evita zoom automático do Safari ao focar input
+    @media (max-width: 767px) { font-size: 16px; }
+  }
+}
+
+[data-theme='dark'] .inp-w input {
+  background: #1a1d2b !important;
+  border-color: #3f4460 !important;
+  color: #f1f5f9 !important;
+  -webkit-text-fill-color: #f1f5f9;
+
+  &:focus {
+    border-color: #6366f1 !important;
+    box-shadow: 0 0 0 3.5px rgba(99,102,241,.2) !important;
+  }
+  &.bad { background: #1c0f10 !important; }
+
+  &:-webkit-autofill,
+  &:-webkit-autofill:hover,
+  &:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0px 1000px #1a1d2b inset !important;
+    -webkit-text-fill-color: #f1f5f9 !important;
+    caret-color: #f1f5f9;
+    border-color: #3f4460 !important;
+  }
+}
+
+.ico-s {
+  position: absolute; right: 14px;
+  display: flex; align-items: center;
+  pointer-events: none;
+  svg { width: 18px; height: 18px; fill: #64748b; }
+}
+
+.ico-b {
+  position: absolute; right: 10px;
+  background: none; border: none; cursor: pointer;
+  padding: 8px; // Área de toque maior
+  display: flex; align-items: center;
+  -webkit-tap-highlight-color: transparent;
+  svg { width: 18px; height: 18px; fill: #64748b; transition: fill 0.15s; }
+  &:hover svg { fill: #334155; }
+}
+
+.ferr {
+  font-size: var(--font-sm);
+  color: var(--err);
+  min-height: 16px;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  svg { width: 12px; height: 12px; fill: currentColor; flex-shrink: 0; }
+}
+
+// ─── Checkbox ─────────────────────────────────────────────────────────────────
+
+.chk {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-base);
+  color: var(--text-body);
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+
+  input {
+    width: 18px; height: 18px;
+    accent-color: #3b82f6;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+}
+
+// ─── Grid de 2 colunas (nome + empresa no cadastro) ───────────────────────────
+
+.duo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+
+  // Em mobile pequeno: 1 coluna
+  @media (max-width: 480px) { grid-template-columns: 1fr; }
+}
+
+// ─── Nota abaixo do botão ─────────────────────────────────────────────────────
+
+.btn-note {
+  font-size: var(--font-sm);
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 10px;
+}
+
+// ─── State boxes (estados de verificação/reset) ───────────────────────────────
+
+.state-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 32px 16px;
+  gap: 12px;
+
+  h2 { font-size: clamp(18px, 4vw, 22px); font-weight: 800; color: var(--text-h); }
+  p  { font-size: var(--font-base); color: var(--text-body); line-height: 1.6; max-width: 300px; }
+}
+
+.state-icon {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 8px;
+  svg { width: 28px; height: 28px; fill: #fff; }
+  &.success { background: linear-gradient(135deg, #10b981, #059669); }
+  &.error   { background: linear-gradient(135deg, #ef4444, #dc2626); }
+  &.info    { background: var(--grad); }
+}
+
+.btn-state-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+  padding: 14px 32px;
+  background: var(--grad);
+  color: #fff;
+  border-radius: var(--radius-lg);
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: var(--shadow-btn);
+  min-height: var(--btn-h);
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.2s, box-shadow 0.2s;
+
+  &:hover { transform: translateY(-2px); box-shadow: var(--shadow-btn-h); }
+}
+
+// ─── Nota de spam ─────────────────────────────────────────────────────────────
+.spam-note {
+  font-size: 12px !important;
+  color: var(--text-muted) !important;
+}

@@ -1,23 +1,2 @@
-<ng-container *ngIf="exibirLayout$ | async as exibir; else layoutPublico">
-  
-  <app-sidebar></app-sidebar>
-
-  <div class="main-container">
-    <app-header></app-header>
-    <main class="main-content">
-      <router-outlet></router-outlet>
-    </main>
-  </div>
-
-</ng-container>
-
-
-<ng-template #layoutPublico>
-  <div class="main-container full-width">
-    <main class="main-content auth-page">
-      <router-outlet></router-outlet>
-    </main>
-  </div>
-</ng-template>
-
-
+<router-outlet/>
+<app-toast/>

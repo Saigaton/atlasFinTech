@@ -9,13 +9,13 @@ export interface Usuario {
   nome:        string;
   email:       string;
   nomeEmpresa:     string | null;
-  is_active:   boolean;
-  is_verified: boolean;
-  created_at:  string;
+  estaAtivo:   boolean;
+  estaVerificado: boolean;
+  dataCriacao:  Date;
 }
 
 /** Resposta completa de autenticação (login e cadastro) */
-export interface TokenResponse {
+export interface RespostaToken {
   access_token:  string;
   refresh_token: string;
   token_type:    string;
@@ -37,12 +37,12 @@ export interface LoginRequest {
 }
 
 /** Payload de cadastro */
-export interface RegisterRequest {
-  name:             string;
+export interface RequisicaoRegistroUsuario {
+  nome:             string;
   email:            string;
-  company:          string;
-  password:         string;
-  confirm_password: string;
+  nomeEmpresa:      string;
+  senha:            string;
+  confirmarSenha:   string;
 }
 
 /** Resposta genérica de operações sem retorno de dados */

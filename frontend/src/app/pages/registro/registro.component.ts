@@ -1,80 +1,53 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
+import { AuthService } from '../../core/services/auth.service';
+import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme-toggle.component';
+import { AuthPanelComponent } from '../../shared/components/auth-panel/auth-panel.component';
+import { ToastService } from '../../core/services/toast.service';
+import { RequisicaoRegistroUsuario } from '../../core/models/auth.models';
+import { HttpErrorResponse } from '@angular/common/http';
+import { PasswordChecklistComponent } from '../../shared/components/password-checklist/password-checklist.component';
 
 @Component({
   selector: 'app-registro',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, ThemeToggleComponent, AuthPanelComponent, PasswordChecklistComponent],
   templateUrl: './registro.component.html',
-  styleUrl: './registro.component.css'
+  styleUrl: './registro.component.scss'
 })
 export class RegistroComponent implements OnInit {
-  nome = '';
-  email = '';
-  senha = '';
-  confirmarSenha = '';
   carregando = false;
   erro = '';
   sucesso = false;
   mostrarSenha = false;
   mostrarConfirmarSenha = false;
+  formRegistro!: FormGroup;
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(private authService: AuthService, private router: Router, 
+    private formBuilder: FormBuilder, private toast: ToastService) {}
 
   ngOnInit(): void {
-    // Se já estiver autenticado, redirecionar para dashboard
-    if (this.authService.estaAutenticado()) {
-      this.router.navigate(['/dashboard']);
-    }
+    this.criarFormulario();
   }
 
-  registro(): void {
-    if (!this.nome || !this.email || !this.senha || !this.confirmarSenha) {
-      this.erro = 'Preencha todos os campos';
-      return;
-    }
-
-    if (this.senha !== this.confirmarSenha) {
-      this.erro = 'As senhas não coincidem';
-      return;
-    }
-
-    if (this.senha.length < 6) {
-      this.erro = 'Senha deve ter pelo menos 6 caracteres';
-      return;
-    }
-
-    if (!this.validarEmail(this.email)) {
-      this.erro = 'Email inválido';
-      return;
-    }
-
-    this.carregando = true;
-    this.erro = '';
-
-    this.authService.registroComSenha(this.nome, this.email, this.senha).subscribe({
-      next: (response) => {
-        this.carregando = false;
-        this.sucesso = true;
-        setTimeout(() => {
-          this.router.navigate(['/dashboard']);
-        }, 1500);
-      },
-      error: (error) => {
-        this.carregando = false;
-        this.erro = error.message || 'Erro ao registrar';
-      }
-    });
+  criarFormulario(){
+    this.formRegistro = this.formBuilder.group({
+      nome: ['', [Validators.required, Validators.minLength(3)]],
+      nomeEmpresa: ['', [Validators.required, Validators.minLength(3)]],
+      email: ['', [Validators.required, Validators.email]],
+      senha: ['', [Validators.required, this.validadorSenhaForte]],
+      confirmarSenha: ['', [Validators.required, Validators.minLength(8)]]
+    },
+    { validators: this.validadorSenhasIguais });
   }
 
   irParaLogin(): void {
     this.router.navigate(['/login']);
   }
 
-  toggleMostrarSenha(): void {
+  alternarMostrarSenha(): void {
     this.mostrarSenha = !this.mostrarSenha;
   }
 
@@ -86,8 +59,54 @@ export class RegistroComponent implements OnInit {
     this.erro = '';
   }
 
-  private validarEmail(email: string): boolean {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email);
+  onSubmit(): void {
+    this.carregando = true;
+    this.authService.register(this.formRegistro.value as RequisicaoRegistroUsuario).subscribe({
+      next: () => {
+        this.toast.success('Conta criada! Verifique seu e-mail para ativar. 📧');
+        this.router.navigate(['/pending-verification']);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.carregando = false;
+        if (err.status === 0) { 
+          this.toast.error("Erro na comunicação com backend.");
+        }
+        const msg = err.error?.detail ?? 'Erro ao criar conta.';
+        this.toast.error(msg);
+        if (msg.toLowerCase().includes('e-mail')) {
+          this.formRegistro.get('email')?.setErrors({ emailTaken: true });
+        }
+      },
+    });
+  }
+
+  onGoogleClick(): void {
+    this.toast.info('Configure o Google Client ID para usar este recurso.');
+  }
+
+  validadorSenhasIguais(control: AbstractControl): ValidationErrors | null {
+    const pw  = control.get('senha');
+    const pw2 = control.get('confirmarSenha');
+    if (pw && pw2 && pw.value !== pw2.value) {
+      pw2.setErrors({ senhasNaoCoincidem: true });
+      return { senhasNaoCoincidem: true };
+    }
+    if (pw2?.errors?.['senhasNaoCoincidem']) {
+      const { senhasNaoCoincidem, ...rest } = pw2.errors;
+      pw2.setErrors(Object.keys(rest).length ? rest : null);
+    }
+    return null;
+  }
+
+  validadorSenhaForte(control: AbstractControl): ValidationErrors | null {
+    const v = control.value ?? '';
+  
+    const valid =
+      v.length >= 8 &&
+      /[A-Z]/.test(v) &&
+      /[0-9]/.test(v) &&
+      /[^A-Za-z0-9]/.test(v);
+  
+    return valid ? null : { passwordStrength: true };
   }
 }

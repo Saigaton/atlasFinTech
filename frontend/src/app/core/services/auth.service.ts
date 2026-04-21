@@ -4,8 +4,8 @@ import { Router } from '@angular/router';
 import { Observable, tap, BehaviorSubject } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
-  TokenResponse, AccessTokenResponse, LoginRequest,
-  RegisterRequest, Usuario, MessageResponse, PostLoginRoute,
+  RespostaToken, AccessTokenResponse, LoginRequest,
+  RequisicaoRegistroUsuario, Usuario, MessageResponse, PostLoginRoute,
 } from '../../core/models/auth.models';
 
 @Injectable({ providedIn: 'root' })
@@ -45,24 +45,24 @@ export class AuthService {
       .split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase();
   }
 
-  isVerified(): boolean { return this.user.getValue()?.is_verified ?? false; }
+  isVerified(): boolean { return this.user.getValue()?.estaVerificado ?? false; }
 
   // ── Autenticação ───────────────────────────────────────────────────────────
 
-  register(data: RegisterRequest): Observable<TokenResponse> {
-    return this.http.post<TokenResponse>(`${this.API}/auth/register`, data).pipe(
+  register(data: RequisicaoRegistroUsuario): Observable<RespostaToken> {
+    return this.http.post<RespostaToken>(`${this.API}/auth/register`, data).pipe(
       tap(res => this.saveSession(res)),
     );
   }
 
-  login(data: LoginRequest): Observable<TokenResponse> {
-    return this.http.post<TokenResponse>(`${this.API}/auth/login`, data).pipe(
+  login(data: LoginRequest): Observable<RespostaToken> {
+    return this.http.post<RespostaToken>(`${this.API}/auth/login`, data).pipe(
       tap(res => this.saveSession(res)),
     );
   }
 
-  googleLogin(idToken: string): Observable<TokenResponse> {
-    return this.http.post<TokenResponse>(`${this.API}/auth/google`, { id_token: idToken }).pipe(
+  googleLogin(idToken: string): Observable<RespostaToken> {
+    return this.http.post<RespostaToken>(`${this.API}/auth/google`, { id_token: idToken }).pipe(
       tap(res => this.saveSession(res)),
     );
   }
@@ -128,7 +128,7 @@ export class AuthService {
 
   // ── Helpers privados ───────────────────────────────────────────────────────
 
-  private saveSession(res: TokenResponse): void {
+  private saveSession(res: RespostaToken): void {
     localStorage.setItem('atlas_access',  res.access_token);
     localStorage.setItem('atlas_refresh', res.refresh_token);
     localStorage.setItem('atlas_user',    JSON.stringify(res.user));
