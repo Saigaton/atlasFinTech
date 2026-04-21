@@ -1,10 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TransacaoService } from '../../services/transacao.service';
-import { ContaService } from '../../services/conta.service';
-import { TipoTransacao, Transacao } from '../../models/transacao.model';
-import { Conta } from '../../models/conta.model';
+import { TransacaoService } from '../../core/services/transacao.service';
+import { ContaService } from '../../core/services/conta.service';
+import { TipoTransacao, Transacao } from '../../core/models/transacao.model';
+import { Conta } from '../../core/models/conta.model';
 
 @Component({
   selector: 'app-transacoes',

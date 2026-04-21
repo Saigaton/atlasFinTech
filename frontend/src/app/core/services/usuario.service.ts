@@ -1,13 +1,12 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { TipoMoeda, TipoUsuario, Usuario } from '../models/usuario.model';
-import { UsuarioAuth } from '../models/usuario-auth.model';
+import { Usuario } from '../models/auth.models';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UsuarioService {
-  private usuario$ = new BehaviorSubject<UsuarioAuth | null>(null);
+  private usuario$ = new BehaviorSubject<Usuario | null>(null);
   private usuarioObservable = this.usuario$.asObservable();
 
   constructor() {
@@ -22,11 +21,11 @@ export class UsuarioService {
     }
   }
 
-  getUsuario(): Observable<UsuarioAuth | null> {
+  getUsuario(): Observable<Usuario | null> {
     return this.usuarioObservable;
   }
 
-  atualizarUsuario(usuarioAtualizado: UsuarioAuth): void {
+  atualizarUsuario(usuarioAtualizado: Usuario): void {
     this.usuario$.next(usuarioAtualizado);
     localStorage.setItem('usuario', JSON.stringify(usuarioAtualizado));
   }

@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ContaService } from '../../services/conta.service';
-import { Conta, TipoConta } from '../../models/conta.model';
+import { ContaService } from '../../core/services/conta.service';
+import { Conta, TipoConta } from '../../core/models/conta.model';
 
 @Component({
   selector: 'app-contas',

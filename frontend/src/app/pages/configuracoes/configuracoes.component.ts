@@ -1,9 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { UsuarioService } from '../../services/usuario.service';
-import { Usuario } from '../../models/usuario.model';
-import { UsuarioAuth } from '../../models/usuario-auth.model';
+import { UsuarioService } from '../../core/services/usuario.service';
+import { Usuario } from '../../core/models/auth.models';
 
 @Component({
   selector: 'app-configuracoes',
@@ -13,8 +12,8 @@ import { UsuarioAuth } from '../../models/usuario-auth.model';
   styleUrl: './configuracoes.component.css'
 })
 export class ConfiguracoesComponent implements OnInit {
-  usuario: UsuarioAuth | null = null;
-  usuarioEditado: UsuarioAuth | null = null;
+  usuario: Usuario | null = null;
+  usuarioEditado: Usuario | null = null;
   editando = false;
 
   constructor(private usuarioService: UsuarioService) {}

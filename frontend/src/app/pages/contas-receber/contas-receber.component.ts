@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ContaReceberService } from '../../services/conta-receber.service';
-import { ContaReceber, SituacaoReceber } from '../../models/conta-receber.model';
+import { ContaReceberService } from '../../core/services/conta-receber.service';
+import { ContaReceber, SituacaoReceber } from '../../core/models/conta-receber.model';
 
 @Component({
   selector: 'app-contas-receber',

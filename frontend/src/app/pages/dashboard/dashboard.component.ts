@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ContaService } from '../../services/conta.service';
-import { TransacaoService } from '../../services/transacao.service';
-import { Conta } from '../../models/conta.model';
-import { TipoTransacao, Transacao } from '../../models/transacao.model';
+import { ContaService } from '../../core/services/conta.service';
+import { TransacaoService } from '../../core/services/transacao.service';
+import { Conta } from '../../core/models/conta.model';
+import { TipoTransacao, Transacao } from '../../core/models/transacao.model';
 
 @Component({
   selector: 'app-dashboard',

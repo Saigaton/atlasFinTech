@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ContaPagarService } from '../../services/conta-pagar.service';
-import { ContaPagar, SituacaoPagar } from '../../models/conta-pagar.model';
+import { ContaPagarService } from '../../core/services/conta-pagar.service';
+import { ContaPagar, SituacaoPagar } from '../../core/models/conta-pagar.model';
 
 @Component({
   selector: 'app-contas-pagar',

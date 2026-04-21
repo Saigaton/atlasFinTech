@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TransacaoService } from '../../services/transacao.service';
-import { TipoTransacao, Transacao } from '../../models/transacao.model';
+import { TransacaoService } from '../../core/services/transacao.service';
+import { TipoTransacao, Transacao } from '../../core/models/transacao.model';
 
 @Component({
   selector: 'app-analise',
