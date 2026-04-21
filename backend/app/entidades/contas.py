@@ -2,7 +2,7 @@ from decimal import Decimal
 from datetime import datetime
 from sqlalchemy import Integer, String, DateTime, Numeric, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.core.database import Base
+from app.configuracoes.database import Base
 from app.enums.tipoContaEnum import TipoContaEnum
 
 class Contas(Base):
@@ -16,7 +16,7 @@ class Contas(Base):
     data_criacao: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
     usuario_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id"))
-    usuario: Mapped["usuario"] = relationship(back_populates="contas")
+    usuario: Mapped["Usuarios"] = relationship(back_populates="conta")
 
     tipo_conta_id: Mapped[TipoContaEnum] = mapped_column(Integer, ForeignKey("tipo_contas.id"))
-    tipo_conta: Mapped["tipoConta"] = relationship(back_populates="contas")
+    tipo_conta: Mapped["TipoContas"] = relationship(back_populates="conta")

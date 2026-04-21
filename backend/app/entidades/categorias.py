@@ -1,6 +1,6 @@
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.core.database import Base
+from app.configuracoes.database import Base
 
 class Categorias(Base):
     __tablename__ = "categorias"
@@ -9,4 +9,7 @@ class Categorias(Base):
     nome: Mapped[str] = mapped_column()
     
     usuario_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id"))
-    contas: Mapped[list["contas"]] = relationship(back_populates="categorias")
+
+    transacoes: Mapped[list["Transacoes"]] = relationship(back_populates="categoria")
+    contas_receber: Mapped[list["ContasReceber"]] = relationship(back_populates="categoria")
+    contas_pagar: Mapped[list["ContasPagar"]] = relationship(back_populates="categoria")

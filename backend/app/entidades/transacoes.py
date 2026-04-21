@@ -2,7 +2,7 @@ from decimal import Decimal
 from datetime import datetime
 from sqlalchemy import Integer, String, Numeric, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.core.database import Base
+from app.configuracoes.database import Base
 from app.enums.tipoTransacaoEnum import TipoTransacaoEnum
 
 class Transacoes(Base):
@@ -15,7 +15,7 @@ class Transacoes(Base):
     data: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
     categoria_id: Mapped[int] = mapped_column(ForeignKey("categorias.id"))
-    categoria: Mapped["categoria"] = relationship(back_populates="transacoes")
+    categoria: Mapped["Categorias"] = relationship(back_populates="transacoes")
 
     transacao_id: Mapped[TipoTransacaoEnum] = mapped_column(Integer, ForeignKey("tipo_transacoes.id"))
-    transacao: Mapped["transacao"] = relationship(back_populates="transacoes")    
+    tipo_transacao: Mapped["TipoTransacoes"] = relationship(back_populates="transacoes")    

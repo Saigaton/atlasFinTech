@@ -1,4 +1,5 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict, Field
+from datetime import datetime
 
 
 class LoginRequest(BaseModel):
@@ -16,19 +17,37 @@ class LoginRequest(BaseModel):
         }
     }
 
+class RequisicaoRegistroUsuario(BaseModel):
+    nome: str
+    email: EmailStr
+    nomeEmpresa: str
+    senha: str
+    confirmarSenha: str
 
-class TokenResponse(BaseModel):
+
+
+class RespostaToken(BaseModel):
     access_token: str
     token_type: str = "bearer"
     expires_in: int
 
 
-class UserInfo(BaseModel):
+class RepostaUsuario(BaseModel):
     id: int
-    email: str
-    name: str
+    nome: str
+    email: EmailStr
+    nomeEmpresa: str
+    estaAtivo: bool = True
+    estaVerificado: bool = False
+    dataCriacao:  datetime = Field(alias="data_criacao")
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class LoginResponse(BaseModel):
-    token: TokenResponse
-    user: UserInfo
+    token: RespostaToken
+    user: RepostaUsuario
+
+class RespostaRegistro(BaseModel):
+    token: RespostaToken
+    usuario: RepostaUsuario
