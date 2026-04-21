@@ -1,69 +1,117 @@
-<div class="login-container">
-  <div class="login-box">
-    <div class="login-header">
-      <h1>Gestão Financeira</h1>
-      <p>Faça login para continuar</p>
-    </div>
+<!-- Tela de login: e-mail/senha + Google OAuth -->
+<div class="auth-wrap">
+  <div class="auth-shell">
 
-    <div *ngIf="erro" class="error-message" (click)="limparErro()">
-      <p>{{ erro }}</p>
-      <span class="close-btn">✕</span>
-    </div>
+    <app-auth-panel />
 
-    <form (ngSubmit)="login()" class="login-form">
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input
-          type="email"
-          id="email"
-          [(ngModel)]="email"
-          name="email"
-          placeholder="seu@email.com"
-          required
-          [disabled]="carregando"
-        >
+    <div class="auth-form-side">
+      <div class="auth-topbar">
+        <app-theme-toggle />
       </div>
 
-      <div class="form-group">
-        <label for="senha">Senha</label>
-        <div class="password-input">
-          <input
-            [type]="mostrarSenha ? 'text' : 'password'"
-            id="senha"
-            [(ngModel)]="senha"
-            name="senha"
-            placeholder="Sua senha"
-            required
-            [disabled]="carregando"
-          >
-          <button
-            type="button"
-            class="toggle-password"
-            (click)="toggleMostrarSenha()"
-            [disabled]="carregando"
-          >
-            {{ mostrarSenha ? 'Ocultar' : 'Mostrar' }}
-          </button>
-        </div>
+      <div class="auth-scroll">
+        <h1 class="form-title">Bem-vindo de volta</h1>
+        <p class="form-desc">
+          Não tem conta?
+          <a routerLink="/registro">Criar gratuitamente</a>
+        </p>
+
+        <!-- Botão Google OAuth -->
+        <button class="btn-google" type="button"
+          (click)="onGoogleClick()"
+          aria-label="Entrar com Google">
+          <div class="g-icon-wrap" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            </svg>
+          </div>
+          <span class="btn-g-txt">Continuar com Google</span>
+        </button>
+
+        <div class="sep-or"><span>ou entre com e-mail</span></div>
+
+        <form [formGroup]="formLogin" (ngSubmit)="onSubmit()" novalidate>
+
+          <!-- Campo: E-mail -->
+          <div class="fld">
+            <label class="fld-lbl" for="l-email">E-mail</label>
+            <div class="inp-w">
+              <input
+                id="l-email"
+                type="email"
+                formControlName="email"
+                placeholder="seu@email.com"
+                [class.bad]="formLogin.get('email')?.invalid && formLogin.get('email')?.touched"
+                [class.good]="formLogin.get('email')?.valid && formLogin.get('email')?.touched"
+                autocomplete="email"
+                inputmode="email"
+              >
+              <span class="ico-s" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+              </span>
+            </div>
+            @if (formLogin.get('email')?.invalid && formLogin.get('email')?.touched) {
+              <div class="ferr" role="alert">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                @if (formLogin.get('email')?.errors?.['required']) { E-mail obrigatório }
+                @else { Formato de e-mail inválido }
+              </div>
+            }
+          </div>
+
+          <!-- Campo: Senha -->
+          <div class="fld">
+            <label class="fld-lbl" for="l-password">Senha</label>
+            <div class="inp-w">
+              <input
+                id="l-password"
+                [type]="mostrarSenha ? 'text' : 'password'"
+                formControlName="senha"
+                placeholder="Sua senha"
+                [class.bad]="formLogin.get('senha')?.invalid && formLogin.get('senha')?.touched"
+                [class.good]="formLogin.get('senha')?.valid && formLogin.get('senha')?.touched"
+              >
+              <button class="ico-b" type="button"
+                (click)="alternarMostrarSenha()"
+                [attr.aria-label]="mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  @if (mostrarSenha) {
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24M1 1l22 22"/>
+                  } @else {
+                    <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                  }
+                </svg>
+              </button>
+            </div>
+            @if (formLogin.get('senha')?.invalid && formLogin.get('senha')?.touched) {
+              <div class="ferr" role="alert">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                @if (formLogin.get('senha')?.errors?.['invalidCredentials']) { E-mail ou senha incorretos }
+                @else { Senha obrigatória }
+              </div>
+            }
+          </div>
+
+          <!-- Link de recuperação de senha — no lugar do "Lembrar-me" -->
+          <a routerLink="/forgot-password" class="forgot-link" aria-label="Recuperar senha">
+            Esqueceu sua senha? Clique aqui para recuperar
+          </a>
+
+        </form>
       </div>
 
-      <button
-        type="submit"
-        class="btn-login"
-        [disabled]="carregando"
-      >
-        {{ carregando ? 'Entrando...' : 'Entrar' }}
-      </button>
-    </form>
+      <!-- Botão principal fixo no rodapé -->
+      <div class="auth-bottom">
+        <button class="btn-primary" type="submit" (click)="onSubmit()" [disabled]="carregando || formLogin.invalid">
+          @if (carregando) { <span class="spin" aria-hidden="true"></span> }
+          @else { <span>Entrar na plataforma</span> }
+        </button>
+        <div class="btn-note">Sem cartão de crédito · Cancele quando quiser</div>
+      </div>
 
-    <div class="login-footer">
-      <p>Não tem conta? <a href="javascript:void(0)" (click)="irParaRegistro()">Registre-se aqui</a></p>
-    </div>
-
-    <div class="demo-info">
-      <p class="demo-title">Demo</p>
-      <p>Email: <strong>demo@example.com</strong></p>
-      <p>Senha: <strong>demo123</strong></p>
     </div>
   </div>
 </div>

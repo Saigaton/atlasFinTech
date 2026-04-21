@@ -20,7 +20,7 @@ export interface RespostaToken {
   refresh_token: string;
   token_type:    string;
   expires_in:    number;
-  user:          Usuario;
+  usuario:          Usuario;
 }
 
 /** Resposta de renovação de token (apenas o novo access token) */
@@ -31,9 +31,9 @@ export interface AccessTokenResponse {
 }
 
 /** Payload de login */
-export interface LoginRequest {
+export interface RequisicaoLoginUsuario {
   email:    string;
-  password: string;
+  senha:    string;
 }
 
 /** Payload de cadastro */

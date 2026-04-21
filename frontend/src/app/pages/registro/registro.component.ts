@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme-toggle.component';
 import { AuthPanelComponent } from '../../shared/components/auth-panel/auth-panel.component';
@@ -13,13 +13,13 @@ import { PasswordChecklistComponent } from '../../shared/components/password-che
 @Component({
   selector: 'app-registro',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ThemeToggleComponent, AuthPanelComponent, PasswordChecklistComponent],
+  imports: [CommonModule, ReactiveFormsModule, ThemeToggleComponent, AuthPanelComponent,
+    PasswordChecklistComponent, RouterLink],
   templateUrl: './registro.component.html',
   styleUrl: './registro.component.scss'
 })
 export class RegistroComponent implements OnInit {
   carregando = false;
-  erro = '';
   sucesso = false;
   mostrarSenha = false;
   mostrarConfirmarSenha = false;
@@ -43,20 +43,8 @@ export class RegistroComponent implements OnInit {
     { validators: this.validadorSenhasIguais });
   }
 
-  irParaLogin(): void {
-    this.router.navigate(['/login']);
-  }
-
   alternarMostrarSenha(): void {
     this.mostrarSenha = !this.mostrarSenha;
-  }
-
-  toggleMostrarConfirmarSenha(): void {
-    this.mostrarConfirmarSenha = !this.mostrarConfirmarSenha;
-  }
-
-  limparErro(): void {
-    this.erro = '';
   }
 
   onSubmit(): void {

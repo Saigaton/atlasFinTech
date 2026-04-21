@@ -4,8 +4,9 @@ import { Router } from '@angular/router';
 import { Observable, tap, BehaviorSubject } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
-  RespostaToken, AccessTokenResponse, LoginRequest,
+  RespostaToken, AccessTokenResponse,
   RequisicaoRegistroUsuario, Usuario, MessageResponse, PostLoginRoute,
+  RequisicaoLoginUsuario,
 } from '../../core/models/auth.models';
 
 @Injectable({ providedIn: 'root' })
@@ -55,7 +56,7 @@ export class AuthService {
     );
   }
 
-  login(data: LoginRequest): Observable<RespostaToken> {
+  login(data: RequisicaoLoginUsuario): Observable<RespostaToken> {
     return this.http.post<RespostaToken>(`${this.API}/auth/login`, data).pipe(
       tap(res => this.saveSession(res)),
     );
@@ -131,9 +132,9 @@ export class AuthService {
   private saveSession(res: RespostaToken): void {
     localStorage.setItem('atlas_access',  res.access_token);
     localStorage.setItem('atlas_refresh', res.refresh_token);
-    localStorage.setItem('atlas_user',    JSON.stringify(res.user));
+    localStorage.setItem('atlas_user',    JSON.stringify(res.usuario));
     this.accessToken.next(res.access_token);
-    this.user.next(res.user);
+    this.user.next(res.usuario);
   }
 
   private clearSession(): void {

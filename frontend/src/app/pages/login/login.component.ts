@@ -1,66 +1,69 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
-import { TipoMoeda, TipoUsuario, Usuario } from '../../core/models/usuario.model';
-import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
+import { ToastService } from '../../core/services/toast.service';
+import { RequisicaoLoginUsuario } from '../../core/models/auth.models';
+import { HttpErrorResponse } from '@angular/common/http';
+import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme-toggle.component';
+import { AuthPanelComponent } from '../../shared/components/auth-panel/auth-panel.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, ThemeToggleComponent, AuthPanelComponent, RouterLink],
   templateUrl: './login.component.html',
-  styleUrl: './login.component.css'
+  styleUrl: './login.component.scss'
 })
 export class LoginComponent implements OnInit {
-  email = '';
-  senha = '';
   carregando = false;
-  erro = '';
+  sucesso = false;
   mostrarSenha = false;
+  formLogin!: FormGroup;
 
-  private usuarioAtualSubject$ = new BehaviorSubject<Usuario | null>(null);
-  public usuarioAtual = this.usuarioAtualSubject$.asObservable();
-
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(private authService: AuthService, private router: Router,
+    private toast: ToastService, private formBuilder: FormBuilder
+  ) {}
 
   ngOnInit(): void {
-   
+   this.criarFormulario();
   }
 
-  login(): void {
-    // if (!this.email || !this.senha) {
-    //   this.erro = 'Preencha email e senha';
-    //   return;
-    // }
-
-    // this.carregando = true;
-    // this.erro = '';
-
-    // // começar a usar depois do backend
-    // this.authService.login(this.email, this.senha).subscribe({
-    //   next: (response) => {
-    //     this.carregando = false;
-    //     this.router.navigate(['/dashboard']);
-    //   },
-    //   error: (error) => {
-    //     this.carregando = false;
-    //     this.erro = error.message || 'Erro ao fazer login';
-    //   }
-    // });
-
+  criarFormulario(){
+    this.formLogin = this.formBuilder.group({
+      email: ['', [Validators.required, Validators.email]],
+      senha: ['', [Validators.required]]
+    });
   }
 
-  irParaRegistro(): void {
-    this.router.navigate(['/registro']);
+  onSubmit(): void {
+    this.carregando = true;
+    this.authService.login(this.formLogin.value as RequisicaoLoginUsuario).subscribe({
+      next: (res) => {
+        this.toast.success(`Bem-vindo de volta, ${res.usuario.nome.split(' ')[0]}! 👋`);
+        // Navega para a rota configurada em AuthService.POST_LOGIN_ROUTE
+        this.authService.navigateAfterLogin();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.carregando = false;
+        if (err.status === 0) { 
+          this.toast.error("Erro na comunicação com backend.");
+        }
+        const msg = err.error?.detail ?? 'Erro ao fazer login.';
+        this.toast.error(msg);
+        if (err.status === 401) {
+          this.formLogin.get('senha')?.setErrors({ invalidCredentials: true });
+        }
+      },
+    });
   }
 
-  toggleMostrarSenha(): void {
+  alternarMostrarSenha(): void {
     this.mostrarSenha = !this.mostrarSenha;
   }
 
-  limparErro(): void {
-    this.erro = '';
+  onGoogleClick(): void {
+    this.toast.info('Configure o Google Client ID para usar este recurso.');
   }
 }
