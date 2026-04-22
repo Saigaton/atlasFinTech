@@ -42,6 +42,6 @@ setupExceptionHandlers(app)
 Base.metadata.create_all(bind=engine)
 
 
-@app.get("/", tags=["Root"])
+@app.get("/", tags=["Root"], methods=["GET", "HEAD"])
 async def root():
     return {"message": "API de Autenticação - Acesse /docs para a documentação Swagger"}
