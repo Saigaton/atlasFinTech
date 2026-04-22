@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
 from app.configuracoes.database import get_db
 
-from app.schemas.auth import RespostaToken, RespostaRegistro, RequisicaoRegistroUsuario
+from app.schemas.auth import RespostaToken, RespostaRegistro, RequisicaoRegistroUsuario, RespostaLogin, RequisicaoLoginUsuario
 from app.configuracoes.config import settings
 from app.configuracoes.security import createAccessToken
 from app.repositories.authRepository import AuthRepository
@@ -33,6 +33,36 @@ async def registro(body: RequisicaoRegistroUsuario, service: AuthService = Depen
     try:
         usuario = service.criarUsuario(body.model_dump())
         return RespostaRegistro(
+        token=RespostaToken(
+            access_token=createAccessToken({"nome": usuario.nome, "nomeEmpresa": usuario.nomeEmpresa, "email": usuario.email}),
+            token_type="bearer",
+            expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        ),
+        usuario=usuario
+    )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.post(
+    "/auth/login",
+    response_model=RespostaLogin,
+    status_code=status.HTTP_200_OK,
+    summary="Login do usuário",
+    description=(
+        "Autentica o usuário com e-mail e senha. "
+        "Retorna um token JWT Bearer e os dados do usuário.\n\n"
+    ),
+    responses={
+        200: {"description": "Login realizado com sucesso"},
+        401: {"description": "Credenciais inválidas"},
+        422: {"description": "Dados de entrada inválidos"},
+    },
+)
+async def login(body: RequisicaoLoginUsuario, service: AuthService = Depends(obterUsuarioService)):
+
+    try:
+        usuario = service.loginUsuario(body.model_dump())
+        return RespostaLogin(
         token=RespostaToken(
             access_token=createAccessToken({"nome": usuario.nome, "nomeEmpresa": usuario.nomeEmpresa, "email": usuario.email}),
             token_type="bearer",

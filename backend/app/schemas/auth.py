@@ -2,20 +2,9 @@ from pydantic import BaseModel, EmailStr, ConfigDict, Field
 from datetime import datetime
 
 
-class LoginRequest(BaseModel):
+class RequisicaoLoginUsuario(BaseModel):
     email: EmailStr
-    password: str
-
-    model_config = {
-        "json_schema_extra": {
-            "examples": [
-                {
-                    "email": "usuario@exemplo.com",
-                    "password": "senha123",
-                }
-            ]
-        }
-    }
+    senha: str
 
 class RequisicaoRegistroUsuario(BaseModel):
     nome: str
@@ -32,7 +21,7 @@ class RespostaToken(BaseModel):
     expires_in: int
 
 
-class RepostaUsuario(BaseModel):
+class RespostaUsuario(BaseModel):
     id: int
     nome: str
     email: EmailStr
@@ -44,10 +33,10 @@ class RepostaUsuario(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class LoginResponse(BaseModel):
+class RespostaLogin(BaseModel):
     token: RespostaToken
-    user: RepostaUsuario
+    usuario: RespostaUsuario
 
 class RespostaRegistro(BaseModel):
     token: RespostaToken
-    usuario: RepostaUsuario
+    usuario: RespostaUsuario
