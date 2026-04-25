@@ -106,7 +106,7 @@ export class AuthService {
 
   // ── Recuperação de senha ───────────────────────────────────────────────────
 
-  recuperarSenha(email: string): Observable<MensagemResposta> {
+  solicitarRecuperacaoSenha(email: string): Observable<MensagemResposta> {
     return this.http.post<MensagemResposta>(`${this.API}/auth/recuperar-senha`, { email });
   }
 

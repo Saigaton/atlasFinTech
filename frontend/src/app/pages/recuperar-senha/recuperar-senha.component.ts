@@ -40,7 +40,7 @@ export class RecuperarSenhaComponent {
 
   onSubmit(): void {
     this.carregando = true;
-    this.authService.recuperarSenha(this.formRecuperarSenha.get('email')?.value).subscribe({
+    this.authService.solicitarRecuperacaoSenha(this.formRecuperarSenha.get('email')?.value).subscribe({
       next: () => {
         this.carregando = false;
         this.enviado = true;

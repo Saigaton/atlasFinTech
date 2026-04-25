@@ -53,6 +53,7 @@ export class LoginComponent implements OnInit {
         this.toast.error(msg);
         if (err.status === 401) {
           this.formLogin.get('senha')?.setErrors({ invalidCredentials: true });
+          this.formLogin.get('email')?.setErrors({ invalidCredentials: true });
         }
       },
     });
