@@ -6,6 +6,9 @@ class RequisicaoLoginUsuario(BaseModel):
     email: EmailStr
     senha: str
 
+class RequisicaoRecuperarSenha(BaseModel):
+    email: EmailStr
+
 class RequisicaoRegistroUsuario(BaseModel):
     nome: str
     email: EmailStr
@@ -15,7 +18,7 @@ class RequisicaoRegistroUsuario(BaseModel):
 
 
 
-class RespostaToken(BaseModel):
+class RespostaTokenUsuario(BaseModel):
     access_token: str
     token_type: str = "bearer"
     expires_in: int
@@ -26,17 +29,20 @@ class RespostaUsuario(BaseModel):
     nome: str
     email: EmailStr
     nomeEmpresa: str
-    estaAtivo: bool = True
-    estaVerificado: bool = False
+    estaAtivo: bool = Field(alias="esta_ativo")
+    estaVerificado: bool = Field(alias="esta_verificado")
     dataCriacao:  datetime = Field(alias="data_criacao")
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class RespostaLogin(BaseModel):
-    token: RespostaToken
+    token: RespostaTokenUsuario
     usuario: RespostaUsuario
 
 class RespostaRegistro(BaseModel):
-    token: RespostaToken
+    token: RespostaTokenUsuario
     usuario: RespostaUsuario
+
+class RespostaRecuperarSenha(BaseModel):
+    link: str

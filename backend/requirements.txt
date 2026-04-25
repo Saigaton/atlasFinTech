@@ -8,3 +8,4 @@ passlib[bcrypt]==1.7.4
 python-multipart==0.0.20
 sqlalchemy==2.0.40
 psycopg2-binary==2.9.10
+resend>=2.4.0

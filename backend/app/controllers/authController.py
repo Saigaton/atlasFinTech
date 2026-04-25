@@ -1,12 +1,13 @@
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, Request, status, HTTPException
 from sqlalchemy.orm import Session
 from app.configuracoes.database import get_db
 
-from app.schemas.auth import RespostaToken, RespostaRegistro, RequisicaoRegistroUsuario, RespostaLogin, RequisicaoLoginUsuario
+from app.schemas.auth import RequisicaoRecuperarSenha, RespostaRecuperarSenha, RespostaRegistro, RequisicaoRegistroUsuario, RespostaLogin, RequisicaoLoginUsuario, RespostaTokenUsuario
 from app.configuracoes.config import settings
 from app.configuracoes.security import createAccessToken
 from app.repositories.authRepository import AuthRepository
 from app.services.authService import AuthService
+from app.utilitarios.emailUtilitario import corpoEmailParaRecuperarSenha, dispararEmailComTentativas
 
 router = APIRouter()
 
@@ -33,7 +34,7 @@ async def registro(body: RequisicaoRegistroUsuario, service: AuthService = Depen
     try:
         usuario = service.criarUsuario(body.model_dump())
         return RespostaRegistro(
-        token=RespostaToken(
+        token=RespostaTokenUsuario(
             access_token=createAccessToken({"nome": usuario.nome, "nomeEmpresa": usuario.nomeEmpresa, "email": usuario.email}),
             token_type="bearer",
             expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
@@ -63,7 +64,7 @@ async def login(body: RequisicaoLoginUsuario, service: AuthService = Depends(obt
     try:
         usuario = service.loginUsuario(body.model_dump())
         return RespostaLogin(
-        token=RespostaToken(
+        token=RespostaTokenUsuario(
             access_token=createAccessToken({"nome": usuario.nome, "nomeEmpresa": usuario.nomeEmpresa, "email": usuario.email}),
             token_type="bearer",
             expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
@@ -72,4 +73,31 @@ async def login(body: RequisicaoLoginUsuario, service: AuthService = Depends(obt
     )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    
+@router.post(
+    "/auth/recuperar-senha",
+    response_model=RespostaRecuperarSenha,
+    status_code=status.HTTP_201_CREATED,
+    summary="Recuperar senha do usuário",
+    description=(
+        "Recupera a senha do usuário. "
+        "Retorna um token de recuperação de senha.\n\n"
+    ),
+    responses={
+        201: {"description": "Token criado com sucesso."},
+        404: {"description": "Usuário não existe."},
+        400: {"description": "Erro ao processar recuperação de senha."},
+    },
+)
+async def solicitarRecuperarSenha(request: Request, backgroundTasks: BackgroundTasks, body: RequisicaoRecuperarSenha, service: AuthService = Depends(obterUsuarioService)):
 
+    try:
+        token = service.solicitarRecuperacaoSenha(body.model_dump())
+        linkRecuperacao = f"{str(request.url)}/{token.token}"
+        backgroundTasks.add_task(dispararEmailComTentativas, body.model_dump()["email"]
+                                 , corpoEmailParaRecuperarSenha(linkRecuperacao), "Recuperar Senha")
+        return RespostaRecuperarSenha(
+            link=linkRecuperacao
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

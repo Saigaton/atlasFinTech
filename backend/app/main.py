@@ -38,7 +38,7 @@ app.add_middleware(
 app.include_router(authController.router, prefix="/api/v1", tags=["Autenticação"])
 setupExceptionHandlers(app)
 
-# Base.metadata.drop_all(bind=engine)
+Base.metadata.drop_all(bind=engine)
 Base.metadata.create_all(bind=engine)
 
 
