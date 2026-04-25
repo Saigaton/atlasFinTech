@@ -31,9 +31,8 @@ def obterUsuarioService(db: Session = Depends(get_db)):
 )
 async def registro(body: RequisicaoRegistroUsuario, service: AuthService = Depends(obterUsuarioService)):
 
-    try:
-        usuario = service.criarUsuario(body.model_dump())
-        return RespostaRegistro(
+    usuario = service.criarUsuario(body.model_dump())
+    return RespostaRegistro(
         token=RespostaTokenUsuario(
             access_token=createAccessToken({"nome": usuario.nome, "nomeEmpresa": usuario.nomeEmpresa, "email": usuario.email}),
             token_type="bearer",
@@ -41,8 +40,6 @@ async def registro(body: RequisicaoRegistroUsuario, service: AuthService = Depen
         ),
         usuario=usuario
     )
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
 
 @router.post(
     "/auth/login",
@@ -61,9 +58,8 @@ async def registro(body: RequisicaoRegistroUsuario, service: AuthService = Depen
 )
 async def login(body: RequisicaoLoginUsuario, service: AuthService = Depends(obterUsuarioService)):
 
-    try:
-        usuario = service.loginUsuario(body.model_dump())
-        return RespostaLogin(
+    usuario = service.loginUsuario(body.model_dump())
+    return RespostaLogin(
         token=RespostaTokenUsuario(
             access_token=createAccessToken({"nome": usuario.nome, "nomeEmpresa": usuario.nomeEmpresa, "email": usuario.email}),
             token_type="bearer",
@@ -71,8 +67,6 @@ async def login(body: RequisicaoLoginUsuario, service: AuthService = Depends(obt
         ),
         usuario=usuario
     )
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
     
 @router.post(
     "/auth/recuperar-senha",
@@ -91,13 +85,10 @@ async def login(body: RequisicaoLoginUsuario, service: AuthService = Depends(obt
 )
 async def solicitarRecuperarSenha(request: Request, backgroundTasks: BackgroundTasks, body: RequisicaoRecuperarSenha, service: AuthService = Depends(obterUsuarioService)):
 
-    try:
-        token = service.solicitarRecuperacaoSenha(body.model_dump())
-        linkRecuperacao = f"{str(request.url)}/{token.token}"
-        backgroundTasks.add_task(dispararEmailComTentativas, body.model_dump()["email"]
-                                 , corpoEmailParaRecuperarSenha(linkRecuperacao), "Recuperar Senha")
-        return RespostaRecuperarSenha(
-            link=linkRecuperacao
-        )
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    token = service.solicitarRecuperacaoSenha(body.model_dump())
+    linkRecuperacao = f"{str(request.url)}/{token.token}"
+    backgroundTasks.add_task(dispararEmailComTentativas, body.model_dump()["email"]
+                                , corpoEmailParaRecuperarSenha(linkRecuperacao), "Recuperar Senha")
+    return RespostaRecuperarSenha(
+        link=linkRecuperacao
+    )
