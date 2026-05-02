@@ -1,15 +1,17 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Transacao } from '../models/transacao.model';
+import { UnsubscriberComponent } from '../unsubscriber.component';
 
 @Injectable({
   providedIn: 'root'
 })
-export class TransacaoService {
+export class TransacaoService extends UnsubscriberComponent{
   private transacoes$ = new BehaviorSubject<Transacao[]>([]);
   private transacoesObservable = this.transacoes$.asObservable();
 
   constructor() {
+    super();
     this.carregarTransacoes();
   }
 

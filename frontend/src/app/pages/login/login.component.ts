@@ -8,6 +8,7 @@ import { RequisicaoLoginUsuario } from '../../core/models/auth.models';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme-toggle.component';
 import { AuthPanelComponent } from '../../shared/components/auth-panel/auth-panel.component';
+import { UnsubscriberComponent } from '../../core/unsubscriber.component';
 
 @Component({
   selector: 'app-login',
@@ -16,14 +17,16 @@ import { AuthPanelComponent } from '../../shared/components/auth-panel/auth-pane
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent extends UnsubscriberComponent implements OnInit {
   carregando = false;
   mostrarSenha = false;
   formLogin!: FormGroup;
 
   constructor(private authService: AuthService, private router: Router,
     private toast: ToastService, private formBuilder: FormBuilder
-  ) {}
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
    this.criarFormulario();

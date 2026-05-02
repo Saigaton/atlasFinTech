@@ -7,6 +7,7 @@ import { AuthPanelComponent } from '../../shared/components/auth-panel/auth-pane
 import { ToastService } from '../../core/services/toast.service';
 import { AuthService } from '../../core/services/auth.service';
 import { HttpErrorResponse } from '@angular/common/http';
+import { UnsubscriberComponent } from '../../core/unsubscriber.component';
 
 /**
  * Tela de recuperação de senha.
@@ -20,13 +21,15 @@ import { HttpErrorResponse } from '@angular/common/http';
   templateUrl: './recuperar-senha.component.html',
   styleUrl: './recuperar-senha.component.scss',
 })
-export class RecuperarSenhaComponent {
+export class RecuperarSenhaComponent extends UnsubscriberComponent{
   carregando = false;
   enviado = false;
   formRecuperarSenha!: FormGroup;
 
   constructor(private authService: AuthService, private router: Router, 
-    private formBuilder: FormBuilder, private toast: ToastService) {}
+    private formBuilder: FormBuilder, private toast: ToastService) {
+    super();
+  }
 
   ngOnInit(): void {
     this.criarFormulario();

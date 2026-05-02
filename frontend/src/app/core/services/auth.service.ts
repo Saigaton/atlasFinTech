@@ -8,9 +8,10 @@ import {
   RequisicaoRegistroUsuario, Usuario, MensagemResposta, PostLoginRoute,
   RequisicaoLoginUsuario,
 } from '../../core/models/auth.models';
+import { UnsubscriberComponent } from '../unsubscriber.component';
 
 @Injectable({ providedIn: 'root' })
-export class AuthService {
+export class AuthService extends UnsubscriberComponent {
   private readonly API = environment.apiUrl;
   private readonly POST_LOGIN_ROUTE: PostLoginRoute = '/dashboard';
 
@@ -23,6 +24,7 @@ export class AuthService {
   readonly accessToken$ = this.accessToken.asObservable();
 
   constructor(private http: HttpClient, private router: Router) {
+    super();
     window.addEventListener('storage', (e) => {
       if (e.key === 'atlas_access' && !e.newValue) {
         this.clearSession();

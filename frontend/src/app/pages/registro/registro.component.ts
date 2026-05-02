@@ -9,6 +9,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { RequisicaoRegistroUsuario } from '../../core/models/auth.models';
 import { HttpErrorResponse } from '@angular/common/http';
 import { PasswordChecklistComponent } from '../../shared/components/password-checklist/password-checklist.component';
+import { UnsubscriberComponent } from '../../core/unsubscriber.component';
 
 @Component({
   selector: 'app-registro',
@@ -18,14 +19,16 @@ import { PasswordChecklistComponent } from '../../shared/components/password-che
   templateUrl: './registro.component.html',
   styleUrl: './registro.component.scss'
 })
-export class RegistroComponent implements OnInit {
+export class RegistroComponent extends UnsubscriberComponent implements OnInit {
   carregando = false;
   mostrarSenha = false;
   mostrarConfirmarSenha = false;
   formRegistro!: FormGroup;
 
   constructor(private authService: AuthService, private router: Router, 
-    private formBuilder: FormBuilder, private toast: ToastService) {}
+    private formBuilder: FormBuilder, private toast: ToastService) {
+    super();
+  }
 
   ngOnInit(): void {
     this.criarFormulario();
