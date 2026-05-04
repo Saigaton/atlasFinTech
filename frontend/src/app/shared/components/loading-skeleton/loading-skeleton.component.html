@@ -1,0 +1,38 @@
+<div class="skeleton-wrap" [attr.data-type]="type">
+    @if (type === 'kpi') {
+      <div class="sk-kpi-row">
+        @for (_ of rowArr; track $index) {
+          <div class="sk-kpi-card">
+            <div class="sk-line sk-short"></div>
+            <div class="sk-line sk-tall"></div>
+            <div class="sk-line sk-medium"></div>
+          </div>
+        }
+      </div>
+    }
+    @if (type === 'card') {
+      <div class="sk-card-grid">
+        @for (_ of rowArr; track $index) {
+          <div class="sk-card">
+            <div class="sk-dot"></div>
+            <div class="sk-lines">
+              <div class="sk-line sk-medium"></div>
+              <div class="sk-line sk-short"></div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+    @if (type === 'table') {
+      <div class="sk-table">
+        @for (_ of rowArr; track $index) {
+          <div class="sk-row">
+            <div class="sk-line sk-short"></div>
+            <div class="sk-line sk-long"></div>
+            <div class="sk-line sk-medium"></div>
+            <div class="sk-line sk-short"></div>
+          </div>
+        }
+      </div>
+    }
+</div>

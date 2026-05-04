@@ -1,0 +1,28 @@
+.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+    @media(max-width:768px){.profile-grid{grid-template-columns:1fr}}
+    .profile-card{background:var(--bg-form);border:1px solid var(--border);border-radius:14px;padding:24px}
+    .card-header-row{margin-bottom:20px}
+    .card-title{font-size:16px;font-weight:700;color:var(--text-h)}
+    .card-desc{font-size:13px;color:var(--text-muted);margin-bottom:18px;line-height:1.5}
+    .avatar-row{display:flex;align-items:center;gap:16px;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+    .avatar-circle{width:52px;height:52px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;flex-shrink:0}
+    .avatar-name{font-size:15px;font-weight:700;color:var(--text-h);margin-bottom:2px}
+    .avatar-email{font-size:12px;color:var(--text-muted);margin-bottom:6px}
+    .badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:600}
+    .badge svg{width:12px;height:12px;fill:currentColor}
+    .badge-ok{background:#dcfce7;color:#166534}
+    .badge-warn{background:#fef9c3;color:#854d0e}
+    [data-theme=dark] .badge-ok{background:#14532d;color:#4ade80}
+    [data-theme=dark] .badge-warn{background:#422006;color:#fbbf24}
+    .profile-form{display:flex;flex-direction:column;gap:14px}
+    .field{display:flex;flex-direction:column;gap:5px}
+    .field-label{font-size:12px;font-weight:600;color:var(--text-label)}
+    .input{height:42px;padding:0 12px;border:1.5px solid var(--border);border-radius:9px;font-size:13px;font-family:inherit;background:var(--bg-form);color:var(--text-h);outline:none;transition:border-color .15s;width:100%}
+    .input:focus{border-color:var(--border-focus)}
+    .input:disabled{opacity:.6;cursor:not-allowed;background:var(--bg-page)}
+    .field-error{font-size:11px;color:#dc2626}
+    .field-hint{font-size:11px;color:var(--text-muted)}
+    .input-icon-wrap{position:relative}
+    .input-icon-wrap .input{padding-right:40px}
+    .icon-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);display:flex;padding:4px}
+    .icon-btn svg{width:17px;height:17px;fill:currentColor}

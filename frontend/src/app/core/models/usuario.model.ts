@@ -17,4 +17,13 @@ export interface Usuario {
   moedaPadrao: TipoMoeda;
   formatoData: string;
   fusoHorario: string;
+  dataCriacao: string;
+  estaVerificado: boolean;
+}
+
+export interface Empresa {
+  id:         number;
+  nome:       string;
+  estaAtivo:  boolean;
+  dataCricao: string;
 }

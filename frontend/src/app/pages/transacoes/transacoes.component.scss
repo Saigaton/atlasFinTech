@@ -1,0 +1,213 @@
+// ─── Header ───────────────────────────────────────────────────────────────────
+.page-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 20px; gap: 16px;
+}
+.page-title { font-size: clamp(18px,3vw,24px); font-weight: 800; color: var(--text-h); letter-spacing: -.3px; margin-bottom: 2px; }
+.page-sub   { font-size: 13px; color: var(--text-muted); }
+
+.btn-new {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 18px; background: var(--grad); color: #fff;
+  border: none; border-radius: 10px; font-size: 13px; font-weight: 600;
+  cursor: pointer; box-shadow: var(--shadow-btn); transition: transform .15s, box-shadow .15s;
+  svg { width: 16px; height: 16px; fill: #fff; }
+  &:hover { transform: translateY(-1px); box-shadow: var(--shadow-btn-h); }
+  &:active { transform: none; }
+  white-space: nowrap;
+}
+
+// ─── Filtros ──────────────────────────────────────────────────────────────────
+.filters {
+  display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;
+}
+
+.search-wrap {
+  position: relative; flex: 1; min-width: 200px;
+  svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; fill: var(--text-muted); }
+  input { width: 100%; height: 40px; padding: 0 12px 0 36px; background: var(--bg-form); border: 1px solid var(--border); border-radius: 10px; font-size: 13px; color: var(--text-h); outline: none; font-family: inherit;
+    &:focus { border-color: var(--border-focus); }
+  }
+}
+
+.filter-group {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  select { height: 40px; padding: 0 12px; background: var(--bg-form); border: 1px solid var(--border); border-radius: 10px; font-size: 13px; color: var(--text-h); cursor: pointer; font-family: inherit; outline: none;
+    &:focus { border-color: var(--border-focus); }
+  }
+}
+
+// ─── Card base ────────────────────────────────────────────────────────────────
+.card { background: var(--bg-form); border: 1px solid var(--border); border-radius: 14px; padding: 0; overflow: hidden; transition: background .2s; }
+
+// ─── Table ────────────────────────────────────────────────────────────────────
+.table-wrap { overflow-x: auto; }
+
+.tx-table {
+  width: 100%; border-collapse: collapse;
+  th { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; padding: 12px 16px; border-bottom: 1px solid var(--border); text-align: left; background: var(--bg-page); white-space: nowrap; }
+  td { padding: 13px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg-page); }
+  .col-actions { width: 80px; }
+}
+
+.row-cancelled td { opacity: .5; }
+
+.td-desc  { display: flex; align-items: center; gap: 10px; }
+.tx-dot   { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.td-main  { font-size: 13px; font-weight: 500; color: var(--text-h); display: block; }
+.td-sub   { font-size: 11px; color: var(--text-muted); display: block; margin-top: 1px; }
+.td-date  { font-size: 13px; color: var(--text-body); white-space: nowrap; }
+
+.cat-tag  { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
+
+.val-pos     { font-size: 13px; font-weight: 700; color: #16a34a; white-space: nowrap; }
+.val-neg     { font-size: 13px; font-weight: 700; color: #dc2626; white-space: nowrap; }
+.val-neutral { font-size: 13px; font-weight: 700; color: #3b82f6; white-space: nowrap; }
+
+.tag-confirmed { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; background: #dcfce7; color: #166534; [data-theme='dark'] & { background: #14532d; color: #4ade80; } }
+.tag-pending   { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; background: #fef9c3; color: #854d0e; [data-theme='dark'] & { background: #422006; color: #fbbf24; } }
+.tag-cancelled { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; background: var(--bg-page); color: var(--text-muted); border: 1px solid var(--border); }
+
+.row-actions { display: flex; align-items: center; gap: 4px; }
+
+.action-btn {
+  background: none; border: none; cursor: pointer;
+  width: 30px; height: 30px; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted); transition: background .15s, color .15s;
+  svg { width: 15px; height: 15px; fill: currentColor; }
+  &:hover { background: var(--bg-page); color: var(--text-h); }
+  &.danger:hover { background: rgba(239,68,68,.1); color: #ef4444; }
+}
+
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
+@keyframes shimmer { from { background-position: -200% 0; } to { background-position: 200% 0; } }
+.skeleton-row {
+  height: 52px; margin: 0;
+  background: linear-gradient(90deg, var(--bg-page) 25%, var(--border) 50%, var(--bg-page) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-bottom: 1px solid var(--border);
+}
+.table-loading { padding: 4px 0; }
+
+// ─── Paginação ────────────────────────────────────────────────────────────────
+.pagination { display: flex; align-items: center; gap: 4px; padding: 14px 16px; border-top: 1px solid var(--border); }
+.pg-btn {
+  min-width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--bg-form); color: var(--text-body); font-size: 13px; cursor: pointer;
+  font-family: inherit; transition: all .15s;
+  &:hover:not(:disabled) { border-color: #3b82f6; color: #3b82f6; }
+  &.active { background: var(--grad); color: #fff; border-color: transparent; }
+  &:disabled { opacity: .4; cursor: not-allowed; }
+}
+.pg-info { font-size: 12px; color: var(--text-muted); margin-left: 8px; }
+
+// ─── Empty ────────────────────────────────────────────────────────────────────
+.empty-state { display: flex; flex-direction: column; align-items: center; padding: 48px 16px; gap: 10px;
+  svg { width: 36px; height: 36px; fill: var(--text-muted); }
+  p   { font-size: 14px; color: var(--text-muted); }
+}
+.link-action { font-size: 13px; font-weight: 600; color: #2563eb; background: none; border: none; cursor: pointer; font-family: inherit;
+  [data-theme='dark'] & { color: #818cf8; }
+  &:hover { text-decoration: underline; }
+}
+
+// ─── Modal ────────────────────────────────────────────────────────────────────
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,.5);
+  z-index: 100; display: flex; align-items: center; justify-content: center;
+  padding: 16px; backdrop-filter: blur(3px);
+}
+.modal {
+  background: var(--bg-form); border: 1px solid var(--border); border-radius: 18px;
+  width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,.2);
+  animation: modal-in .2s ease;
+}
+@keyframes modal-in { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px 0;
+  h2 { font-size: 17px; font-weight: 700; color: var(--text-h); }
+}
+.modal-close { background: none; border: none; cursor: pointer; padding: 4px; border-radius: 8px; color: var(--text-muted);
+  svg { width: 18px; height: 18px; fill: currentColor; }
+  &:hover { background: var(--bg-page); }
+}
+.modal-body { padding: 20px 24px; }
+.modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+// Tabs de tipo
+.type-tabs { display: flex; gap: 6px; margin-bottom: 18px; background: var(--bg-page); border-radius: 10px; padding: 4px; }
+.type-tabs button {
+  flex: 1; height: 34px; border: none; border-radius: 8px; font-size: 12px; font-weight: 600;
+  cursor: pointer; font-family: inherit; background: transparent; color: var(--text-muted); transition: all .15s;
+  &.active { background: var(--bg-form); color: var(--text-h); box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  &.tab-income.active  { color: #16a34a; }
+  &.tab-expense.active { color: #dc2626; }
+  &.tab-transfer.active { color: #3b82f6; }
+}
+
+// Campos do modal
+.fld { display: flex; flex-direction: column; margin-bottom: 14px; }
+.fld-lbl { font-size: 11px; font-weight: 700; color: var(--text-label); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .4px; }
+.fld input, .fld select, .fld textarea {
+  width: 100%; background: var(--bg-page); border: 1.5px solid var(--border);
+  border-radius: 10px; padding: 10px 13px; font-size: 13px; color: var(--text-h);
+  font-family: inherit; outline: none; transition: border-color .15s;
+  &:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(59,130,246,.12); }
+  &.bad { border-color: var(--err); }
+}
+.fld textarea { resize: vertical; min-height: 64px; }
+.duo { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; @media (max-width: 400px) { grid-template-columns: 1fr; } }
+
+.btn-cancel {
+  padding: 10px 20px; border: 1.5px solid var(--border); background: transparent;
+  border-radius: 10px; font-size: 13px; font-weight: 600; color: var(--text-body);
+  cursor: pointer; font-family: inherit; transition: all .15s;
+  &:hover { border-color: var(--text-h); color: var(--text-h); }
+}
+.btn-save {
+  padding: 10px 24px; background: var(--grad); color: #fff;
+  border: none; border-radius: 10px; font-size: 13px; font-weight: 600;
+  cursor: pointer; font-family: inherit; box-shadow: var(--shadow-btn);
+  display: flex; align-items: center; gap: 6px; transition: transform .15s;
+  &:hover:not(:disabled) { transform: translateY(-1px); }
+  &:disabled { opacity: .6; cursor: not-allowed; }
+}
+
+.spin {
+  width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff;
+  border-radius: 50%; animation: spin .6s linear infinite; display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+// Responsivo
+.hide-sm { @media (max-width: 600px) { display: none !important; } }
+.hide-md { @media (max-width: 800px) { display: none !important; } }
+.show-sm { @media (min-width: 601px) { display: none !important; } }
+
+// ─── Ícone de tipo de transação — padrão SGFE ─────────────────────────────────
+.tx-type-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  svg { width: 16px; height: 16px; }
+
+  &.income  { background: rgba(34,197,94,.12);  svg { fill: #16a34a; } }
+  &.expense { background: rgba(239,68,68,.12);  svg { fill: #dc2626; } }
+  &.transfer{ background: rgba(59,130,246,.12); svg { fill: #2563eb; } }
+
+  [data-theme='dark'] &.income  { background: rgba(34,197,94,.15); }
+  [data-theme='dark'] &.expense { background: rgba(239,68,68,.15); }
+  [data-theme='dark'] &.transfer{ background: rgba(59,130,246,.15); }
+}

@@ -13,3 +13,16 @@ export interface ContaPagar {
   status: SituacaoPagar;
   categoria?: string;
 }
+
+export interface ResumoContasAPagar {
+  pendente:   number;
+  atrasado:   number;
+  pago:       number;
+  cancelado:  number;
+}
+
+export interface RequisicaoPagamento {
+  contaId:           number;
+  dataPagamento:     string;
+  valorPago?:        number;
+}

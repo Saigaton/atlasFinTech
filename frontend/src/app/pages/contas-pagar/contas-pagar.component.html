@@ -1,97 +1,289 @@
-<div class="contas-pagar-container">
+<app-shell>
+
   <div class="page-header">
     <div>
-      <h1>Contas a Pagar</h1>
-      <p>Gerencie suas obrigações financeiras</p>
+      <h1 class="page-title">Contas a Pagar</h1>
+      <p class="page-sub">Controle de despesas futuras e vencimentos</p>
     </div>
-    <button class="btn-primary" (click)="abrirModal()">+ Nova Conta a Pagar</button>
+    <button class="btn-new" (click)="abrirCriar()">
+      <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+      Nova conta
+    </button>
   </div>
 
-  <div *ngIf="contasPagar.length === 0; else contasPagarList" class="empty-state">
-    <p>Nenhuma conta a pagar registrada</p>
+  <!-- KPIs de resumo -->
+  <div class="summary-grid">
+    <div class="sum-card">
+      <div class="sum-icon" style="background:rgba(234,179,8,.15)">
+        <svg viewBox="0 0 24 24" style="fill:#ca8a04"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
+      </div>
+      <div>
+        <div class="sum-lbl">Pendente</div>
+        <div class="sum-val">{{ formatarMoeda(resumo?.pendente ?? 0) }}</div>
+      </div>
+    </div>
+    <div class="sum-card sum-card-danger">
+      <div class="sum-icon" style="background:rgba(239,68,68,.15)">
+        <svg viewBox="0 0 24 24" style="fill:#dc2626"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+      </div>
+      <div>
+        <div class="sum-lbl">Vencidas</div>
+        <div class="sum-val danger">{{ formatarMoeda(resumo?.atrasado ?? 0) }}</div>
+      </div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-icon" style="background:rgba(22,163,74,.15)">
+        <svg viewBox="0 0 24 24" style="fill:#16a34a"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+      </div>
+      <div>
+        <div class="sum-lbl">Pago</div>
+        <div class="sum-val success">{{ formatarMoeda(resumo?.pago ?? 0) }}</div>
+      </div>
+    </div>
   </div>
 
-  <ng-template #contasPagarList>
-    <div class="contas-table">
-      <table>
-        <thead>
-          <tr>
-            <th>Descrição</th>
-            <th>Categoria</th>
-            <th>Valor</th>
-            <th>Vencimento</th>
-            <th>Status</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let conta of contasPagar">
-            <td>{{ conta.descricao }}</td>
-            <td>{{ conta.categoria || '-' }}</td>
-            <td>{{ formatarMoeda(conta.valor) }}</td>
-            <td>{{ conta.dataVencimento | date: 'dd/MM/yyyy' }}</td>
-            <td>
-              <span class="badge" [ngClass]="'badge-' + obterStatusClasse(conta.status)">
-                {{ conta.status }}
-              </span>
-            </td>
-            <td class="acoes">
-              <button class="btn-edit" (click)="editarContaPagar(conta)" title="Editar">Editar</button>
-              <button class="btn-delete" (click)="deletarContaPagar(conta.id)" title="Deletar">Deletar</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+  <!-- Busca + Filtros -->
+  <div class="search-filter-row">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      <input type="text" placeholder="Buscar contas..." [value]="filtroPesquisa"
+        (input)="filtroPesquisa = $any($event.target).value">
     </div>
-  </ng-template>
+  </div>
 
-  <!-- Modal -->
-  <div *ngIf="mostrarModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>{{ editando ? 'Editar Conta a Pagar' : 'Nova Conta a Pagar' }}</h2>
-        <button class="modal-close" (click)="fecharModal()">✕</button>
+  <!-- Filtros por situação -->
+  <div class="filter-tabs">
+    @for (f of [{v:'',l:'Todas'},{v:'0',l:'Pendentes'},{v:'2',l:'Vencidas'},{v:'1',l:'Pagas'}]; track f.v) {
+      <button class="ftab" [class.active]="filtroSituacao === f.v" (click)="definirFiltro(f.v)">
+        {{ f.l }}
+      </button>
+    }
+  </div>
+
+  <!-- Tabela -->
+  <div class="card">
+    @if (carregando) {
+      <div class="skel-wrap">
+        @for (i of [1,2,3,4,5]; track i) { <div class="skel-row"></div> }
+      </div>
+    } @else if (items.length === 0) {
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+        <p>Nenhuma conta a pagar encontrada</p>
+        <button class="link-action" (click)="abrirCriar()">Adicionar primeira conta</button>
+      </div>
+    } @else {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Descrição</th>
+              <th>Vencimento</th>
+              <th class="hide-sm">Valor</th>
+              <th class="hide-md">Categoria</th>
+              <th>Situação</th>
+              <th class="col-act"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of items; track item.id) {
+              <tr [class.row-paid]="item.status === 1">
+                <td>
+                  <div class="td-main">{{ item.descricao }}</div>
+                  <div class="td-sub show-sm">{{ formatarMoeda(item.valor) }}</div>
+                </td>
+                <td>
+                  <div class="due-date" [class.overdue]="item.status === 2">
+                    {{ formatarData(item.dataVencimento) }}
+                  </div>
+                  @if (item.status === 2) {
+                    <div class="overdue-days">{{ -diasAte(item.dataVencimento) }}d atraso</div>
+                  } @else if (item.status === 0 && diasAte(item.dataVencimento) <= 7) {
+                    <div class="due-soon">vence em {{ diasAte(item.dataVencimento) }}d</div>
+                  }
+                </td>
+                <td class="hide-sm td-amount">{{ formatarMoeda(item.valor) }}</td>
+                <td class="hide-md">
+                  @if (item.categoria) {
+                    <span class="cat-tag">{{ item.categoria }}</span>
+                  } @else {
+                    <span class="td-sub">—</span>
+                  }
+                </td>
+                <td>
+                  <span [class]="situacaoClass(item.status)">
+                    {{ labelSituacao(item.status) }}
+                  </span>
+                </td>
+                <td>
+                  <div class="row-actions">
+                    @if (item.status !== 1) {
+                      <button class="action-btn pay-btn" (click)="abrirPagamento(item)" title="Registrar pagamento">
+                        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                      </button>
+                      <button class="action-btn" (click)="abrirEditar(item)" title="Editar">
+                        <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                      </button>
+                      <button class="action-btn danger" (click)="aoCancelar(item)" title="Cancelar">
+                        <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
       </div>
 
-      <form (ngSubmit)="salvarContaPagar()">
-        <div class="form-group">
-          <label>Descrição</label>
-          <input type="text" [(ngModel)]="contaPagarAtual.descricao" name="descricao" placeholder="Ex: Aluguel" required>
+      @if (paginas > 1) {
+        <div class="pagination">
+          <button class="pg-btn" (click)="irParaPagina(pagina - 1)" [disabled]="pagina === 1">‹</button>
+          @for (p of arrayPaginas; track p) {
+            <button class="pg-btn" [class.active]="p === pagina" (click)="irParaPagina(p)">{{ p }}</button>
+          }
+          <button class="pg-btn" (click)="irParaPagina(pagina + 1)" [disabled]="pagina === paginas">›</button>
+          <span class="pg-info">{{ total }} contas</span>
         </div>
+      }
+    }
+  </div>
 
-        <div class="form-group">
-          <label>Categoria</label>
-          <input type="text" [(ngModel)]="contaPagarAtual.categoria" name="categoria" placeholder="Ex: Despesas Fixas">
+  <!-- ── Modal criar/editar ───────────────────────────────────────────── -->
+  @if (showModal) {
+    <div class="modal-backdrop" (click)="fecharModal()">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>{{ editandoId ? 'Editar conta a pagar' : 'Nova conta a pagar' }}</h2>
+          <button class="modal-close" (click)="fecharModal()">
+            <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+          </button>
         </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Valor</label>
-            <input type="number" [(ngModel)]="contaPagarAtual.valor" name="valor" step="0.01" required>
+        <form [formGroup]="formContaPagar" (ngSubmit)="aoEnviar()" novalidate class="modal-body">
+          <div class="fld">
+            <label class="fld-lbl">Descrição *</label>
+            <input type="text" formControlName="descricao" placeholder="Ex: Aluguel, Fornecedor..."
+              [class.bad]="formContaPagar.get('descricao')?.invalid && formContaPagar.get('descricao')?.touched">
           </div>
-          <div class="form-group">
-            <label>Data de Vencimento</label>
-            <input type="date" [(ngModel)]="contaPagarAtual.dataVencimento" name="dataVencimento" required>
+          <div class="duo">
+            <div class="fld">
+              <label class="fld-lbl">Valor total (R$) *</label>
+              <input type="number" formControlName="valor" placeholder="0,00" min="0.01" step="0.01"
+                [class.bad]="formContaPagar.get('valor')?.invalid && formContaPagar.get('valor')?.touched">
+            </div>
+            <div class="fld">
+              <label class="fld-lbl">Vencimento *</label>
+              <input type="date" formControlName="dataVencimento"
+                [class.bad]="formContaPagar.get('dataVencimento')?.invalid && formContaPagar.get('dataVencimento')?.touched">
+            </div>
           </div>
+          @if (!editandoId) {
+            <div class="fld">
+              <label class="fld-lbl">Parcelamento</label>
+              <div class="installments-wrap">
+                <input type="number" formControlName="totalParcelas" min="1" max="360" style="width:80px">
+                <span class="inst-hint">
+                  {{ formContaPagar.get('totalParcelas')?.value > 1
+                    ? formContaPagar.get('totalParcelas')?.value + 'x de '
+                      + formatarMoeda((formContaPagar.get('valor')?.value || 0) / formContaPagar.get('totalParcelas')?.value)
+                    : 'pagamento único' }}
+                </span>
+              </div>
+            </div>
+          }
+          <div class="duo">
+            <div class="fld">
+              <label class="fld-lbl">Conta bancária</label>
+              <select formControlName="contaId">
+                <option [value]="null">Sem conta</option>
+                @for (c of contas; track c.id) {
+                  <option [value]="c.id">{{ c.nome }}</option>
+                }
+              </select>
+            </div>
+            <div class="fld">
+              <label class="fld-lbl">Categoria</label>
+              <select formControlName="categoriaId">
+                <option [value]="null">Sem categoria</option>
+                @for (cat of categorias; track cat.id) {
+                  <option [value]="cat.id">{{ cat.nome }}</option>
+                }
+              </select>
+            </div>
+          </div>
+          <div class="fld">
+            <label class="fld-lbl">Observação</label>
+            <textarea formControlName="notas" rows="2" placeholder="Opcional..."></textarea>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-cancel" (click)="fecharModal()">Cancelar</button>
+            <button type="submit" class="btn-save" [disabled]="enviando">
+              @if (enviando) { <span class="spin"></span> }
+              @else { {{ editandoId ? 'Salvar' : 'Criar' }} }
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- ── Modal de pagamento ───────────────────────────────────────────── -->
+  @if (showPayModal) {
+    <div class="modal-backdrop" (click)="fecharModalPagamento()">
+      <div class="modal modal-sm" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Registrar pagamento</h2>
+          <button class="modal-close" (click)="fecharModalPagamento()">
+            <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+          </button>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label>Status</label>
-            <select [(ngModel)]="contaPagarAtual.status" name="status">
-              <option value="Pendente">Pendente</option>
-              <option value="Pago">Pago</option>
-              <option value="Atrasado">Atrasado</option>
+        @if (pagandoItem) {
+          <div class="pay-info">
+            <div class="pay-desc">{{ pagandoItem.descricao }}</div>
+            <div class="pay-amount">{{ formatarMoeda(pagandoItem.valor) }}</div>
+          </div>
+        }
+
+        <form [formGroup]="formPagamento" (ngSubmit)="aoPagar()" novalidate class="modal-body">
+          <div class="fld">
+            <label class="fld-lbl">Conta de débito *</label>
+            <select formControlName="contaId"
+              [class.bad]="formPagamento.get('contaId')?.invalid && formPagamento.get('contaId')?.touched">
+              <option [value]="null">Selecione a conta...</option>
+              @for (c of contas; track c.id) {
+                <option [value]="c.id">{{ c.nome }}</option>
+              }
             </select>
           </div>
-          <div class="form-group" *ngIf="contaPagarAtual.status === situacaoPagar.Pago">
-            <label>Data de Pagamento</label>
-            <input type="date" [(ngModel)]="contaPagarAtual.dataPagamento" name="dataPagamento">
+          <div class="duo">
+            <div class="fld">
+              <label class="fld-lbl">Data do pagamento *</label>
+              <input type="date" formControlName="dataPagamento"
+                [class.bad]="formPagamento.get('dataPagamento')?.invalid && formPagamento.get('dataPagamento')?.touched">
+            </div>
+            <div class="fld">
+              <label class="fld-lbl">Valor pago (R$)</label>
+              <input type="number" formControlName="valorPago" min="0.01" step="0.01" placeholder="Total">
+            </div>
           </div>
-        </div>
-
-        <button type="submit" class="btn-primary">{{ editando ? 'Atualizar' : 'Criar' }}</button>
-      </form>
+          <div class="pay-notice">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+            Uma transação de despesa será gerada automaticamente.
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-cancel" (click)="fecharModalPagamento()">Cancelar</button>
+            <button type="submit" class="btn-pay" [disabled]="pagando">
+              @if (pagando) { <span class="spin"></span> }
+              @else {
+                <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                Confirmar pagamento
+              }
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
-  </div>
-</div>
+  }
+
+</app-shell>

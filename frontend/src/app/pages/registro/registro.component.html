@@ -30,41 +30,22 @@
         <div class="sep-or"><span>ou cadastre com e-mail</span></div>
 
         <form [formGroup]="formRegistro" (ngSubmit)="onSubmit()" novalidate>
-          <!-- Linha: Nome + Empresa -->
-          <div class="duo">
-            <div class="fld">
-              <label class="fld-lbl" for="r-name">Nome completo</label>
-              <div class="inp-w">
-                <input id="r-name" type="text" formControlName="nome"
-                  placeholder="Seu nome"
-                  [class.bad]="formRegistro.get('nome')?.invalid && formRegistro.get('nome')?.touched"
-                  [class.good]="formRegistro.get('nome')?.valid && formRegistro.get('nome')?.touched"
-                  autocomplete="name">
-              </div>
-              @if (formRegistro.get('nome')?.invalid && formRegistro.get('nome')?.touched) {
-                <div class="ferr" role="alert">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-                  Nome obrigatório (mín. 3 caracteres)
-                </div>
-              }
+          <!-- Linha: Nome -->
+          <div class="fld">
+            <label class="fld-lbl" for="r-name">Nome completo</label>
+            <div class="inp-w">
+              <input id="r-name" type="text" formControlName="nome"
+                placeholder="Seu nome"
+                [class.bad]="formRegistro.get('nome')?.invalid && formRegistro.get('nome')?.touched"
+                [class.good]="formRegistro.get('nome')?.valid && formRegistro.get('nome')?.touched"
+                autocomplete="name">
             </div>
-
-            <div class="fld">
-              <label class="fld-lbl" for="r-company">Empresa</label>
-              <div class="inp-w">
-                <input id="r-company" type="text" formControlName="nomeEmpresa"
-                  placeholder="Sua empresa"
-                  [class.bad]="formRegistro.get('nomeEmpresa')?.invalid && formRegistro.get('nomeEmpresa')?.touched"
-                  [class.good]="formRegistro.get('nomeEmpresa')?.valid && formRegistro.get('nomeEmpresa')?.touched"
-                  autocomplete="organization">
+            @if (formRegistro.get('nome')?.invalid && formRegistro.get('nome')?.touched) {
+              <div class="ferr" role="alert">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                Nome obrigatório (mín. 3 caracteres)
               </div>
-              @if (formRegistro.get('nomeEmpresa')?.invalid && formRegistro.get('nomeEmpresa')?.touched) {
-                <div class="ferr" role="alert">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-                  Empresa obrigatória (mín. 3 caracteres)
-                </div>
-              }
-            </div>
+            }
           </div>
 
           <!-- Campo: E-mail -->

@@ -5,11 +5,13 @@ export enum TipoConta {
 }
 
 export interface Conta {
-  id: string;
+  id: number;
   nome: string;
   tipo: TipoConta;
   saldoInicial: number;
   saldoAtual: number;
   descricao?: string;
+  estaAtivado: boolean;
+  cor: string | null;
   dataCriacao: Date;
 }

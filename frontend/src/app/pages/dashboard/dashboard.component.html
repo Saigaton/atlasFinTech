@@ -1,52 +1,495 @@
-<div class="dashboard">
-  <div class="stats-grid">
-    <div class="stat-card">
-      <h3>Saldo Total</h3>
-      <p class="stat-value">{{ formatarMoeda(saldoTotal) }}</p>
-      <p class="stat-subtitle">{{ contas.length }} conta(s) ativa(s)</p>
+<app-shell>
+
+  <!-- ══ ONBOARDING ═══════════════════════════════════════════════════════════ -->
+  @if (!temEmpresa) {
+    <div class="onboarding">
+      <div class="onboarding-card">
+        <div class="onboarding-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>
+        </div>
+        <h2>Bem-vindo ao Atlas FinTech!</h2>
+        <p>Para começar, crie sua empresa e organize suas finanças em um só lugar.</p>
+        <a routerLink="/company/new" class="btn-primary-lg">
+          <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          Criar minha empresa
+        </a>
+      </div>
+    </div>
+  }
+
+  <!-- ══ DASHBOARD ════════════════════════════════════════════════════════════ -->
+  @if (temEmpresa) {
+
+    <!-- Header com seletor de período -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-sub">
+          Visão geral das suas finanças ·
+          @if (periodoSelecionado === 'mes') { Este mês }
+          @else if (periodoSelecionado === 'ultimos30') { Últimos 30 dias }
+          @else { Ano {{ anoSelecionado }} }
+        </p>
+      </div>
+      <div class="period-selector">
+        <button class="period-btn" [class.active]="periodoSelecionado === 'mes'"       (click)="definirPeriodo('mes')">Este Mês</button>
+        <button class="period-btn" [class.active]="periodoSelecionado === 'ultimos30'" (click)="definirPeriodo('ultimos30')">Últimos 30 dias</button>
+        <button class="period-btn" [class.active]="periodoSelecionado === 'ano'"       (click)="definirPeriodo('ano')">Este Ano</button>
+        <button class="period-refresh" (click)="recarregar()" title="Atualizar">
+          <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+        </button>
+      </div>
     </div>
 
-    <div class="stat-card">
-      <h3>Receitas (Mês)</h3>
-      <p class="stat-value">{{ formatarMoeda(receitasTotal) }}</p>
-      <p class="stat-subtitle">0 transação(ões)</p>
-    </div>
+    <!-- ── KPIs ─────────────────────────────────────────────────────────────── -->
+    <div class="kpi-grid">
 
-    <div class="stat-card">
-      <h3>Despesas (Mês)</h3>
-      <p class="stat-value">{{ formatarMoeda(despesasTotal) }}</p>
-      <p class="stat-subtitle">0 transação(ões)</p>
-    </div>
-
-    <div class="stat-card">
-      <h3>Fluxo Líquido</h3>
-      <p class="stat-value" [ngClass]="fluxoLiquido >= 0 ? 'positive' : 'negative'">
-        {{ formatarMoeda(fluxoLiquido) }}
-      </p>
-      <p class="stat-subtitle">Receitas - Despesas</p>
-    </div>
-  </div>
-
-  <div class="recent-transactions">
-    <h2>Transações Recentes</h2>
-    <p class="subtitle">Últimas movimentações</p>
-
-    <div *ngIf="transacoes.length === 0; else transacoesList" class="empty-state">
-      <p>Nenhuma transação registrada ainda</p>
-    </div>
-
-    <ng-template #transacoesList>
-      <div class="transactions-list">
-        <div *ngFor="let transacao of getTransacoesRecentes()" class="transaction-item">
-          <div class="transaction-info">
-            <p class="transaction-description">{{ transacao.descricao }}</p>
-            <p class="transaction-date">{{ transacao.data | date: 'dd/MM/yyyy' }}</p>
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div class="kpi-icon" style="background:linear-gradient(135deg,#10b981,#059669)">
+            <svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
           </div>
-          <p class="transaction-value" [ngClass]="transacao.tipo === tipoTransacao.Receita ? 'receita' : 'despesa'">
-            {{ transacao.tipo === tipoTransacao.Receita ? '+' : '-' }} {{ formatarMoeda(transacao.valor) }}
-          </p>
+          <span class="kpi-label">Receita total</span>
+        </div>
+        @if (carregandoKpis) { <div class="skeleton-val"></div> }
+        @else {
+          <div class="kpi-val">{{ formatarMoeda(kpis?.receitaTotal) }}</div>
+          <div class="kpi-chg" [class.chg-up]="ehVariacaoPositiva(kpis?.variacaoReceita)" [class.chg-dn]="!ehVariacaoPositiva(kpis?.variacaoReceita)">
+            {{ formatarVariacao(kpis?.variacaoReceita) }} vs mês anterior
+          </div>
+        }
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div class="kpi-icon" style="background:linear-gradient(135deg,#f59e0b,#d97706)">
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+          </div>
+          <span class="kpi-label">Despesas</span>
+        </div>
+        @if (carregandoKpis) { <div class="skeleton-val"></div> }
+        @else {
+          <div class="kpi-val">{{ formatarMoeda(kpis?.despesaTotal) }}</div>
+          <div class="kpi-chg" [class.chg-dn]="ehVariacaoPositiva(kpis?.variacaoDespesa)" [class.chg-up]="!ehVariacaoPositiva(kpis?.variacaoDespesa)">
+            {{ formatarVariacao(kpis?.variacaoDespesa) }} vs mês anterior
+          </div>
+        }
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div class="kpi-icon" style="background:linear-gradient(135deg,#3b82f6,#2563eb)">
+            <svg viewBox="0 0 24 24"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
+          </div>
+          <span class="kpi-label">Lucro líquido</span>
+        </div>
+        @if (carregandoKpis) { <div class="skeleton-val"></div> }
+        @else {
+          <div class="kpi-val" [class.val-neg]="(kpis?.lucroLiquido ?? 0) < 0">
+            {{ formatarMoeda(kpis?.lucroLiquido) }}
+          </div>
+          <div class="kpi-chg" [class.chg-up]="ehVariacaoPositiva(kpis?.variacaoLucro)" [class.chg-dn]="!ehVariacaoPositiva(kpis?.variacaoLucro)">
+            {{ formatarVariacao(kpis?.variacaoLucro) }} vs mês anterior
+          </div>
+        }
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div class="kpi-icon" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed)">
+            <svg viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14c1.1 0 2 .9 2 2v1h-9a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+          </div>
+          <span class="kpi-label">Saldo total</span>
+        </div>
+        @if (carregandoKpis) { <div class="skeleton-val"></div> }
+        @else {
+          <div class="kpi-val" [class.val-neg]="(kpis?.saldoTotal ?? 0) < 0">
+            {{ formatarMoeda(kpis?.saldoTotal) }}
+          </div>
+          <div class="kpi-chg chg-neutral">Todas as contas combinadas</div>
+        }
+      </div>
+
+    </div>
+
+    <!-- ── Alertas rápidos ──────────────────────────────────────────────────── -->
+    <div class="alert-cards-grid">
+      <div class="alert-card red">
+        <div class="ac-icon"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div>
+        <div class="ac-body">
+          <span class="ac-label">Contas Vencidas</span>
+          <a routerLink="/payables" class="ac-link">{{ contasVencidasCount }} — {{ formatarMoeda(contasVencidasTotal) }}</a>
         </div>
       </div>
-    </ng-template>
-  </div>
-</div>
+      <div class="alert-card yellow">
+        <div class="ac-icon"><svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg></div>
+        <div class="ac-body">
+          <span class="ac-label">A Vencer (7 dias)</span>
+          <a routerLink="/payables" class="ac-link">{{ vencimentoBreveCount }} — {{ formatarMoeda(vencimentoBreveTotal) }}</a>
+        </div>
+      </div>
+      <div class="alert-card blue">
+        <div class="ac-icon"><svg viewBox="0 0 24 24"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg></div>
+        <div class="ac-body">
+          <span class="ac-label">Recebimentos Atrasados</span>
+          <a routerLink="/receivables" class="ac-link">{{ recebimentosAtrasadosCount }} — {{ formatarMoeda(recebimentosAtrasadosTotal) }}</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Previsão de saldo fim do mês ─────────────────────────────────────── -->
+    @if (previsaoMes) {
+      <div class="forecast-card" [class.forecast-neg]="!previsaoMes.ePositivo">
+        <div class="forecast-icon">
+          <svg viewBox="0 0 24 24">
+            @if (previsaoMes.ePositivo) {
+              <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
+            } @else {
+              <path d="M16 18l2.29-2.29-4.88-4.88-4 4L2 7.41 3.41 6l6 6 4-4 6.3 6.29L22 12v6z"/>
+            }
+          </svg>
+        </div>
+        <div class="forecast-body">
+          <div class="forecast-label">Previsão de saldo em 31/{{ mesSelecionado.toString().padStart(2,'0') }}</div>
+          <div class="forecast-value" [class.pos]="previsaoMes.ePositivo" [class.neg]="!previsaoMes.ePositivo">
+            {{ formatarMoeda(previsaoMes.saldoProjetado) }}
+          </div>
+          <div class="forecast-detail">
+            <span class="fc-in">+{{ formatarMoedaCurta(previsaoMes.receitaProjetada) }} previsto</span>
+            <span class="fc-sep">·</span>
+            <span class="fc-out">−{{ formatarMoedaCurta(previsaoMes.despesaProjetada) }} previsto</span>
+            <span class="fc-sep">·</span>
+            <span class="fc-days">{{ previsaoMes.diasRestantes }} dias restantes</span>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ── Receitas por categoria ───────────────────────────────────────────── -->
+    @if (receitasCategorias.length > 0) {
+      <div class="cat-card">
+        <div class="card-header">
+          <span class="card-title">Receitas por categoria</span>
+          <a routerLink="/analytics" class="card-action">Ver análise completa →</a>
+        </div>
+        <div class="cat-wrap">
+          <div style="display:flex;align-items:center;justify-content:center">
+            <svg class="donut-svg" viewBox="0 0 100 100" id="donut-income-svg">
+              <circle class="donut-bg" cx="50" cy="50" r="35"/>
+              @for (seg of segmentosDonutReceita; track seg.cor) {
+                <circle class="donut-ring" cx="50" cy="50" r="35"
+                  [attr.stroke]="seg.cor"
+                  [attr.stroke-dasharray]="seg.dash + ' ' + seg.gap"
+                  [attr.stroke-dashoffset]="seg.offset"/>
+              }
+              <text x="50" y="44" class="donut-center-label">Receitas</text>
+              <text x="50" y="57" class="donut-center-val">{{ formatarMoedaCurta(totalReceitasCategorias) }}</text>
+            </svg>
+          </div>
+          <div class="cat-list">
+            @for (cat of receitasCategorias; track $index) {
+              <div class="cat-row">
+                <div class="cat-dot" [style.background]="cat.cor"></div>
+                <div class="cat-info">
+                  <div class="cat-name-row">
+                    <span class="cat-name">{{ cat.nome }}</span>
+                    <span class="cat-pct">{{ formatarPorcentagem(cat.percentual) }}</span>
+                  </div>
+                  <div class="cat-bar-track">
+                    <div class="cat-bar-fill" [style.width.%]="cat.percentual" [style.background]="cat.cor"></div>
+                  </div>
+                  <span class="cat-val">{{ formatarMoeda(cat.total) }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ── Metas orçamentárias ──────────────────────────────────────────────── -->
+    @if (metasOrcamentarias.length > 0) {
+      <div class="card budget-card">
+        <div class="card-header">
+          <span class="card-title">Metas orçamentárias</span>
+          <a routerLink="/categories" class="card-action">Configurar →</a>
+        </div>
+        <div class="budget-list">
+          @for (meta of metasOrcamentarias; track meta.id) {
+            <div class="budget-row">
+              <div class="budget-top">
+                <div class="budget-left">
+                  <div class="budget-dot" [style.background]="meta.corCategoria"></div>
+                  <span class="budget-name">{{ meta.nomeCategoria }}</span>
+                </div>
+                <div class="budget-right">
+                  <span class="budget-spent" [class.over]="meta.excedido">{{ formatarMoeda(meta.gasto) }}</span>
+                  <span class="budget-sep">/</span>
+                  <span class="budget-goal">{{ formatarMoeda(meta.valorMeta) }}</span>
+                </div>
+              </div>
+              <div class="budget-track">
+                <div class="budget-fill"
+                  [style.width.%]="meta.percentual"
+                  [class.fill-ok]="meta.percentual < 80"
+                  [class.fill-warn]="meta.percentual >= 80 && !meta.excedido"
+                  [class.fill-over]="meta.excedido"></div>
+              </div>
+              <div class="budget-footer">
+                @if (meta.excedido) {
+                  <span class="budget-status over">Limite excedido em {{ formatarMoeda(meta.gasto - meta.valorMeta) }}</span>
+                } @else {
+                  <span class="budget-status ok">{{ formatarMoeda(meta.valorMeta - meta.gasto) }} disponível · {{ meta.percentual.toFixed(0) }}% usado</span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- ── Distribuição por conta bancária ──────────────────────────────────── -->
+    @if (graficoPorConta.length > 1) {
+      <div class="card account-dist-card">
+        <div class="card-header">
+          <span class="card-title">Distribuição por conta bancária</span>
+          <a routerLink="/accounts" class="card-action">Gerenciar →</a>
+        </div>
+        <div class="acc-dist-list">
+          @for (acc of graficoPorConta; track acc.contaId) {
+            <div class="acc-dist-row">
+              <div class="acc-dist-name">{{ acc.nomeConta }}</div>
+              <div class="acc-dist-bars">
+                <div class="acc-dist-bar-wrap">
+                  <div class="acc-dist-bar income" [style.width.%]="pctBarraConta(acc.receita, 'receita')"></div>
+                  <span class="acc-dist-val income-txt">+{{ formatarMoedaCurta(acc.receita) }}</span>
+                </div>
+                <div class="acc-dist-bar-wrap">
+                  <div class="acc-dist-bar expense" [style.width.%]="pctBarraConta(acc.despesa, 'despesa')"></div>
+                  <span class="acc-dist-val expense-txt">−{{ formatarMoedaCurta(acc.despesa) }}</span>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- ── Despesas por categoria ────────────────────────────────────────────── -->
+    <div class="card cat-expense-card">
+      <div class="card-header">
+        <span class="card-title">Despesas por categoria</span>
+        <a routerLink="/analytics" class="card-action">Ver análise completa →</a>
+      </div>
+
+      @if (carregandoCategorias) {
+        <div class="cat-skeleton">
+          @for (i of [1,2,3,4,5]; track i) {
+            <div class="cat-skel-row">
+              <div class="cat-skel-dot"></div>
+              <div class="cat-skel-bar"></div>
+              <div class="cat-skel-val"></div>
+            </div>
+          }
+        </div>
+      } @else if (despesasCategorias.length === 0) {
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <p>Sem despesas categorizadas no período</p>
+          <a routerLink="/categories" class="link-action">Configurar categorias</a>
+        </div>
+      } @else {
+        <div class="cat-chart-wrap">
+          <div class="donut-wrap">
+            <svg class="donut-svg" viewBox="0 0 100 100">
+              <circle class="donut-bg" cx="50" cy="50" r="35"/>
+              @for (seg of segmentosDonut; track seg.cor) {
+                <circle class="donut-ring" cx="50" cy="50" r="35"
+                  [attr.stroke]="seg.cor"
+                  [attr.stroke-dasharray]="seg.dash + ' ' + seg.gap"
+                  [attr.stroke-dashoffset]="seg.offset"/>
+              }
+              <text x="50" y="44" class="donut-center-label">Total</text>
+              <text x="50" y="57" class="donut-center-val">{{ formatarMoedaCurta(totalDespesasCategorias) }}</text>
+            </svg>
+          </div>
+          <div class="cat-list">
+            @for (cat of despesasCategorias; track $index) {
+              <div class="cat-row">
+                <div class="cat-dot" [style.background]="cat.cor"></div>
+                <div class="cat-info">
+                  <div class="cat-name-row">
+                    <span class="cat-name">{{ cat.nome }}</span>
+                    <span class="cat-pct">{{ formatarPorcentagem(cat.percentual) }}</span>
+                  </div>
+                  <div class="cat-bar-track">
+                    <div class="cat-bar-fill" [style.width.%]="cat.percentual" [style.background]="cat.cor"></div>
+                  </div>
+                  <span class="cat-val">{{ formatarMoeda(cat.total) }}</span>
+                </div>
+              </div>
+            }
+            <a routerLink="/reports" class="cat-report-link">
+              <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+              Exportar relatório de despesas
+            </a>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="mid-grid">
+
+      <!-- Gráfico de evolução mensal -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Evolução mensal {{ anoSelecionado }}</span>
+          <div class="chart-legend">
+            <span class="legend-dot" style="background:#3b82f6"></span><span class="legend-lbl">Receita</span>
+            <span class="legend-dot" style="background:#ef4444"></span><span class="legend-lbl">Despesa</span>
+          </div>
+        </div>
+
+        @if (carregandoGrafico) {
+          <div class="chart-skeleton">
+            @for (i of [1,2,3,4,5,6,7,8,9,10,11,12]; track i) {
+              <div class="cs-col">
+                <div class="cs-bar" [style.height.%]="20 + (i * 5 % 60)"></div>
+                <div class="cs-bar cs-bar-expense" [style.height.%]="10 + (i * 3 % 40)"></div>
+              </div>
+            }
+          </div>
+        } @else if (dadosGrafico.length === 0) {
+          <div class="chart-empty">
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+            <p>Sem dados para exibir</p>
+          </div>
+        } @else {
+          <div class="bar-chart">
+            @for (m of dadosGrafico; track m.mes) {
+              <div class="bar-group" [class.future]="!ehMesPassado(m.mes)"
+                   [title]="ROTULOS_MESES[m.mes-1] + ': Receita ' + formatarMoeda(m.receita) + ' / Despesa ' + formatarMoeda(m.despesa)">
+                <div class="bars-wrap">
+                  <div class="bar bar-income"  [style.height]="alturaBarra(m.receita)"></div>
+                  <div class="bar bar-expense" [style.height]="alturaBarra(m.despesa)"></div>
+                </div>
+                <span class="bar-lbl">{{ ROTULOS_MESES[m.mes - 1] }}</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Transações recentes -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Transações recentes</span>
+          <a routerLink="/transactions" class="card-action">Ver todas →</a>
+        </div>
+
+        @if (carregandoTransacoes) {
+          <div class="skeleton-list">
+            @for (i of [1,2,3,4,5]; track i) { <div class="skeleton-tx"></div> }
+          </div>
+        } @else if (transacoes.length === 0) {
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+            <p>Nenhuma transação ainda</p>
+            <a routerLink="/transactions" class="link-action">Registrar primeira transação</a>
+          </div>
+        } @else {
+          <div class="tx-list">
+            @for (tx of transacoes; track tx.id) {
+              <div class="tx-item">
+                <div class="tx-left">
+                  <div class="tx-ico" [style.background]="tx.categoria?.cor || '#64748b'">
+                    <svg viewBox="0 0 24 24">
+                      @if (tx.tipo === TipoTransacao.Receita) {
+                        <path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/>
+                      } @else {
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                      }
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="tx-name">{{ tx.descricao }}</div>
+                    <div class="tx-meta">
+                      {{ formatarDataTransacao(tx.data) }}
+                      @if (tx.categoria?.nome) { · {{ tx.categoria!.nome }} }
+                      @if (tx.situacao === SituacaoTransacao.Pendente) { <span class="tag-pending">Pendente</span> }
+                    </div>
+                  </div>
+                </div>
+                <span [class]="tx.tipo === TipoTransacao.Receita ? 'tx-pos' : 'tx-neg'">
+                  {{ tx.tipo === TipoTransacao.Receita ? '+' : '−' }}{{ formatarMoeda(tx.valor) }}
+                </span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- ── Bottom grid ───────────────────────────────────────────────────────── -->
+    <div class="bottom-grid">
+
+      <!-- Contas bancárias -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Contas bancárias</span>
+          <a routerLink="/accounts" class="card-action">Gerenciar →</a>
+        </div>
+        @if (carregandoContas) {
+          <div class="skeleton-list">
+            @for (i of [1,2]; track i) { <div class="skeleton-acc"></div> }
+          </div>
+        } @else if (contas.length === 0) {
+          <div class="empty-state small">
+            <p>Nenhuma conta cadastrada</p>
+            <a routerLink="/accounts" class="link-action">Adicionar conta</a>
+          </div>
+        } @else {
+          <div class="acc-list">
+            @for (conta of contas; track conta.id) {
+              <div class="acc-item">
+                <div class="acc-dot" [style.background]="corConta(conta)"></div>
+                <div class="acc-info">
+                  <span class="acc-name">{{ conta.nome }}</span>
+                  <span class="acc-type">{{ labelTipoConta(conta.tipo) }}</span>
+                </div>
+                <span class="acc-bal" [class.bal-neg]="conta.saldoAtual < 0">
+                  {{ formatarMoeda(conta.saldoAtual) }}
+                </span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Acesso rápido -->
+      <div class="card">
+        <div class="card-title" style="margin-bottom:14px">Acesso rápido</div>
+        <div class="quick-actions">
+          <a routerLink="/transactions" class="qa-btn">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            Nova transação
+          </a>
+          <a routerLink="/accounts" class="qa-btn">
+            <svg viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14c1.1 0 2 .9 2 2v1h-9a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h9z"/></svg>
+            Nova conta
+          </a>
+          <a routerLink="/categories" class="qa-btn">
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            Categorias
+          </a>
+          <a routerLink="/reports" class="qa-btn">
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+            Relatórios
+          </a>
+        </div>
+      </div>
+
+    </div>
+  }
+
+</app-shell>

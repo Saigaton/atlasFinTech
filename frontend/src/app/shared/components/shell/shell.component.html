@@ -1,0 +1,120 @@
+<!-- Shell do sistema autenticado: sidebar com grupos de nav + topbar + conteúdo -->
+<div class="shell-wrap" [class.sidebar-collapsed]="collapsed">
+
+  <!-- Overlay mobile -->
+  @if (mobileOpen) {
+    <div class="mob-overlay" (click)="closeMobile()"></div>
+  }
+
+  <!-- ── Sidebar ────────────────────────────────────────────────────────── -->
+  <aside class="sidebar" [class.open]="mobileOpen">
+
+    <!-- Logo -->
+    <div class="sb-logo" (click)="closeMobile()">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
+      </div>
+      @if (!collapsed) {
+        <div class="logo-text">
+          <span class="logo-name">Atlas</span>
+          <span class="logo-sub">FinTech</span>
+        </div>
+      }
+      <button class="collapse-btn hide-mobile" (click)="toggleCollapse(); $event.stopPropagation()" title="Colapsar sidebar">
+        <svg viewBox="0 0 24 24">
+          @if (collapsed) {
+            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+          } @else {
+            <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+          }
+        </svg>
+      </button>
+    </div>
+
+    <!-- Empresa ativa -->
+    @if (!collapsed && empresaService.ativo) {
+      <div class="sb-empresaService">
+        <div class="empresaService-badge">
+          {{ empresaService.ativo!.nome.slice(0, 1).toUpperCase() }}
+        </div>
+        <div class="empresaService-info">
+          <span class="empresaService-name">{{ empresaService.ativo!.nome }}</span>
+          <span class="empresaService-role">Administrador</span>
+        </div>
+      </div>
+    }
+
+    <!-- Navegação em grupos — padrão SGFE -->
+    <nav class="sb-nav" (click)="closeMobile()">
+      @for (group of navGroups; track group.label) {
+        @if (!collapsed) {
+          <span class="nav-group-label">{{ group.label }}</span>
+        }
+        @for (item of group.items; track item.route) {
+          <a class="nav-item"
+             [class.nav-item-ai]="item.route === '/chatbot'"
+             [routerLink]="item.route"
+             routerLinkActive="active"
+             [title]="collapsed ? item.label : ''">
+            <svg class="nav-icon" viewBox="0 0 24 24">
+              <path [attr.d]="item.icon"/>
+            </svg>
+            @if (!collapsed) {
+              <span class="nav-label">{{ item.label }}</span>
+              <!-- Seta de indicação de ativo — padrão SGFE -->
+              <svg class="nav-arrow" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+            }
+          </a>
+        }
+      }
+    </nav>
+
+    <!-- Footer da sidebar -->
+    <div class="sb-footer">
+      <a class="user-row" routerLink="/profile" [title]="collapsed ? 'Meu Perfil' : ''"
+         style="text-decoration:none;cursor:pointer">
+        <div class="user-avatar">{{ iniciaisUsuario }}</div>
+        @if (!collapsed) {
+          <div class="user-info">
+            <span class="user-name">{{ nomeUsuario }}</span>
+            <span class="user-email">{{ emailUsuario }}</span>
+          </div>
+        }
+      </a>
+      <button class="btn-logout" (click)="logout()" title="Sair">
+        <svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ── Área principal ─────────────────────────────────────────────────── -->
+  <div class="main-area">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <!-- Hambúrguer mobile -->
+      <button class="hamburger show-mobile" (click)="toggleMobile()" aria-label="Menu">
+        <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+      </button>
+
+      <!-- Título da rota ativa (mobile) -->
+      <span class="topbar-page-title show-mobile">{{ tituloPagina }}</span>
+
+      <div class="topbar-spacer"></div>
+
+      <div class="topbar-right">
+        <app-theme-toggle />
+        <div class="user-chip hide-mobile">
+          <div class="chip-avatar">{{ iniciaisUsuario }}</div>
+          <span class="chip-name">{{ nomeUsuario }}</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Conteúdo da rota -->
+    <main class="page-content">
+      <ng-content />
+    </main>
+
+  </div>
+</div>

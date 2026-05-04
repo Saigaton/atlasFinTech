@@ -37,7 +37,6 @@ export class RegistroComponent extends UnsubscriberComponent implements OnInit {
   criarFormulario(){
     this.formRegistro = this.formBuilder.group({
       nome: ['', [Validators.required, Validators.minLength(3)]],
-      nomeEmpresa: ['', [Validators.required, Validators.minLength(3)]],
       email: ['', [Validators.required, Validators.email]],
       senha: ['', [Validators.required, this.validadorSenhaForte]],
       confirmarSenha: ['', [Validators.required, Validators.minLength(8)]]

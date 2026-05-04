@@ -39,11 +39,11 @@ export class AuthService extends UnsubscriberComponent {
 
   getAccessToken(): string | null { return this.accessToken.getValue(); }
 
-  getUserEmail(): string { return this.user.getValue()?.email ?? ''; }
+  getEmailUsuario(): string { return this.user.getValue()?.email ?? ''; }
 
-  getUserName(): string { return this.user.getValue()?.nome?.split(' ')[0] ?? ''; }
+  getNomeUsuario(): string { return this.user.getValue()?.nome?.split(' ')[0] ?? ''; }
 
-  getUserInitials(): string {
+  getIniciaisUsuario(): string {
     return (this.user.getValue()?.nome ?? '')
       .split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase();
   }
@@ -104,6 +104,27 @@ export class AuthService extends UnsubscriberComponent {
     return this.http.post<MensagemResposta>(
       `${this.API}/auth/resend-verification`, { email }
     );
+  }
+
+  // ── Perfil do usuário ──────────────────────────────────────────────────────
+
+  obterPerfil(): Observable<{ data: Usuario }> {
+    return this.http.get<{ data: Usuario }>(`${this.API}/auth/me`);
+  }
+
+  atualizarPerfil(dados: { nome: string }): Observable<{ data: Usuario }> {
+    return this.http.put<{ data: Usuario }>(`${this.API}/auth/me`, dados).pipe(
+      tap(res => {
+        localStorage.setItem('atlas_user', JSON.stringify(res.data));
+        this.user.next(res.data);
+      }),
+    );
+  }
+
+  alterarSenha(dados: {
+    senha_atual: string; nova_senha: string; confirmar_nova_senha: string;
+  }): Observable<MensagemResposta> {
+    return this.http.post<MensagemResposta>(`${this.API}/auth/me/change-password`, dados);
   }
 
   // ── Recuperação de senha ───────────────────────────────────────────────────

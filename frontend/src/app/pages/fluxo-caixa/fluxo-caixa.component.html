@@ -1,66 +1,137 @@
-<div class="fluxo-caixa-container">
-  <h1>Fluxo de Caixa</h1>
-  <p>Acompanhe o movimento de entrada e saída de recursos</p>
+<app-shell>
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Fluxo de Caixa</h1>
+      <p class="page-sub">Entradas e saídas confirmadas · {{ anoSelecionado }}</p>
+    </div>
+    <select class="period-select"
+            [value]="anoSelecionado"
+            (change)="anoSelecionado = +$any($event.target).value; loadData()">
+      @for (y of anos; track y) {
+        <option [value]="y">{{ y }}</option>
+      }
+    </select>
+  </div>
 
-  <div class="filtros">
-    <h3>Período</h3>
-    <div class="filtros-grid">
-      <div class="filtro-item">
-        <label>Data Inicial</label>
-        <input type="date" [(ngModel)]="dataInicial">
+  <!-- KPI Cards -->
+  <div class="cf-kpi-grid">
+    <div class="cf-kpi-card green">
+      <div class="cf-kpi-icon">
+        <svg viewBox="0 0 24 24"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
       </div>
-      <div class="filtro-item">
-        <label>Data Final</label>
-        <input type="date" [(ngModel)]="dataFinal">
+      <div class="cf-kpi-body">
+        <span class="cf-kpi-label">Total Entradas</span>
+        <span class="cf-kpi-val green">{{ fmt(totalReceita) }}</span>
       </div>
-      <div class="filtro-item">
-        <button class="btn-primary" (click)="aplicarFiltro()">Aplicar Filtro</button>
+    </div>
+    <div class="cf-kpi-card red">
+      <div class="cf-kpi-icon red">
+        <svg viewBox="0 0 24 24"><path d="M16 18l2.29-2.29-4.88-4.88-4 4L2 7.41 3.41 6l6 6 4-4 6.3 6.29L22 12v6z"/></svg>
+      </div>
+      <div class="cf-kpi-body">
+        <span class="cf-kpi-label">Total Saídas</span>
+        <span class="cf-kpi-val red">{{ fmt(totalDespesa) }}</span>
+      </div>
+    </div>
+    <div class="cf-kpi-card blue">
+      <div class="cf-kpi-icon blue">
+        <svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
+      </div>
+      <div class="cf-kpi-body">
+        <span class="cf-kpi-label">Saldo Líquido</span>
+        <span class="cf-kpi-val" [class.green]="liquidoAtual >= 0" [class.red]="liquidoAtual < 0">
+          {{ fmt(liquidoAtual) }}
+        </span>
       </div>
     </div>
   </div>
 
-  <div class="stats-grid">
-    <div class="stat-card receitas">
-      <h3>Receitas</h3>
-      <p class="stat-value">{{ formatarMoeda(receitas) }}</p>
+  <!-- Gráfico de barras -->
+  <div class="cf-card">
+    <div class="cf-card-header">
+      <span class="cf-card-title">Fluxo de Caixa ao Longo do Tempo</span>
+      <div class="chart-legend">
+        <span class="leg-item"><span class="leg-dot" style="background:#22c55e"></span>Entradas</span>
+        <span class="leg-item"><span class="leg-dot" style="background:#ef4444"></span>Saídas</span>
+      </div>
     </div>
-
-    <div class="stat-card despesas">
-      <h3>Despesas</h3>
-      <p class="stat-value">{{ formatarMoeda(despesas) }}</p>
-    </div>
-
-    <div class="stat-card fluxo">
-      <h3>Fluxo Líquido</h3>
-      <p class="stat-value" [ngClass]="fluxoLiquido >= 0 ? 'positive' : 'negative'">
-        {{ formatarMoeda(fluxoLiquido) }}
-      </p>
-    </div>
-
-    <div class="stat-card saldo">
-      <h3>Saldo</h3>
-      <p class="stat-value">{{ formatarMoeda(saldo) }}</p>
-    </div>
-  </div>
-
-  <div class="transacoes-section">
-    <h2>Transações do Período</h2>
-    <div *ngIf="getTransacoesFiltrads().length === 0; else transacoesList" class="empty-state">
-      <p>Nenhuma transação no período selecionado</p>
-    </div>
-
-    <ng-template #transacoesList>
-      <div class="transacoes-list">
-        <div *ngFor="let transacao of getTransacoesFiltrads()" class="transacao-item">
-          <div class="transacao-info">
-            <p class="transacao-description">{{ transacao.descricao }}</p>
-            <p class="transacao-date">{{ transacao.data | date: 'dd/MM/yyyy' }}</p>
-          </div>
-          <p class="transacao-value" [ngClass]="transacao.tipo === tipoTransacao.Receita ? 'receita' : 'despesa'">
-            {{ transacao.tipo === tipoTransacao.Receita ? '+' : '-' }} {{ formatarMoeda(transacao.valor) }}
-          </p>
+    @if (carregando) {
+      <div class="cf-skeleton-chart">
+        @for (i of [1,2,3,4,5,6,7,8,9,10,11,12]; track i) {
+          <div class="cf-skel-col"></div>
+        }
+      </div>
+    } @else if (grafico.length === 0) {
+      <div class="cf-empty">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+        <p>Sem movimentações em {{ anoSelecionado }}</p>
+      </div>
+    } @else {
+      <div class="cf-area-chart">
+        <div class="chart-y-axis">
+          <span>{{ fmtK(valorMaximo) }}</span>
+          <span>{{ fmtK(valorMaximo * .75) }}</span>
+          <span>{{ fmtK(valorMaximo * .5) }}</span>
+          <span>{{ fmtK(valorMaximo * .25) }}</span>
+          <span>R$0</span>
+        </div>
+        <div class="chart-bars">
+          @for (pt of grafico; track pt.label) {
+            <div class="cf-col">
+              <div class="cf-bars-wrap">
+                <div class="cf-bar-in"
+                     [style.height.%]="valorMaximo > 0 ? (pt.receita / valorMaximo * 100) : 0"
+                     [title]="'Entradas: ' + fmt(pt.receita)"></div>
+                <div class="cf-bar-ex"
+                     [style.height.%]="valorMaximo > 0 ? (pt.despesa / valorMaximo * 100) : 0"
+                     [title]="'Saídas: ' + fmt(pt.despesa)"></div>
+              </div>
+              <span class="cf-col-lbl">{{ pt.label }}</span>
+            </div>
+          }
         </div>
       </div>
-    </ng-template>
+    }
   </div>
-</div>
+
+  <!-- Tabela -->
+  <div class="cf-card">
+    <div class="cf-card-header">
+      <span class="cf-card-title">Entradas vs Saídas</span>
+    </div>
+    @if (grafico.length > 0) {
+      <div class="cf-table-wrap">
+        <table class="cf-table">
+          <thead>
+            <tr>
+              <th>Mês</th>
+              <th class="text-right">Entradas</th>
+              <th class="text-right">Saídas</th>
+              <th class="text-right">Saldo Líquido</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (pt of grafico; track pt.label) {
+              <tr>
+                <td class="td-period">{{ pt.label }}</td>
+                <td class="text-right td-income">+{{ fmt(pt.receita) }}</td>
+                <td class="text-right td-expense">-{{ fmt(pt.despesa) }}</td>
+                <td class="text-right"
+                    [class.td-income]="pt.liquido >= 0"
+                    [class.td-expense]="pt.liquido < 0">
+                  {{ pt.liquido >= 0 ? '+' : '' }}{{ fmt(pt.liquido) }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else if (!carregando) {
+      <div class="cf-empty">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>
+        <p>Nenhuma movimentação no período</p>
+      </div>
+    }
+  </div>
+
+</app-shell>

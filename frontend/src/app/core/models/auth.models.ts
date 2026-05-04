@@ -40,7 +40,6 @@ export interface RequisicaoLoginUsuario {
 export interface RequisicaoRegistroUsuario {
   nome:             string;
   email:            string;
-  nomeEmpresa:      string;
   senha:            string;
   confirmarSenha:   string;
 }

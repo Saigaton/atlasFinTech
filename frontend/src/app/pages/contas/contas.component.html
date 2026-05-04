@@ -1,87 +1,176 @@
-<div class="contas-container">
+<app-shell>
   <div class="page-header">
     <div>
-      <h1>Contas</h1>
-      <p>Gerencie suas contas bancárias e de caixa</p>
+      <h1 class="page-title">Contas bancárias</h1>
+      <p class="page-sub">Gerencie suas contas e visualize saldos em tempo real</p>
     </div>
-    <button class="btn-primary" (click)="abrirModal()">+ Nova Conta</button>
+    <button class="btn-new" (click)="abrirCriarConta()">
+      <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+      Nova conta
+    </button>
   </div>
 
-  <div *ngIf="contas.length === 0; else contasList" class="empty-state">
-    <p>Nenhuma conta criada ainda. Clique em "Nova Conta" para começar.</p>
-  </div>
-
-  <ng-template #contasList>
-    <div class="contas-grid">
-      <div *ngFor="let conta of contas" class="conta-card">
-        <div class="conta-header">
-          <div class="conta-info">
+  @if (carregando) {
+    <div class="acc-grid">
+      @for (i of [1,2,3]; track i) { <div class="acc-skeleton"></div> }
+    </div>
+  } @else if (contas.length === 0) {
+    <div class="empty-full">
+      <svg viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14c1.1 0 2 .9 2 2v1h-9a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+      <h3>Nenhuma conta cadastrada</h3>
+      <p>Adicione suas contas bancárias para começar a controlar suas finanças.</p>
+      <button class="btn-new" (click)="abrirCriarConta()">Adicionar primeira conta</button>
+    </div>
+  } @else {
+    <div class="acc-grid">
+      @for (acc of contas; track acc.id) {
+        <div class="acc-card" [style.border-top-color]="acc.cor || '#3b82f6'">
+          <div class="acc-card-top">
+            <div class="acc-dot-lg" [style.background]="acc.cor || '#3b82f6'">
+              <svg viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14c1.1 0 2 .9 2 2v1h-9a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+            </div>
             <div>
-              <h3>{{ conta.nome }}</h3>
-              <p class="conta-tipo">{{ conta.tipo }}</p>
+              <div class="acc-name">{{ acc.nome }}</div>
+              <!-- <div class="acc-type-tag">{{ typeLabel(acc.tipo) }}</div> -->
             </div>
           </div>
-          <div class="conta-actions">
-            <button class="btn-edit" (click)="editarConta(conta)" title="Editar">Editar</button>
-            <button class="btn-delete" (click)="deletarConta(conta.id)" title="Deletar">Deletar</button>
+          @if (acc.nome) { <div class="acc-bank">{{ acc.nome }}</div> }
+          <div class="acc-balance" [class.neg]="acc.saldoAtual < 0">
+            {{ formatCurrency(acc.saldoAtual) }}
+          </div>
+          <div class="acc-balance-lbl">Saldo atual</div>
+          <div class="acc-actions">
+            <!-- <button class="acc-btn" (click)="openEdit(acc)" title="Editar">
+              <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+              Editar
+            </button> -->
+            <button class="acc-btn acc-btn-danger" (click)="onDelete(acc)" title="Desativar">
+              <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+              Desativar
+            </button>
           </div>
         </div>
-        <div class="conta-body">
-          <div class="saldo-item">
-            <span>Saldo Inicial:</span>
-            <strong>{{ formatarMoeda(conta.saldoInicial) }}</strong>
-          </div>
-          <div class="saldo-item">
-            <span>Saldo Atual:</span>
-            <strong>{{ formatarMoeda(conta.saldoAtual) }}</strong>
-          </div>
-          <p *ngIf="conta.descricao" class="conta-descricao">{{ conta.descricao }}</p>
+      }
+    </div>
+  }
+
+  @if (showModal) {
+    <div class="modal-backdrop" (click)="fecharModal()">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Nova conta bancária</h2>
+          <button class="modal-close" (click)="fecharModal()">
+            <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+          </button>
         </div>
+        <form [formGroup]="formConta" (ngSubmit)="onSubmit()" class="modal-body">
+          <div class="fld">
+            <label class="fld-lbl">Nome da conta *</label>
+            <input type="text" formControlName="name" placeholder="Ex: Banco do Brasil, Caixa..." [class.bad]="formConta.get('nome')?.invalid && formConta.get('nome')?.touched">
+          </div>
+          <div class="duo">
+            <div class="fld">
+              <label class="fld-lbl">Tipo</label>
+              <select formControlName="type">
+                @for (t of tiposConta; track t.value) { <option [value]="t.value">{{ t.label }}</option> }
+              </select>
+            </div>
+            <div class="fld">
+              <label class="fld-lbl">Saldo inicial (R$)</label>
+              <input type="number" formControlName="initial_balance" placeholder="0,00" min="0" step="0.01">
+            </div>
+          </div>
+          <div class="duo">
+            <div class="fld">
+              <label class="fld-lbl">Banco</label>
+              <input type="text" formControlName="bank_name" placeholder="Opcional">
+            </div>
+            <div class="fld">
+              <label class="fld-lbl">Agência</label>
+              <input type="text" formControlName="agency" placeholder="Opcional">
+            </div>
+          </div>
+          <div class="fld">
+            <label class="fld-lbl">Cor de identificação</label>
+            <div class="color-presets">
+              @for (c of colorPresets; track c) {
+                <button type="button" class="color-dot" [style.background]="c"
+                  [class.selected]="formConta.get('cor')?.value === c"
+                  (click)="formConta.get('cor')?.setValue(c)"></button>
+              }
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-cancel" (click)="fecharModal()">Cancelar</button>
+            <button type="submit" class="btn-save" [disabled]="enviando">
+              @if (enviando) { <span class="spin"></span> } @else { Criar conta }
+            </button>
+          </div>
+        </form>
       </div>
     </div>
-  </ng-template>
+  }
 
-  <!-- Modal -->
-  <div *ngIf="mostrarModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>{{ editando ? 'Editar Conta' : 'Nova Conta' }}</h2>
-        <button class="modal-close" (click)="fecharModal()">✕</button>
+  <!-- Modal de Transferência -->
+  @if (showTransfer) {
+    <div class="modal-overlay" (click)="fecharTransferencia()">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2 class="modal-title">Transferência entre Contas</h2>
+          <button class="modal-close" (click)="fecharTransferencia()">
+            <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+          </button>
+        </div>
+        <form [formGroup]="formTransferencia" (ngSubmit)="onTransferencia()" class="modal-body">
+
+          <div class="duo">
+            <div class="field">
+              <label class="field-label">Conta de Origem *</label>
+              <select class="input" formControlName="from_account_id">
+                <option [ngValue]="null">Selecione</option>
+                @for (acc of contas; track acc.id) {
+                  <option [ngValue]="acc.id">{{ acc.nome }} — {{ formatCurrency(acc.saldoAtual) }}</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">Conta de Destino *</label>
+              <select class="input" formControlName="to_account_id">
+                <option [ngValue]="null">Selecione</option>
+                @for (acc of contas; track acc.id) {
+                  <option [ngValue]="acc.id">{{ acc.nome }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <div class="duo">
+            <div class="field">
+              <label class="field-label">Valor *</label>
+              <input type="number" class="input" formControlName="amount"
+                     placeholder="0,00" min="0.01" step="0.01">
+            </div>
+            <div class="field">
+              <label class="field-label">Data *</label>
+              <input type="date" class="input" formControlName="date">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Descrição *</label>
+            <input type="text" class="input" formControlName="descricao"
+                   placeholder="Transferência entre contas">
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" (click)="fecharTransferencia()">Cancelar</button>
+            <button type="submit" class="btn btn-primary" [disabled]="transferindo">
+              {{ transferindo ? 'Transferindo...' : 'Realizar Transferência' }}
+            </button>
+          </div>
+        </form>
       </div>
-
-      <form (ngSubmit)="salvarConta()">
-        <div class="form-group">
-          <label>Nome da Conta</label>
-          <input type="text" [(ngModel)]="contaAtual.nome" name="nome" placeholder="Ex: Banco do Brasil" required>
-        </div>
-
-        <div class="form-group">
-          <label>Tipo</label>
-          <select [(ngModel)]="contaAtual.tipo" name="tipo">
-            <option value="Banco">Banco</option>
-            <option value="Cartão de Crédito">Cartão de Crédito</option>
-            <option value="Poupança">Poupança</option>
-          </select>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Saldo Inicial</label>
-            <input type="number" [(ngModel)]="contaAtual.saldoInicial" name="saldoInicial" step="0.01">
-          </div>
-          <div class="form-group">
-            <label>Saldo Atual</label>
-            <input type="number" [(ngModel)]="contaAtual.saldoAtual" name="saldoAtual" step="0.01">
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>Descrição</label>
-          <textarea [(ngModel)]="contaAtual.descricao" name="descricao" placeholder="Descrição (opcional)"></textarea>
-        </div>
-
-        <button type="submit" class="btn-primary">{{ editando ? 'Atualizar Conta' : 'Criar Conta' }}</button>
-      </form>
     </div>
-  </div>
-</div>
+  }
+
+</app-shell>

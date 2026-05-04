@@ -1,0 +1,401 @@
+// ─── Variáveis da shell ────────────────────────────────────────────────────
+$sb-w:           240px;
+$sb-w-collapsed: 64px;
+$topbar-h:       58px;
+$transition:     0.22s ease;
+
+// ─── Wrap global ──────────────────────────────────────────────────────────
+.shell-wrap {
+  display: flex;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--bg-page);
+  transition: background $transition;
+}
+
+// ─── Sidebar ──────────────────────────────────────────────────────────────
+.sidebar {
+  width: $sb-w;
+  background: var(--bg-form);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  transition: width $transition, background $transition;
+  z-index: 40;
+}
+
+// Sidebar colapsada
+.sidebar-collapsed .sidebar { width: $sb-w-collapsed; }
+
+// ─── Logo ──────────────────────────────────────────────────────────────────
+.sb-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.logo-mark {
+  width: 32px; height: 32px;
+  background: var(--grad);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  svg { width: 17px; height: 17px; fill: #fff; }
+}
+
+.logo-text { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+.logo-name { font-size: 15px; font-weight: 800; color: var(--text-h); letter-spacing: -.3px; white-space: nowrap; }
+.logo-sub  { font-size: 8px; font-weight: 600; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
+
+.collapse-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  color: var(--text-muted);
+  border-radius: 6px;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+  svg { width: 18px; height: 18px; fill: currentColor; }
+  &:hover { background: var(--bg-page); color: var(--text-h); }
+}
+
+// ─── Empresa ───────────────────────────────────────────────────────────────
+.sb-company {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 12px 4px;
+  padding: 10px 12px;
+  background: var(--bg-page);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.company-badge {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  background: var(--grad);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700;
+  flex-shrink: 0;
+}
+
+.company-name { font-size: 12px; font-weight: 600; color: var(--text-h); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.company-role { font-size: 10px; color: var(--text-muted); }
+
+// ─── Nav ───────────────────────────────────────────────────────────────────
+.sb-nav {
+  flex: 1;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--text-body);
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+  min-height: 42px;
+
+  &:hover { background: var(--bg-page); color: var(--text-h); }
+
+  &.active {
+    background: rgba(37, 99, 235, 0.1);
+    color: #2563eb;
+    font-weight: 600;
+    .nav-icon { fill: #2563eb; }
+  }
+
+  [data-theme='dark'] &.active {
+    background: rgba(99, 102, 241, 0.15);
+    color: #818cf8;
+    .nav-icon { fill: #818cf8; }
+  }
+}
+
+.nav-icon {
+  width: 18px; height: 18px;
+  fill: currentColor;
+  flex-shrink: 0;
+  transition: fill 0.15s;
+}
+
+.nav-label { overflow: hidden; text-overflow: ellipsis; }
+
+// ─── Sidebar collapsed: centralizar ícones ─────────────────────────────────
+.sidebar-collapsed .nav-item {
+  justify-content: center;
+  padding: 12px;
+}
+.sidebar-collapsed .sb-company { display: none; }
+
+// ─── Footer sidebar ────────────────────────────────────────────────────────
+.sb-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  border-top: 1px solid var(--border);
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.user-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  flex: 1;
+}
+
+.user-avatar {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--grad);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: #fff;
+  flex-shrink: 0;
+}
+
+.user-name { font-size: 12px; font-weight: 500; color: var(--text-h); white-space: nowrap; }
+
+.btn-logout {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  color: var(--text-muted);
+  display: flex; align-items: center;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+  svg { width: 18px; height: 18px; fill: currentColor; }
+  &:hover { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+}
+
+.sidebar-collapsed .sb-footer { flex-direction: column; justify-content: center; }
+.sidebar-collapsed .user-row  { justify-content: center; }
+.sidebar-collapsed .user-name  { display: none; }
+
+// ─── Área principal ────────────────────────────────────────────────────────
+.main-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+// ─── Topbar ────────────────────────────────────────────────────────────────
+.topbar {
+  height: $topbar-h;
+  background: var(--bg-form);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.topbar-spacer { flex: 1; }
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.hamburger {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  color: var(--text-h);
+  border-radius: 8px;
+  display: flex; align-items: center;
+  svg { width: 22px; height: 22px; fill: currentColor; }
+  &:hover { background: var(--bg-page); }
+}
+
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+}
+
+.chip-avatar {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--grad);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; color: #fff;
+}
+
+.chip-name { font-size: 13px; font-weight: 500; color: var(--text-h); }
+
+// ─── Conteúdo da página ────────────────────────────────────────────────────
+.page-content {
+  flex: 1;
+  padding: 28px 28px;
+  overflow-y: auto;
+
+  @media (max-width: 900px)  { padding: 20px; }
+  @media (max-width: 600px)  { padding: 16px; }
+}
+
+// ─── Overlay mobile ────────────────────────────────────────────────────────
+.mob-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 39;
+  backdrop-filter: blur(2px);
+}
+
+// ─── Responsividade ────────────────────────────────────────────────────────
+@media (max-width: 900px) {
+  .sidebar-collapsed .sidebar { width: $sb-w-collapsed; }
+}
+
+@media (max-width: 768px) {
+  // Sidebar fora do fluxo em mobile
+  .sidebar {
+    position: fixed;
+    left: -$sb-w;
+    top: 0;
+    height: 100%;
+    transition: left $transition, background $transition;
+    width: $sb-w !important;
+    box-shadow: none;
+    z-index: 41;
+
+    &.open {
+      left: 0;
+      box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+    }
+  }
+
+  .main-area { margin-left: 0 !important; }
+}
+
+// ─── Utilitários ──────────────────────────────────────────────────────────
+.hide-mobile { @media (max-width: 768px) { display: none !important; } }
+.show-mobile { @media (min-width: 769px) { display: none !important; } }
+
+// ─── Título de página na topbar (mobile) ──────────────────────────────────
+.topbar-page-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-h);
+  letter-spacing: -.2px;
+  margin-left: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
+// ─── Grupos de navegação (padrão SGFE) ────────────────────────────────────────
+.nav-group-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .9px;
+  padding: 14px 12px 3px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.nav-arrow {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+  margin-left: auto;
+  opacity: 0;
+  transition: opacity .15s;
+  flex-shrink: 0;
+}
+
+.nav-item.active .nav-arrow {
+  opacity: .7;
+}
+
+// ─── E-mail no rodapé da sidebar ───────────────────────────────────────────────
+.user-email {
+  font-size: 10px;
+  color: var(--text-muted);
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// ─── Topbar page title em mobile ──────────────────────────────────────────────
+.topbar-page-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-h);
+  letter-spacing: -.2px;
+  margin-left: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
+// ─── Destaque para Assistente IA na sidebar — padrão SGFE ─────────────────────
+// Angular RouterLink NÃO gera atributo [href] nativo — usar [routerLink="/chatbot"]
+// Para selecionar o item IA, usamos o routerLink como atributo de dados.
+// A solução correta é adicionar uma classe utilitária no nav-item do chatbot via template.
+// O badge "IA" é renderizado via .nav-item-ai no shell.component.html
+.nav-item-ai:not(.active) {
+  .nav-arrow { display: none; }
+
+  &::after {
+    content: "IA";
+    font-size: 8px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    padding: 1px 5px;
+    border-radius: 5px;
+    margin-left: auto;
+    letter-spacing: .3px;
+    flex-shrink: 0;
+  }
+}

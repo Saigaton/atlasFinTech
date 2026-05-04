@@ -1,75 +1,357 @@
-<div class="analise-container">
-  <h1>Análise Financeira</h1>
-  <p>Visualize seus dados financeiros em gráficos</p>
-
-  <div class="filtros">
-    <h3>Período</h3>
-    <div class="filtros-grid">
-      <div class="filtro-item">
-        <label>Data Inicial</label>
-        <input type="date" [(ngModel)]="dataInicial">
-      </div>
-      <div class="filtro-item">
-        <label>Data Final</label>
-        <input type="date" [(ngModel)]="dataFinal">
-      </div>
-      <div class="filtro-item">
-        <button class="btn-primary" (click)="aplicarFiltro()">Aplicar Filtro</button>
-      </div>
+<app-shell>
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Análise</h1>
+      <p class="page-sub">Fluxo de caixa, análise financeira, alertas e assistente</p>
     </div>
   </div>
 
-  <div class="stats-grid">
-    <div class="stat-card receitas">
-      <h3>Receitas</h3>
-      <p class="value">{{ formatarMoeda(getReceitasTotal()) }}</p>
-      <div class="progress-bar">
-        <div class="progress" [style.width.%]="getPercentualReceitas()"></div>
-      </div>
-      <p class="percentage">{{ getPercentualReceitas().toFixed(1) }}%</p>
-    </div>
-
-    <div class="stat-card despesas">
-      <h3>Despesas</h3>
-      <p class="value">{{ formatarMoeda(getDespesasTotal()) }}</p>
-      <div class="progress-bar">
-        <div class="progress" [style.width.%]="getPercentualDespesas()"></div>
-      </div>
-      <p class="percentage">{{ getPercentualDespesas().toFixed(1) }}%</p>
-    </div>
-
-    <div class="stat-card fluxo">
-      <h3>Fluxo Líquido</h3>
-      <p class="value" [ngClass]="getFluxoLiquido() >= 0 ? 'positive' : 'negative'">
-        {{ formatarMoeda(getFluxoLiquido()) }}
-      </p>
-      <p class="subtitle">Receitas - Despesas</p>
-    </div>
+  <!-- Abas -->
+  <div class="tabs">
+    @for (t of [
+      {k:'fluxoCaixa', l:'Fluxo de Caixa',  icon:'M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z'},
+      {k:'analise',    l:'Análise',          icon:'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z'},
+      {k:'alertas',    l:'Alertas',          icon:'M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z'},
+      {k:'auditoria',  l:'Auditoria',        icon:'M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z'},
+      {k:'assistente', l:'Assistente',       icon:'M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z'},
+      {k:'calendario', l:'Calendário',       icon:'M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z'}
+    ]; track t.k) {
+      <button class="tab" [class.active]="abaSelecionada === t.k" (click)="selecionarAba($any(t.k))">
+        <svg viewBox="0 0 24 24"><path [attr.d]="t.icon"/></svg>{{ t.l }}
+        @if (t.k === 'alertas' && alertas.length > 0) {
+          <span class="tab-badge">{{ alertas.length }}</span>
+        }
+      </button>
+    }
   </div>
 
-  <div class="chart-container">
-    <h2>Distribuição de Transações</h2>
-    <div *ngIf="getTransacoesFiltrads().length === 0; else chartContent" class="empty-state">
-      <p>Nenhuma transação no período selecionado</p>
-    </div>
-
-    <ng-template #chartContent>
-      <div class="chart-info">
-        <div class="chart-item receitas">
-          <div class="chart-color"></div>
-          <div class="chart-label">
-            <p>Receitas</p>
-            <p class="value">{{ formatarMoeda(getReceitasTotal()) }}</p>
+  <!-- ══ FLUXO DE CAIXA ══════════════════════════════════════════════════ -->
+  @if (abaSelecionada === 'fluxoCaixa') {
+    @if (carregandoFluxoCaixa) {
+      <div class="loading-center"><span class="spin-lg"></span></div>
+    } @else if (fluxoCaixa) {
+      <div class="kpi-row">
+        <div class="kpi-mini">
+          <div class="km-lbl">Saldo atual</div>
+          <div class="km-val" [class.neg]="fluxoCaixa.saldoAtual < 0">
+            {{ formatarMoeda(fluxoCaixa.saldoAtual) }}
           </div>
         </div>
-        <div class="chart-item despesas">
-          <div class="chart-color"></div>
-          <div class="chart-label">
-            <p>Despesas</p>
-            <p class="value">{{ formatarMoeda(getDespesasTotal()) }}</p>
+        @for (p of fluxoCaixa.projecao; track p.rotulo) {
+          <div class="kpi-mini">
+            <div class="km-lbl">Proj. {{ p.rotulo }}</div>
+            <div class="km-val" [class.neg]="p.saldoProjetado < 0">
+              {{ formatarMoeda(p.saldoProjetado) }}
+            </div>
           </div>
+        }
+      </div>
+
+      <div class="card">
+        <div class="card-title">Projeção de entradas e saídas</div>
+        <div class="cf-chart">
+          @for (m of fluxoCaixa.projecao; track m.rotulo) {
+            <div class="cf-col">
+              <div class="cf-bars">
+                <div class="cf-bar cf-income"  [style.height]="alturaBarraCaixa(m.receitaProjetada)"
+                     [title]="'Entrada: ' + formatarMoeda(m.receitaProjetada)"></div>
+                <div class="cf-bar cf-expense" [style.height]="alturaBarraCaixa(m.despesaProjetada)"
+                     [title]="'Saída: ' + formatarMoeda(m.despesaProjetada)"></div>
+              </div>
+              <div class="cf-lbl">{{ m.rotulo }}</div>
+            </div>
+          }
+        </div>
+        <div class="cf-legend">
+          <span class="leg-dot" style="background:#3b82f6"></span><span class="leg-lbl">Entradas projetadas</span>
+          <span class="leg-dot" style="background:#ef4444"></span><span class="leg-lbl">Saídas projetadas</span>
+        </div>
+        <div class="cf-table-wrap">
+          <table class="cf-table">
+            <thead>
+              <tr><th>Mês</th><th>Entradas</th><th>Saídas</th><th>Líquido</th><th>Saldo proj.</th></tr>
+            </thead>
+            <tbody>
+              @for (m of fluxoCaixa.projecao; track m.rotulo) {
+                <tr>
+                  <td>{{ m.rotulo }}</td>
+                  <td class="val-pos">{{ formatarMoeda(m.receitaProjetada) }}</td>
+                  <td class="val-neg">{{ formatarMoeda(m.despesaProjetada) }}</td>
+                  <td [class]="m.liquido >= 0 ? 'val-pos' : 'val-neg'">{{ formatarMoeda(m.liquido) }}</td>
+                  <td [class]="m.saldoProjetado >= 0 ? 'val-pos' : 'val-neg'">{{ formatarMoeda(m.saldoProjetado) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
         </div>
       </div>
-    </ng-template>
-  </div>
-</div>
+    }
+  }
+
+  <!-- ══ ANÁLISE FINANCEIRA ══════════════════════════════════════════════ -->
+  @if (abaSelecionada === 'analise') {
+    <div class="period-bar-sgfe">
+      <button class="period-btn-sgfe" [class.active]="periodoAnalise === '1m'" (click)="definirPeriodoAnalise('1m')">Este Mês</button>
+      <button class="period-btn-sgfe" [class.active]="periodoAnalise === '3m'" (click)="definirPeriodoAnalise('3m')">Últimos 3 meses</button>
+      <button class="period-btn-sgfe" [class.active]="periodoAnalise === '6m'" (click)="definirPeriodoAnalise('6m')">Últimos 6 meses</button>
+      <button class="period-btn-sgfe" [class.active]="periodoAnalise === '1y'" (click)="definirPeriodoAnalise('1y')">Este Ano</button>
+    </div>
+
+    @if (carregandoAnalise) {
+      <div class="loading-center"><span class="spin-lg"></span></div>
+    } @else if (analise) {
+      <div class="an-grid">
+        <div class="an-card">
+          <div class="an-lbl">Receita total</div>
+          <div class="an-val pos">{{ formatarMoeda(analise.totalReceita) }}</div>
+          <div class="an-chg">{{ formatarPorcentagem(analise.crescimentoReceita) }} vs mês anterior</div>
+        </div>
+        <div class="an-card">
+          <div class="an-lbl">Despesa total</div>
+          <div class="an-val neg">{{ formatarMoeda(analise.totalDespesa) }}</div>
+          <div class="an-chg">{{ formatarPorcentagem(analise.crescimentoDespesa) }} vs mês anterior</div>
+        </div>
+        <div class="an-card">
+          <div class="an-lbl">Lucro líquido</div>
+          <div class="an-val" [class.pos]="analise.lucroLiquido >= 0" [class.neg]="analise.lucroLiquido < 0">
+            {{ formatarMoeda(analise.lucroLiquido) }}
+          </div>
+          <div class="an-chg">{{ formatarPorcentagem(analise.crescimentoLucro) }} vs mês anterior</div>
+        </div>
+        <div class="an-card">
+          <div class="an-lbl">Margem de lucro</div>
+          <div class="an-val" [class.pos]="analise.margemLucro >= 0" [class.neg]="analise.margemLucro < 0">
+            {{ analise.margemLucro.toFixed(1) }}%
+          </div>
+          <div class="an-chg">{{ analise.totalTransacoes }} transações</div>
+        </div>
+        <div class="an-card">
+          <div class="an-lbl">Ticket médio (receita)</div>
+          <div class="an-val pos">{{ formatarMoeda(analise.ticketMedioReceita) }}</div>
+          <div class="an-chg">{{ analise.transacoesReceita }} entradas</div>
+        </div>
+        <div class="an-card">
+          <div class="an-lbl">Ticket médio (despesa)</div>
+          <div class="an-val neg">{{ formatarMoeda(analise.ticketMedioDespesa) }}</div>
+          <div class="an-chg">{{ analise.transacoesDespesa }} saídas</div>
+        </div>
+      </div>
+    }
+  }
+
+  <!-- ══ ALERTAS ══════════════════════════════════════════════════════════ -->
+  @if (abaSelecionada === 'alertas') {
+    @if (carregandoAlertas) {
+      <div class="loading-center"><span class="spin-lg"></span></div>
+    } @else if (alertas.length === 0) {
+      <div class="empty-full">
+        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        <h3>Nenhum alerta</h3>
+        <p>Suas finanças estão em ordem!</p>
+      </div>
+    } @else {
+      <div class="alerts-list">
+        @for (a of alertas; track a.titulo) {
+          <div class="alert-card"
+               [class.alert-danger]="a.tipo === TipoAlerta.Perigo"
+               [class.alert-warning]="a.tipo === TipoAlerta.Aviso"
+               [class.alert-info]="a.tipo === TipoAlerta.Informacao">
+            <div class="alert-icon">{{ iconeAlerta(a.tipo) }}</div>
+            <div class="alert-body">
+              <div class="alert-title">{{ a.titulo }}</div>
+              <div class="alert-msg">{{ a.mensagem }}</div>
+            </div>
+            <a [routerLink]="a.rotaAcao" class="alert-link">Ver →</a>
+          </div>
+        }
+      </div>
+    }
+  }
+
+  <!-- ══ AUDITORIA ════════════════════════════════════════════════════════ -->
+  @if (abaSelecionada === 'auditoria') {
+    @if (carregandoAuditoria) {
+      <div class="loading-center"><span class="spin-lg"></span></div>
+    } @else if (logAuditoria) {
+      <div class="card">
+        <div class="card-title">Log de auditoria ({{ logAuditoria.total }} registros)</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Data / Hora</th><th>Ação</th><th>Entidade</th><th>ID</th><th>IP</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (l of logAuditoria.itens; track l.id) {
+                <tr>
+                  <td class="td-date">{{ formatarDataHora(l.criadoEm) }}</td>
+                  <td>
+                    <span class="action-badge" [class]="'action-' + l.acao">
+                      {{ labelAcao(l.acao) }}
+                    </span>
+                  </td>
+                  <td class="td-entity">{{ l.entidade }}</td>
+                  <td class="td-id">{{ l.entidadeId ? '#' + l.entidadeId : '—' }}</td>
+                  <td class="td-ip">{{ l.ip || '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (logAuditoria.paginas > 1) {
+          <div class="pagination">
+            <button class="pg-btn" (click)="auditoriaPagina(paginaAuditoria - 1)" [disabled]="paginaAuditoria === 1">‹</button>
+            @for (p of paginasAuditoria; track p) {
+              <button class="pg-btn" [class.active]="p === paginaAuditoria" (click)="auditoriaPagina(p)">{{ p }}</button>
+            }
+            <button class="pg-btn" (click)="auditoriaPagina(paginaAuditoria + 1)" [disabled]="paginaAuditoria === logAuditoria.paginas">›</button>
+          </div>
+        }
+      </div>
+    }
+  }
+
+  <!-- ══ ASSISTENTE ═══════════════════════════════════════════════════════ -->
+  @if (abaSelecionada === 'assistente') {
+    <div class="chat-wrap">
+      <div class="chat-messages">
+        @for (msg of historicoChat; track $index) {
+          <div class="chat-msg" [class.msg-usuario]="msg.tipo === 'usuario'" [class.msg-bot]="msg.tipo === 'bot'">
+            <div class="msg-bubble">{{ msg.texto }}</div>
+          </div>
+        }
+        @if (enviandoChat) {
+          <div class="chat-msg msg-bot">
+            <div class="msg-bubble typing"><span></span><span></span><span></span></div>
+          </div>
+        }
+      </div>
+
+      <div class="quick-btns">
+        @for (q of ['Qual é meu saldo?','Como foi o mês?','O que tenho a pagar?','Há algum alerta?']; track q) {
+          <button class="quick-btn" (click)="sugestaoRapida(q)" [disabled]="enviandoChat">{{ q }}</button>
+        }
+      </div>
+
+      <div class="chat-input-row">
+        <textarea class="chat-input" rows="1"
+          [(ngModel)]="mensagemChat"
+          (keydown)="aoDigitarChat($event)"
+          placeholder="Pergunte sobre suas finanças..."
+          [disabled]="enviandoChat"></textarea>
+        <button class="btn-send-chat" (click)="enviarMensagem()" [disabled]="enviandoChat || !mensagemChat.trim()">
+          @if (enviandoChat) { <span class="spin"></span> }
+          @else { <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg> }
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- ══ CALENDÁRIO ═══════════════════════════════════════════════════════ -->
+  @if (abaSelecionada === 'calendario') {
+    <div class="cal-period-bar">
+      <span class="cal-period-label">Período do calendário:</span>
+      <select class="cal-select" [(ngModel)]="mesSelecionadoCal" (change)="alterarMesCalendario()">
+        @for (m of meses; track m.v) {
+          <option [value]="m.v">{{ m.l }}</option>
+        }
+      </select>
+      <select class="cal-select" [(ngModel)]="anoSelecionadoCal" (change)="alterarMesCalendario()">
+        @for (a of anos; track a) {
+          <option [value]="a">{{ a }}</option>
+        }
+      </select>
+    </div>
+
+    @if (carregandoCalendario) {
+      <div class="loading-center"><span class="spin-lg"></span></div>
+    } @else if (dadosCalendario) {
+      <div class="cal-totals">
+        <div class="cal-total-card cal-out">
+          <div class="ct-lbl">Total a pagar no mês</div>
+          <div class="ct-val">{{ formatarMoeda(dadosCalendario.totalPagar) }}</div>
+        </div>
+        <div class="cal-total-card cal-in">
+          <div class="ct-lbl">Total a receber no mês</div>
+          <div class="ct-val">{{ formatarMoeda(dadosCalendario.totalReceber) }}</div>
+        </div>
+        <div class="cal-total-card"
+             [class.cal-in]="dadosCalendario.totalReceber >= dadosCalendario.totalPagar"
+             [class.cal-out]="dadosCalendario.totalReceber < dadosCalendario.totalPagar">
+          <div class="ct-lbl">Saldo previsto</div>
+          <div class="ct-val">{{ formatarMoeda(dadosCalendario.totalReceber - dadosCalendario.totalPagar) }}</div>
+        </div>
+      </div>
+
+      <div class="cal-card">
+        <div class="cal-header">{{ dadosCalendario.rotulo }}</div>
+        <div class="cal-weekdays">
+          @for (d of ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom']; track d) {
+            <div class="cal-wd">{{ d }}</div>
+          }
+        </div>
+        <div class="cal-grid">
+          @for (dia of diasCalendario(); track $index) {
+            <div class="cal-cell" [class.empty]="!dia"
+                 [class.today]="dia && ehHoje(dia)"
+                 [class.has-events]="dia && !!eventoDoCalendario(dia!)">
+              @if (dia) {
+                <div class="cal-day-num">{{ dia }}</div>
+                @let evt = eventoDoCalendario(dia);
+                @if (evt) {
+                  @if (evt.pagaveis.length > 0) {
+                    <div class="cal-dot cal-dot-out" [title]="'A pagar: ' + formatarMoeda(evt.totalPagar)">
+                      {{ evt.pagaveis.length }} pagar
+                    </div>
+                  }
+                  @if (evt.recebiveis.length > 0) {
+                    <div class="cal-dot cal-dot-in" [title]="'A receber: ' + formatarMoeda(evt.totalReceber)">
+                      {{ evt.recebiveis.length }} receber
+                    </div>
+                  }
+                }
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      @if (dadosCalendario.eventos.length > 0) {
+        <div class="card" style="margin-top:14px">
+          <div class="card-title">Vencimentos do mês</div>
+          @for (evt of dadosCalendario.eventos; track evt.data) {
+            <div class="cal-event-day">
+              <div class="ced-date">{{ evt.data | date:'dd/MM' }}</div>
+              <div class="ced-items">
+                @for (p of evt.pagaveis; track p.id) {
+                  <div class="ced-item ced-out">
+                    <span class="ced-label">A PAGAR</span>
+                    <span class="ced-desc">{{ p.descricao }}</span>
+                    <span class="ced-val">{{ formatarMoeda(p.valor) }}</span>
+                    <span class="ced-status" [class]="'status-' + p.situacao">{{ p.situacao }}</span>
+                  </div>
+                }
+                @for (r of evt.recebiveis; track r.id) {
+                  <div class="ced-item ced-in">
+                    <span class="ced-label">A RECEBER</span>
+                    <span class="ced-desc">{{ r.descricao }}{{ r.nomeCliente ? ' — ' + r.nomeCliente : '' }}</span>
+                    <span class="ced-val">{{ formatarMoeda(r.valor) }}</span>
+                    <span class="ced-status" [class]="'status-' + r.situacao">{{ r.situacao }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="empty-full" style="padding:40px">
+          <svg viewBox="0 0 24 24"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg>
+          <h3>Nenhum vencimento</h3>
+          <p>Não há contas a pagar ou receber neste mês.</p>
+        </div>
+      }
+    }
+  }
+
+</app-shell>

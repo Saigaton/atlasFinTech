@@ -1,125 +1,265 @@
-<div class="transacoes-container">
+<app-shell>
+
   <div class="page-header">
     <div>
-      <h1>Transações</h1>
-      <p>Registre e acompanhe todas as suas movimentações</p>
+      <h1 class="page-title">Transações</h1>
+      <p class="page-sub">Gerencie receitas, despesas e transferências</p>
     </div>
-    <button class="btn-primary" (click)="abrirModal()">+ Nova Transação</button>
+    <button class="btn-new" (click)="abrirCriarTransacao()">
+      <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+      Nova transação
+    </button>
   </div>
 
-  <div class="filtros">
-    <h3>Filtros</h3>
-    <div class="filtros-grid">
-      <div class="filtro-item">
-        <label>Tipo</label>
-        <select [(ngModel)]="filtroTipo">
-          <option [value]="3">Todas</option>
-          <option [value]="tipoTransacao.Receita">Receita</option>
-          <option [value]="tipoTransacao.Despesa">Despesa</option>
-        </select>
-      </div>
-      <div class="filtro-item">
-        <label>Conta</label>
-        <select [(ngModel)]="filtroContaId">
-          <option value="">Todas as contas</option>
-          <option *ngFor="let conta of contas" [value]="conta.id">{{ conta.nome }}</option>
-        </select>
-      </div>
-      <div class="filtro-item">
-        <label>Buscar por descrição...</label>
-        <input type="text" placeholder="Buscar por descrição...">
-      </div>
+  <!-- Filtros -->
+  <div class="filters">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      <input type="text" placeholder="Buscar transação..." [value]="filtroPesquisa"
+             (input)="aplicarFiltro('pesquisa', $any($event.target).value)">
+    </div>
+    <div class="filter-group">
+      <select [value]="filtroTipo" (change)="aplicarFiltro('tipo', $any($event.target).value)">
+        <option value="">Todos os tipos</option>
+        <option value="income">Receita</option>
+        <option value="expense">Despesa</option>
+        <option value="transfer">Transferência</option>
+      </select>
+      <select [value]="filtroSituacao" (change)="aplicarFiltro('situacao', $any($event.target).value)">
+        <option value="">Todos os status</option>
+        <option value="confirmed">Confirmado</option>
+        <option value="pending">Pendente</option>
+        <option value="cancelled">Cancelado</option>
+      </select>
     </div>
   </div>
 
-  <div *ngIf="getTransacoesFiltrads().length === 0; else transacoesList" class="empty-state">
-    <p>Nenhuma transação encontrada</p>
-  </div>
-
-  <ng-template #transacoesList>
-    <div class="transacoes-table">
-      <table>
-        <thead>
-          <tr>
-            <th>Tipo</th>
-            <th>Conta</th>
-            <th>Descrição</th>
-            <th>Data</th>
-            <th>Valor</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let transacao of getTransacoesFiltrads()" [ngClass]="transacao.tipo === tipoTransacao.Receita ? 'receita' : 'despesa'">
-            <td>
-              <span class="badge" [ngClass]="transacao.tipo === tipoTransacao.Receita ? 'badge-success' : 'badge-danger'">
-                {{ transacao.tipo }}
-              </span>
-            </td>
-            <td>{{ getNomeConta(transacao.contaId) }}</td>
-            <td>{{ transacao.descricao }}</td>
-            <td>{{ transacao.data | date: 'dd/MM/yyyy' }}</td>
-            <td class="valor" [ngClass]="transacao.tipo === tipoTransacao.Receita ? 'receita' : 'despesa'">
-              {{ transacao.tipo === tipoTransacao.Receita ? '+' : '-' }} {{ formatarMoeda(transacao.valor) }}
-            </td>
-            <td class="acoes">
-              <button class="btn-edit" (click)="editarTransacao(transacao)" title="Editar">Editar</button>
-              <button class="btn-delete" (click)="deletarTransacao(transacao.id)" title="Deletar">Deletar</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </ng-template>
-
-  <!-- Modal -->
-  <div *ngIf="mostrarModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>{{ editando ? 'Editar Transação' : 'Nova Transação' }}</h2>
-        <button class="modal-close" (click)="fecharModal()">✕</button>
+  <!-- Tabela -->
+  <div class="card">
+    @if (carregando) {
+      <div class="table-loading">
+        @for (i of [1,2,3,4,5,6]; track i) {
+          <div class="skeleton-row"></div>
+        }
+      </div>
+    } @else if (transacoes.length === 0) {
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+        <p>Nenhuma transação encontrada</p>
+        <button class="link-action" (click)="abrirCriarTransacao()">Registrar primeira transação</button>
+      </div>
+    } @else {
+      <div class="table-wrap">
+        <table class="tx-table">
+          <thead>
+            <tr>
+              <th>Descrição</th>
+              <th class="hide-sm">Data</th>
+              <th class="hide-md">Conta</th>
+              <th class="hide-md">Categoria</th>
+              <th>Valor</th>
+              <th class="hide-sm">Status</th>
+              <th class="col-actions"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (tx of transacoes; track tx.id) {
+              <tr [class.row-cancelled]="tx.situacao === 2">
+                <td>
+                  <div class="td-desc">
+                    <!-- Ícone de tipo — padrão SGFE -->
+                    <div class="tx-type-icon" [class.income]="tx.tipo===0" [class.expense]="tx.tipo===1" [class.transfer]="tx.tipo===3">
+                      @if (tx.tipo === 0) {
+                        <svg viewBox="0 0 24 24"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
+                      } @else if (tx.tipo === 1) {
+                        <svg viewBox="0 0 24 24"><path d="M16 18l2.29-2.29-4.88-4.88-4 4L2 7.41 3.41 6l6 6 4-4 6.3 6.29L22 12v6z"/></svg>
+                      } @else {
+                        <svg viewBox="0 0 24 24"><path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z"/></svg>
+                      }
+                    </div>
+                    <div>
+                      <span class="td-main">{{ tx.descricao }}</span>
+                      <span class="td-sub show-sm">{{ formatarData(tx.data) }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="hide-sm td-date">{{ formatarData(tx.data) }}</td>
+                <td class="hide-md td-sub">{{ tx.conta.nome || '—' }}</td>
+                <td class="hide-md">
+                  @if (tx.categoria!.nome) {
+                    <span class="cat-tag" [style.background]="(tx.categoria!.cor || '#64748b') + '22'" [style.color]="tx.categoria!.cor || '#64748b'">
+                      {{ tx.categoria!.nome }}
+                    </span>
+                  } @else { <span class="td-sub">—</span> }
+                </td>
+                <td>
+                  <!-- <span [class]="tx.tipo === 'income' ? 'val-pos' : tx.tipo === 'expense' ? 'val-neg' : 'val-neutral'">
+                    {{ tx.tipo === 'income' ? '+' : tx.tipo === 'expense' ? '−' : '⇄' }}
+                    {{ formatarCurrency(tx.valor) }}
+                  </span> -->
+                </td>
+                <td class="hide-sm">
+                  <span [class]="situacaoClass('SituacaoTransacao[tx.situacaoId]')">{{ situacaoLabel('SituacaoTransacao[tx.situacaoId]') }}</span>
+                </td>
+                <td>
+                  <div class="row-actions">
+                    @if (tx.situacao !== 2) {
+                      <button class="action-btn" (click)="abrirEditarTransacao(tx)" title="Editar">
+                        <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                      </button>
+                      <button class="action-btn danger" (click)="onDelete(tx)" title="Cancelar">
+                        <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
       </div>
 
-      <form (ngSubmit)="salvarTransacao()">
-        <div class="form-group">
-          <label>Tipo</label>
-          <select [(ngModel)]="transacaoAtual.tipo" name="tipo">
-            <option value="Receita">Receita</option>
-            <option value="Despesa">Despesa</option>
-          </select>
+      <!-- Paginação -->
+      @if (paginas > 1) {
+        <div class="pagination">
+          <button class="pg-btn" (click)="irParaPagina(pagina - 1)" [disabled]="pagina === 1">‹</button>
+          @for (p of arrayPaginas; track p) {
+            <button class="pg-btn" [class.active]="p === pagina" (click)="irParaPagina(p)">{{ p }}</button>
+          }
+          <button class="pg-btn" (click)="irParaPagina(pagina + 1)" [disabled]="pagina === paginas">›</button>
+          <span class="pg-info">{{ total }} transações</span>
+        </div>
+      }
+    }
+  </div>
+
+  <!-- ── Modal de criar/editar ──────────────────────────────────────────── -->
+  @if (showModal) {
+    <div class="modal-backdrop" (click)="closeModal()">
+      <div class="modal" (click)="$event.stopPropagation()">
+
+        <div class="modal-header">
+          <h2>{{ editandoTransacao ? 'Editar transação' : 'Nova transação' }}</h2>
+          <button class="modal-close" (click)="closeModal()">
+            <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+          </button>
         </div>
 
-        <div class="form-group">
-          <label>Conta</label>
-          <select [(ngModel)]="transacaoAtual.contaId" name="contaId" required>
-            <option value="">Selecione uma conta</option>
-            <option *ngFor="let conta of contas" [value]="conta.id">{{ conta.nome }}</option>
-          </select>
-        </div>
+        <form [formGroup]="formTransacao" (ngSubmit)="onSubmit()" novalidate class="modal-body">
 
-        <div class="form-group">
-          <label>Descrição</label>
-          <input type="text" [(ngModel)]="transacaoAtual.descricao" name="descricao" placeholder="Ex: Venda de produto" required>
-        </div>
+          <!-- Tipo -->
+          @if (!editandoTransacao) {
+            <div class="type-tabs">
+              @for (t of [{val:'expense',label:'Despesa'},{val:'income',label:'Receita'},{val:'transfer',label:'Transferência'}]; track t.val) {
+                <button type="button"
+                  [class.active]="formTransacao.get('tipo')?.value === t.val"
+                  [class]="'tab-' + t.val"
+                  (click)="formTransacao.get('tipo')?.setValue(t.val)">
+                  {{ t.label }}
+                </button>
+              }
+            </div>
+          }
 
-        <div class="form-row">
-          <div class="form-group">
-            <label>Valor</label>
-            <input type="number" [(ngModel)]="transacaoAtual.valor" name="valor" step="0.01" required>
+          <!-- Descrição -->
+          <div class="fld">
+            <label class="fld-lbl">Descrição *</label>
+            <input type="text" formControlName="descricao" placeholder="Ex: Salário, Aluguel..."
+              [class.bad]="formTransacao.get('descricao')?.invalid && formTransacao.get('descricao')?.touched">
           </div>
-          <div class="form-group">
-            <label>Data</label>
-            <input type="date" [(ngModel)]="transacaoAtual.data" name="data" required>
+
+          <!-- Valor + Data -->
+          <div class="duo">
+            <div class="fld">
+              <label class="fld-lbl">Valor (R$) *</label>
+              <input type="number" formControlName="amount" placeholder="0,00" min="0.01" step="0.01"
+                [class.bad]="formTransacao.get('valor')?.invalid && formTransacao.get('valor')?.touched">
+            </div>
+            <div class="fld">
+              <label class="fld-lbl">Data *</label>
+              <input type="date" formControlName="date"
+                [class.bad]="formTransacao.get('data')?.invalid && formTransacao.get('data')?.touched">
+            </div>
           </div>
-        </div>
 
-        <div class="form-group">
-          <label>Categoria</label>
-          <input type="text" [(ngModel)]="transacaoAtual.categoria" name="categoria" placeholder="Ex: Vendas">
-        </div>
+          <!-- Conta + Status -->
+          <div class="duo">
+            <div class="fld">
+              <label class="fld-lbl">Conta *</label>
+              <select formControlName="contaId" [class.bad]="formTransacao.get('contaId')?.invalid && formTransacao.get('contaId')?.touched">
+                <option [value]="null">Selecione...</option>
+                @for (acc of contas; track acc.id) {
+                  <option [value]="acc.id">{{ acc.nome }}</option>
+                }
+              </select>
+            </div>
+            <div class="fld">
+              <label class="fld-lbl">Status</label>
+              <select formControlName="status">
+                <option value="confirmed">Confirmado</option>
+                <option value="pending">Pendente</option>
+              </select>
+            </div>
+          </div>
 
-        <button type="submit" class="btn-primary">{{ editando ? 'Atualizar Transação' : 'Criar Transação' }}</button>
-      </form>
+          <!-- Conta destino (transferências) -->
+          @if (isTransferencia) {
+            <div class="fld">
+              <label class="fld-lbl">Conta de destino *</label>
+              <select formControlName="transfer_to_account_id">
+                <option [value]="null">Selecione...</option>
+                @for (acc of contas; track acc.id) {
+                  @if (acc.id !== formTransacao.get('account_id')?.value) {
+                    <option [value]="acc.id">{{ acc.nome }}</option>
+                  }
+                }
+              </select>
+            </div>
+          }
+
+          <!-- Categoria -->
+          @if (!isTransferencia) {
+            <div class="fld">
+              <label class="fld-lbl">Categoria</label>
+              <select formControlName="category_id">
+                <option [value]="null">Sem categoria</option>
+                @for (cat of categoriasFiltradas; track cat.id) {
+                  <option [value]="cat.id">{{ cat.nome }}</option>
+                }
+              </select>
+            </div>
+          }
+
+          <!-- Recorrência -->
+          @if (!editandoTransacao && !isTransferencia) {
+            <div class="fld">
+              <label class="fld-lbl">Recorrência</label>
+              <select formControlName="recurrence">
+                <option value="none">Sem recorrência</option>
+                <option value="monthly">Mensal</option>
+                <option value="weekly">Semanal</option>
+                <option value="yearly">Anual</option>
+              </select>
+            </div>
+          }
+
+          <!-- Observação -->
+          <div class="fld">
+            <label class="fld-lbl">Observação</label>
+            <textarea formControlName="notes" rows="2" placeholder="Opcional..."></textarea>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn-cancel" (click)="closeModal()">Cancelar</button>
+            <button type="submit" class="btn-save" [disabled]="enviando">
+              @if (enviando) { <span class="spin"></span> }
+              @else { {{ editandoTransacao ? 'Salvar' : 'Registrar' }} }
+            </button>
+          </div>
+
+        </form>
+      </div>
     </div>
-  </div>
-</div>
+  }
+
+</app-shell>

@@ -1,0 +1,661 @@
+// ─── Page header ──────────────────────────────────────────────────────────────
+.page-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:24px; }
+.page-title  { font-size:clamp(20px,3vw,26px); font-weight:800; color:var(--text-h); letter-spacing:-.4px; margin-bottom:3px; }
+.page-sub    { font-size:13px; color:var(--text-muted); }
+
+// ─── KPI Grid ─────────────────────────────────────────────────────────────────
+.kpi-grid {
+  display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px;
+  @media (max-width:1100px) { grid-template-columns:repeat(2,1fr); }
+  @media (max-width:500px)  { grid-template-columns:1fr; }
+}
+.kpi-card {
+  background:var(--bg-form); border:1px solid var(--border); border-radius:14px;
+  padding:18px 20px; transition:background .2s;
+}
+.kpi-top  { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.kpi-icon { width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; svg{width:17px;height:17px;fill:#fff;} }
+.kpi-label{ font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:.4px; }
+.kpi-val  { font-size:22px; font-weight:800; color:var(--text-h); letter-spacing:-.5px; margin-bottom:5px; }
+.kpi-chg  { font-size:11px; font-weight:600; }
+.chg-up   { color:#16a34a; }
+.chg-dn   { color:#dc2626; }
+.chg-neutral { color:var(--text-muted); }
+.val-neg  { color:#dc2626; }
+
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
+@keyframes shimmer { from{background-position:-200% 0} to{background-position:200% 0} }
+%ske {
+  background:linear-gradient(90deg,var(--bg-page) 25%,var(--border) 50%,var(--bg-page) 75%);
+  background-size:200% 100%; animation:shimmer 1.4s infinite; border-radius:6px;
+}
+.skeleton-val { @extend %ske; height:28px; width:65%; margin-bottom:6px; }
+.skeleton-tx  { @extend %ske; height:50px; margin-bottom:8px; border-radius:10px; }
+.skeleton-acc { @extend %ske; height:42px; margin-bottom:8px; border-radius:10px; }
+.skeleton-list { padding:4px 0; }
+
+// ─── Mid grid (gráfico + transações) ──────────────────────────────────────────
+.mid-grid {
+  display:grid; grid-template-columns:1fr 360px; gap:16px; margin-bottom:16px;
+  @media (max-width:1000px) { grid-template-columns:1fr; }
+}
+
+// ─── Card base ────────────────────────────────────────────────────────────────
+.card {
+  background:var(--bg-form); border:1px solid var(--border); border-radius:14px;
+  padding:20px; transition:background .2s;
+}
+.card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.card-title  { font-size:14px; font-weight:700; color:var(--text-h); }
+.card-action { font-size:12px; color:#2563eb; font-weight:600; text-decoration:none; [data-theme='dark'] &{color:#818cf8;} &:hover{text-decoration:underline;} }
+
+// ─── Gráfico de barras ────────────────────────────────────────────────────────
+.chart-legend { display:flex; align-items:center; gap:8px; }
+.legend-dot   { width:10px; height:10px; border-radius:50%; }
+.legend-lbl   { font-size:11px; color:var(--text-muted); margin-right:6px; }
+
+.bar-chart {
+  display:flex; align-items:flex-end; gap:6px; height:120px; padding-bottom:4px;
+}
+.bar-group {
+  flex:1; display:flex; flex-direction:column; align-items:center; gap:4px;
+  cursor:default;
+  &.future { opacity:.35; }
+}
+.bars-wrap {
+  flex:1; width:100%; display:flex; align-items:flex-end; gap:2px;
+}
+.bar {
+  flex:1; border-radius:3px 3px 0 0; transition:height .4s ease, opacity .2s;
+  min-height:2px;
+}
+.bar-income  { background:linear-gradient(180deg,#3b82f6,#2563eb); }
+.bar-expense { background:linear-gradient(180deg,#f87171,#ef4444); }
+.bar-lbl { font-size:9px; color:var(--text-muted); font-weight:500; }
+
+.chart-empty {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  height:120px; gap:8px;
+  svg { width:28px; height:28px; fill:var(--text-muted); }
+  p   { font-size:12px; color:var(--text-muted); }
+}
+
+// Skeleton do gráfico
+.chart-skeleton { display:flex; align-items:flex-end; gap:6px; height:120px; }
+.cs-col  { flex:1; display:flex; align-items:flex-end; gap:2px; }
+.cs-bar  { flex:1; border-radius:3px 3px 0 0; background:var(--border); animation:shimmer 1.4s infinite; background-size:200% 100%; }
+.cs-bar-expense { opacity:.6; }
+
+// ─── Transações ───────────────────────────────────────────────────────────────
+.tx-list { display:flex; flex-direction:column; }
+.tx-item {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 0; border-bottom:1px solid var(--border); gap:8px;
+  &:last-child { border-bottom:none; padding-bottom:0; }
+}
+.tx-left { display:flex; align-items:center; gap:10px; overflow:hidden; flex:1; }
+.tx-ico  { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; svg{width:14px;height:14px;fill:#fff;} }
+.tx-name { font-size:13px; font-weight:500; color:var(--text-h); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tx-meta { font-size:11px; color:var(--text-muted); margin-top:1px; display:flex; align-items:center; gap:4px; }
+.tag-pending {
+  font-size:10px; font-weight:600; background:#fef9c3; color:#854d0e;
+  padding:1px 6px; border-radius:10px;
+  [data-theme='dark'] & { background:#422006; color:#fbbf24; }
+}
+.tx-pos { font-size:13px; font-weight:700; color:#16a34a; white-space:nowrap; }
+.tx-neg { font-size:13px; font-weight:700; color:#dc2626; white-space:nowrap; }
+
+// ─── Bottom grid ──────────────────────────────────────────────────────────────
+.bottom-grid { display:grid; grid-template-columns:1fr 280px; gap:16px;
+  @media (max-width:900px) { grid-template-columns:1fr; }
+}
+
+// ─── Contas ───────────────────────────────────────────────────────────────────
+.acc-list { display:flex; flex-direction:column; gap:8px; }
+.acc-item { display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--bg-page); border-radius:10px; border:1px solid var(--border); }
+.acc-dot  { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.acc-info { flex:1; overflow:hidden; }
+.acc-name { font-size:13px; font-weight:500; color:var(--text-h); display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.acc-type { font-size:11px; color:var(--text-muted); }
+.acc-bal  { font-size:13px; font-weight:700; color:var(--text-h); white-space:nowrap; }
+.bal-neg  { color:#dc2626; }
+
+// ─── Quick actions ────────────────────────────────────────────────────────────
+.quick-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; @media (max-width:400px) { grid-template-columns:1fr; } }
+.qa-btn {
+  display:flex; align-items:center; gap:8px; padding:10px 12px;
+  background:var(--bg-page); border:1px solid var(--border); border-radius:10px;
+  text-decoration:none; font-size:12px; font-weight:500; color:var(--text-body);
+  transition:border-color .15s, color .15s, background .15s;
+  svg { width:15px; height:15px; fill:currentColor; flex-shrink:0; }
+  &:hover { border-color:#3b82f6; color:#2563eb; background:rgba(37,99,235,.05);
+    [data-theme='dark'] & { border-color:#6366f1; color:#818cf8; background:rgba(99,102,241,.08); }
+  }
+}
+
+// ─── Empty state ──────────────────────────────────────────────────────────────
+.empty-state { display:flex; flex-direction:column; align-items:center; padding:28px 16px; gap:8px;
+  svg { width:28px; height:28px; fill:var(--text-muted); }
+  p   { font-size:13px; color:var(--text-muted); }
+  &.small { padding:14px; }
+}
+.link-action { font-size:13px; font-weight:600; color:#2563eb; text-decoration:none;
+  &:hover { text-decoration:underline; }
+  [data-theme='dark'] & { color:#818cf8; }
+}
+
+// ─── Onboarding ───────────────────────────────────────────────────────────────
+.onboarding { display:flex; align-items:center; justify-content:center; min-height:60vh; }
+.onboarding-card {
+  background:var(--bg-form); border:1px solid var(--border); border-radius:20px;
+  padding:48px 40px; max-width:420px; text-align:center;
+  h2 { font-size:22px; font-weight:800; color:var(--text-h); margin-bottom:8px; }
+  p  { font-size:14px; color:var(--text-body); margin-bottom:28px; }
+}
+.onboarding-icon { width:64px; height:64px; background:var(--grad); border-radius:18px; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; svg{width:30px;height:30px;fill:#fff;} }
+.btn-primary-lg {
+  display:inline-flex; align-items:center; gap:8px; padding:14px 28px; background:var(--grad);
+  color:#fff; border-radius:12px; font-size:15px; font-weight:700; text-decoration:none;
+  box-shadow:var(--shadow-btn); transition:transform .2s, box-shadow .2s;
+  svg { width:18px; height:18px; fill:#fff; }
+  &:hover { transform:translateY(-2px); box-shadow:var(--shadow-btn-h); }
+}
+
+// ─── Seletor de período — padrão SGFE ─────────────────────────────────────────
+.period-selector {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 4px;
+  flex-wrap: wrap;
+}
+
+.period-btn {
+  padding: 5px 12px;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .15s;
+  white-space: nowrap;
+
+  &:hover:not(.active) { background: var(--bg-form); color: var(--text-h); }
+  &.active { background: var(--bg-form); color: #2563eb; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  [data-theme='dark'] &.active { color: #818cf8; }
+}
+
+.period-refresh {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  border-radius: 7px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all .15s;
+  svg { width: 15px; height: 15px; fill: currentColor; }
+  &:hover { background: var(--bg-form); color: var(--text-h); }
+}
+
+// ─── Cards de alertas rápidos — padrão SGFE ───────────────────────────────────
+.alert-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+  @media (max-width: 700px) { grid-template-columns: 1fr; }
+}
+
+.alert-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid;
+  transition: background .2s;
+
+  &.red    { background: #fef2f2; border-color: #fecaca; }
+  &.yellow { background: #fffbeb; border-color: #fde68a; }
+  &.blue   { background: #eff6ff; border-color: #bfdbfe; }
+
+  [data-theme='dark'] &.red    { background: #1c0f10; border-color: #991b1b; }
+  [data-theme='dark'] &.yellow { background: #1c1408; border-color: #854d0e; }
+  [data-theme='dark'] &.blue   { background: #0c1a2e; border-color: #1e40af; }
+}
+
+.ac-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  svg { width: 18px; height: 18px; }
+  .red &    { background: #fee2e2; svg { fill: #dc2626; } }
+  .yellow & { background: #fef3c7; svg { fill: #d97706; } }
+  .blue &   { background: #dbeafe; svg { fill: #2563eb; } }
+}
+
+.ac-body { display: flex; flex-direction: column; gap: 2px; }
+.ac-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: var(--text-muted);
+}
+
+.ac-link {
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  .red &    { color: #dc2626; }
+  .yellow & { color: #d97706; }
+  .blue &   { color: #2563eb; }
+  [data-theme='dark'] .red &    { color: #f87171; }
+  [data-theme='dark'] .yellow & { color: #fbbf24; }
+  [data-theme='dark'] .blue &   { color: #93c5fd; }
+  &:hover { text-decoration: underline; }
+}
+
+// ── Gráfico de Despesas por Categoria ────────────────────────────────────────
+
+.cat-expense-card {
+  margin-bottom: 16px;
+}
+
+.cat-chart-wrap {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 24px;
+  align-items: center;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Donut SVG
+.donut-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.donut-svg {
+  width: 160px;
+  height: 160px;
+  transform: rotate(-90deg);
+  overflow: visible;
+}
+
+.donut-bg {
+  fill: none;
+  stroke: var(--border, #e2e8f0);
+  stroke-width: 14;
+}
+
+.donut-ring {
+  fill: none;
+  stroke-width: 14;
+  transition: stroke-dasharray .4s ease, stroke-dashoffset .4s ease;
+}
+
+.donut-center-label {
+  fill: var(--text-muted);
+  font-size: 8px;
+  text-anchor: middle;
+  transform: rotate(90deg);
+  transform-origin: 50px 50px;
+}
+
+.donut-center-val {
+  fill: var(--text-h);
+  font-size: 9px;
+  font-weight: 700;
+  text-anchor: middle;
+  transform: rotate(90deg);
+  transform-origin: 50px 50px;
+}
+
+// Lista de categorias
+.cat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cat-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.cat-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+.cat-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.cat-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  gap: 8px;
+}
+
+.cat-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-h);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cat-pct {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.cat-bar-track {
+  height: 5px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 3px;
+}
+
+.cat-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width .4s ease;
+}
+
+.cat-val {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.cat-report-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-info, #2563eb);
+  text-decoration: none;
+  opacity: .8;
+  transition: opacity .15s;
+
+  svg {
+    width: 13px;
+    height: 13px;
+    fill: currentColor;
+  }
+
+  &:hover { opacity: 1; }
+}
+
+// Skeleton do gráfico de categorias
+.cat-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cat-skel-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cat-skel-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.cat-skel-bar {
+  flex: 1;
+  height: 14px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--border) 25%, var(--bg-page) 50%, var(--border) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+
+.cat-skel-val {
+  width: 70px;
+  height: 14px;
+  border-radius: 4px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+// ── Previsão de saldo fim do mês (FEAT-5) ────────────────────────────────────
+.forecast-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  border: 0.5px solid #bfdbfe;
+  border-radius: var(--border-radius-lg);
+  padding: 14px 18px;
+  margin-bottom: 14px;
+
+  &.forecast-neg {
+    background: linear-gradient(135deg, #fef2f2, #fee2e2);
+    border-color: #fecaca;
+  }
+}
+
+.forecast-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(37, 99, 235, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  svg { width: 20px; height: 20px; fill: #2563eb; }
+
+  .forecast-neg & {
+    background: rgba(220, 38, 38, 0.1);
+    svg { fill: #dc2626; }
+  }
+}
+
+.forecast-body { flex: 1; min-width: 0; }
+
+.forecast-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted, var(--color-text-tertiary));
+  margin-bottom: 4px;
+}
+
+.forecast-value {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-bottom: 5px;
+
+  &.pos { color: #2563eb; }
+  &.neg { color: #dc2626; }
+}
+
+.forecast-detail {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: 11px;
+}
+
+.fc-in   { color: #16a34a; font-weight: 500; }
+.fc-out  { color: #dc2626; font-weight: 500; }
+.fc-days { color: var(--color-text-tertiary); }
+.fc-sep  { color: var(--color-text-tertiary); }
+
+// ── Metas orçamentárias (FEAT-2) ─────────────────────────────────────────────
+.budget-card { margin-bottom: 14px; }
+
+.budget-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.budget-row { display: flex; flex-direction: column; gap: 5px; }
+
+.budget-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.budget-left {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.budget-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.budget-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-h, var(--color-text-primary));
+}
+
+.budget-right {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.budget-spent {
+  font-weight: 600;
+  color: var(--color-text-primary);
+
+  &.over { color: #dc2626; }
+}
+
+.budget-sep { color: var(--color-text-tertiary); }
+
+.budget-goal {
+  color: var(--color-text-tertiary);
+  font-weight: 400;
+}
+
+.budget-track {
+  height: 6px;
+  background: var(--color-border-tertiary);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.budget-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s ease;
+
+  &.fill-ok   { background: #22c55e; }
+  &.fill-warn { background: #f59e0b; }
+  &.fill-over { background: #dc2626; }
+}
+
+.budget-footer { font-size: 10px; }
+
+.budget-status {
+  &.ok   { color: #16a34a; }
+  &.over { color: #dc2626; font-weight: 500; }
+}
+
+// ── Distribuição por conta (FEAT-4) ──────────────────────────────────────────
+.account-dist-card { margin-bottom: 14px; }
+
+.acc-dist-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.acc-dist-row { display: flex; flex-direction: column; gap: 5px; }
+
+.acc-dist-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  margin-bottom: 2px;
+}
+
+.acc-dist-bars { display: flex; flex-direction: column; gap: 4px; }
+
+.acc-dist-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.acc-dist-bar {
+  height: 6px;
+  border-radius: 3px;
+  min-width: 4px;
+  transition: width 0.4s ease;
+  flex-shrink: 0;
+
+  &.income  { background: linear-gradient(90deg, #22c55e, #16a34a); }
+  &.expense { background: linear-gradient(90deg, #f87171, #ef4444); }
+}
+
+.acc-dist-val {
+  font-size: 10px;
+  font-weight: 500;
+  white-space: nowrap;
+
+  &.income-txt  { color: #16a34a; }
+  &.expense-txt { color: #dc2626; }
+}
+
+// ── FEAT-3: linha de tendência no gráfico mensal ──────────────────────────────
+// Implementada via computed no .ts (média móvel 3 meses)
+// Sem mudança de HTML necessária — dados de tendência são sobrepostos pelo
+// componente de gráfico de barras usando o mesmo dataset com linha calculada.

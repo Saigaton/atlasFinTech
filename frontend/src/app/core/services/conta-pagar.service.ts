@@ -1,48 +1,52 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { ContaPagar } from '../models/conta-pagar.model';
+import { Observable } from 'rxjs';
+import { ContaPagar, RequisicaoPagamento, ResumoContasAPagar } from '../models/conta-pagar.model';
+import { environment } from '../../../environments/environment';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { RespostaApi, RespostaPaginada } from '../models/resposta-api';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ContaPagarService {
-  private contasPagar$ = new BehaviorSubject<ContaPagar[]>([]);
-  private contasPagarObservable = this.contasPagar$.asObservable();
+  private readonly API = `${environment.apiUrl}/api/v1`;
 
-  constructor() {
-    this.carregarContasPagar();
+  constructor(private http: HttpClient) {}
+
+  private base(empresaId: number): string {
+    return `${this.API}/empresa/${empresaId}/contas-pagar`;
   }
 
-  private carregarContasPagar(): void {
-    const contasPagarArmazenadas = localStorage.getItem('contasPagar');
-    if (contasPagarArmazenadas) {
-      const contasPagar = JSON.parse(contasPagarArmazenadas);
-      this.contasPagar$.next(contasPagar);
-    }
+  // ── Contas a Pagar ────────────────────────────────────────────────────
+
+  listarContasPagar(empresaId: number, params: {
+    status?: string; date_from?: string; date_to?: string;
+    page?: number; per_page?: number;
+  } = {}): Observable<RespostaPaginada<ContaPagar>> {
+    let p = new HttpParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') p = p.set(k, String(v));
+    });
+    return this.http.get<RespostaPaginada<ContaPagar>>(this.base(empresaId), { params: p });
   }
 
-  getContasPagar(): Observable<ContaPagar[]> {
-    return this.contasPagarObservable;
+  criarContaPagar(empresaId: number, data: ContaPagar): Observable<RespostaApi<ContaPagar[]>> {
+    return this.http.post<RespostaApi<ContaPagar[]>>(this.base(empresaId), data);
   }
 
-  adicionarContaPagar(contaPagar: ContaPagar): void {
-    const contasAtuais = this.contasPagar$.value;
-    const novasContas = [...contasAtuais, contaPagar];
-    this.contasPagar$.next(novasContas);
-    localStorage.setItem('contasPagar', JSON.stringify(novasContas));
+  atualizarContaPagar(empresaId: number, id: number, data: ContaPagar): Observable<RespostaApi<ContaPagar>> {
+    return this.http.patch<RespostaApi<ContaPagar>>(`${this.base(empresaId)}/${id}`, data);
   }
 
-  atualizarContaPagar(contaPagarAtualizada: ContaPagar): void {
-    const contasAtuais = this.contasPagar$.value;
-    const novasContas = contasAtuais.map(c => c.id === contaPagarAtualizada.id ? contaPagarAtualizada : c);
-    this.contasPagar$.next(novasContas);
-    localStorage.setItem('contasPagar', JSON.stringify(novasContas));
+  pagarContaPagar(empresaId: number, id: number, data: RequisicaoPagamento): Observable<RespostaApi<ContaPagar>> {
+    return this.http.post<RespostaApi<ContaPagar>>(`${this.base(empresaId)}/${id}/pay`, data);
   }
 
-  deletarContaPagar(id: string): void {
-    const contasAtuais = this.contasPagar$.value;
-    const novasContas = contasAtuais.filter(c => c.id !== id);
-    this.contasPagar$.next(novasContas);
-    localStorage.setItem('contasPagar', JSON.stringify(novasContas));
+  deletarContaPagar(empresaId: number, id: number): Observable<RespostaApi<null>> {
+    return this.http.delete<RespostaApi<null>>(`${this.base(empresaId)}/${id}`);
+  }
+
+  obterResumoContaPagar(empresaId: number): Observable<RespostaApi<ResumoContasAPagar>> {
+    return this.http.get<RespostaApi<ResumoContasAPagar>>(`${this.base(empresaId)}/resumo`);
   }
 }

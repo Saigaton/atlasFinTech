@@ -2,93 +2,74 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TransacaoService } from '../../core/services/transacao.service';
-import { TipoTransacao, Transacao } from '../../core/models/transacao.model';
+import { EmpresaService } from '../../core/services/empresa.service';
+import { firstValueFrom } from 'rxjs/internal/firstValueFrom';
+import { UnsubscriberComponent } from '../../core/unsubscriber.component';
+import { ShellComponent } from '../../shared/components/shell/shell.component';
 
+const MONTH_LABELS = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 @Component({
   selector: 'app-fluxo-caixa',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ShellComponent],
   templateUrl: './fluxo-caixa.component.html',
-  styleUrl: './fluxo-caixa.component.css'
+  styleUrl: './fluxo-caixa.component.scss'
 })
-export class FluxoCaixaComponent implements OnInit {
-  dataInicial = '';
-  dataFinal = '';
-  receitas = 0;
-  despesas = 0;
-  saldo = 0;
-  fluxoLiquido = 0;
-  transacoes: Transacao[] = [];
-  tipoTransacao = TipoTransacao;
+export class FluxoCaixaComponent extends UnsubscriberComponent implements OnInit {
+  // ── Estado ───────────────────────────────────────────────────────────────
+  carregando      = true;
+  anoSelecionado = new Date().getFullYear();
+  readonly anos = Array.from({ length: 5 }, (_, i) => this.anoSelecionado - i);
 
-  constructor(private transacaoService: TransacaoService) {}
+  private rawData: Array<{ mes: number; receita: number; despesa: number }> = [];
 
-  ngOnInit(): void {
-    this.definirPeriodiPadrao();
-    this.carregarTransacoes();
+  // ── Dados computados ──────────────────────────────────────────────────────
+  get grafico(): PontoFluxoCaixa[] {
+    return this.rawData
+      .filter(pt => pt.receita > 0 || pt.despesa > 0)
+      .map(pt => ({
+        label:   MONTH_LABELS[pt.mes - 1] ?? String(pt.mes),
+        receita:  pt.receita,
+        despesa: pt.despesa,
+        liquido:     pt.receita - pt.despesa,
+      }));
   }
 
-  private definirPeriodiPadrao(): void {
-    const hoje = new Date();
-    const primeiroDia = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-    const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
-
-    this.dataInicial = this.formatarDataInput(primeiroDia);
-    this.dataFinal = this.formatarDataInput(ultimoDia);
+  get totalReceita():  number { return this.rawData.reduce((s, p) => s + p.receita,  0); }
+  get totalDespesa(): number { return this.rawData.reduce((s, p) => s + p.despesa, 0); }
+  get liquidoAtual():   number { return this.totalReceita - this.totalDespesa; }
+  get valorMaximo():     number {
+    return Math.max(...this.grafico.flatMap(p => [p.receita, p.despesa]), 1);
   }
 
-  private formatarDataInput(data: Date): string {
-    const ano = data.getFullYear();
-    const mes = String(data.getMonth() + 1).padStart(2, '0');
-    const dia = String(data.getDate()).padStart(2, '0');
-    return `${ano}-${mes}-${dia}`;
+  constructor(
+    private empresaService: EmpresaService,
+    private transacaoService: TransacaoService,
+  ) {
+    super();
   }
 
-  private carregarTransacoes(): void {
-    this.transacaoService.getTransacoes().subscribe(transacoes => {
-      this.transacoes = transacoes;
-      this.calcularFluxo();
-    });
+  ngOnInit(): void { this.loadData(); }
+
+  async loadData(): Promise<void> {
+    this.carregando = true;
+    const cid = this.empresaService.ativoId();
+    if (!cid) { this.carregando = false; return; }
+    try {
+      const resp = await firstValueFrom(this.transacaoService.obterMesGrafico(cid, this.anoSelecionado));
+      this.rawData = resp?.conteudo ?? [];
+    } catch {
+      this.rawData = [];
+    }
+    this.carregando = false;
   }
 
-  private calcularFluxo(): void {
-    const dataIni = new Date(this.dataInicial);
-    const dataFim = new Date(this.dataFinal);
-
-    const transacoesFiltradas = this.transacoes.filter(t => {
-      const dataTrans = new Date(t.data);
-      return dataTrans >= dataIni && dataTrans <= dataFim;
-    });
-
-    this.receitas = transacoesFiltradas
-      .filter(t => t.tipo === TipoTransacao.Receita)
-      .reduce((total, t) => total + t.valor, 0);
-
-    this.despesas = transacoesFiltradas
-      .filter(t => t.tipo === TipoTransacao.Despesa)
-      .reduce((total, t) => total + t.valor, 0);
-
-    this.fluxoLiquido = this.receitas - this.despesas;
+  fmt(v: number): string {
+    return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
 
-  aplicarFiltro(): void {
-    this.calcularFluxo();
-  }
-
-  formatarMoeda(valor: number): string {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(valor);
-  }
-
-  getTransacoesFiltrads(): Transacao[] {
-    const dataIni = new Date(this.dataInicial);
-    const dataFim = new Date(this.dataFinal);
-
-    return this.transacoes.filter(t => {
-      const dataTrans = new Date(t.data);
-      return dataTrans >= dataIni && dataTrans <= dataFim;
-    });
+  fmtK(v: number): string {
+    if (v >= 1000) return 'R$' + (v / 1000).toFixed(0) + 'k';
+    return 'R$' + Math.round(v).toString();
   }
 }
