@@ -17,7 +17,7 @@ import { ToastService } from '../../core/services/toast.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, ShellComponent, LoadingSkeletonComponent],
   templateUrl: './contas-pagar.component.html',
-  styleUrl: './contas-pagar.component.scss'
+  styleUrls: ['./contas-pagar.component.scss', './contas-pagar.component.extra.scss']
 })
 export class ContasPagarComponent implements OnInit {
 

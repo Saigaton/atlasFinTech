@@ -1,0 +1,106 @@
+// ─── Empty ────────────────────────────────────────────────────────────────────
+.empty-state { display: flex; flex-direction: column; align-items: center; padding: 48px 16px; gap: 10px;
+  svg { width: 36px; height: 36px; fill: var(--text-muted); }
+  p   { font-size: 14px; color: var(--text-muted); }
+}
+.link-action { font-size: 13px; font-weight: 600; color: #2563eb; background: none; border: none; cursor: pointer; font-family: inherit;
+  [data-theme='dark'] & { color: #818cf8; }
+  &:hover { text-decoration: underline; }
+}
+
+// ─── Modal ────────────────────────────────────────────────────────────────────
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,.5);
+  z-index: 100; display: flex; align-items: center; justify-content: center;
+  padding: 16px; backdrop-filter: blur(3px);
+}
+.modal {
+  background: var(--bg-form); border: 1px solid var(--border); border-radius: 18px;
+  width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,.2);
+  animation: modal-in .2s ease;
+}
+@keyframes modal-in { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px 0;
+  h2 { font-size: 17px; font-weight: 700; color: var(--text-h); }
+}
+.modal-close { background: none; border: none; cursor: pointer; padding: 4px; border-radius: 8px; color: var(--text-muted);
+  svg { width: 18px; height: 18px; fill: currentColor; }
+  &:hover { background: var(--bg-page); }
+}
+.modal-body { padding: 20px 24px; }
+.modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+// Tabs de tipo
+.type-tabs { display: flex; gap: 6px; margin-bottom: 18px; background: var(--bg-page); border-radius: 10px; padding: 4px; }
+.type-tabs button {
+  flex: 1; height: 34px; border: none; border-radius: 8px; font-size: 12px; font-weight: 600;
+  cursor: pointer; font-family: inherit; background: transparent; color: var(--text-muted); transition: all .15s;
+  &.active { background: var(--bg-form); color: var(--text-h); box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  &.tab-income.active  { color: #16a34a; }
+  &.tab-expense.active { color: #dc2626; }
+  &.tab-transfer.active { color: #3b82f6; }
+}
+
+// Campos do modal
+.fld { display: flex; flex-direction: column; margin-bottom: 14px; }
+.fld-lbl { font-size: 11px; font-weight: 700; color: var(--text-label); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .4px; }
+.fld input, .fld select, .fld textarea {
+  width: 100%; background: var(--bg-page); border: 1.5px solid var(--border);
+  border-radius: 10px; padding: 10px 13px; font-size: 13px; color: var(--text-h);
+  font-family: inherit; outline: none; transition: border-color .15s;
+  &:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(59,130,246,.12); }
+  &.bad { border-color: var(--err); }
+}
+.fld textarea { resize: vertical; min-height: 64px; }
+.duo { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; @media (max-width: 400px) { grid-template-columns: 1fr; } }
+
+.btn-cancel {
+  padding: 10px 20px; border: 1.5px solid var(--border); background: transparent;
+  border-radius: 10px; font-size: 13px; font-weight: 600; color: var(--text-body);
+  cursor: pointer; font-family: inherit; transition: all .15s;
+  &:hover { border-color: var(--text-h); color: var(--text-h); }
+}
+.btn-save {
+  padding: 10px 24px; background: var(--grad); color: #fff;
+  border: none; border-radius: 10px; font-size: 13px; font-weight: 600;
+  cursor: pointer; font-family: inherit; box-shadow: var(--shadow-btn);
+  display: flex; align-items: center; gap: 6px; transition: transform .15s;
+  &:hover:not(:disabled) { transform: translateY(-1px); }
+  &:disabled { opacity: .6; cursor: not-allowed; }
+}
+
+.spin {
+  width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff;
+  border-radius: 50%; animation: spin .6s linear infinite; display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+// Responsivo
+.hide-sm { @media (max-width: 600px) { display: none !important; } }
+.hide-md { @media (max-width: 800px) { display: none !important; } }
+.show-sm { @media (min-width: 601px) { display: none !important; } }
+
+// ─── Ícone de tipo de transação — padrão SGFE ─────────────────────────────────
+.tx-type-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  svg { width: 16px; height: 16px; }
+
+  &.income  { background: rgba(34,197,94,.12);  svg { fill: #16a34a; } }
+  &.expense { background: rgba(239,68,68,.12);  svg { fill: #dc2626; } }
+  &.transfer{ background: rgba(59,130,246,.12); svg { fill: #2563eb; } }
+
+  [data-theme='dark'] &.income  { background: rgba(34,197,94,.15); }
+  [data-theme='dark'] &.expense { background: rgba(239,68,68,.15); }
+  [data-theme='dark'] &.transfer{ background: rgba(59,130,246,.15); }
+}

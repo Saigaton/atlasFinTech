@@ -38,7 +38,7 @@ import { UnsubscriberComponent } from '../../core/unsubscriber.component';
   imports: [CommonModule, RouterLink, ReactiveFormsModule, ShellComponent,
            LoadingSkeletonComponent],
   templateUrl: './transacoes.component.html',
-  styleUrl:    './transacoes.component.scss',
+  styleUrls: ['./transacoes.component.scss', './transacoes.component.extra.scss'],
 })
 export class TransacoesComponent extends UnsubscriberComponent implements OnInit {
 

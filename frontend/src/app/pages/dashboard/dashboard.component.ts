@@ -24,7 +24,7 @@ import { Categoria } from '../../core/models/categoria.models';
   standalone: true,
   imports: [CommonModule, RouterLink, ShellComponent],
   templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.scss',
+  styleUrls: ['./dashboard.component.scss', './dashboard.component.extra.scss'],
 })
 export class DashboardComponent implements OnInit {
 

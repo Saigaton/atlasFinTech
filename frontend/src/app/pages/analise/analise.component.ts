@@ -18,7 +18,7 @@ type PeriodoAnalise = '1m' | '3m' | '6m' | '1y';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule, ShellComponent],
   templateUrl: './analise.component.html',
-  styleUrl: './analise.component.scss'
+  styleUrls: ['./analise.component.scss', './analise.component.extra.scss']
 })
 export class AnaliseComponent implements OnInit {
 
