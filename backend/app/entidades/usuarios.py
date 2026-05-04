@@ -8,7 +8,6 @@ class Usuarios(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     nome: Mapped[str] = mapped_column(String(100), nullable=False)
-    nomeEmpresa: Mapped[str] = mapped_column(String(255), nullable=False)
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     senha_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     esta_ativo: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)

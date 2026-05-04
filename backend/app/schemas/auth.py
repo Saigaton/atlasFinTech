@@ -12,7 +12,6 @@ class RequisicaoRecuperarSenha(BaseModel):
 class RequisicaoRegistroUsuario(BaseModel):
     nome: str
     email: EmailStr
-    nomeEmpresa: str
     senha: str
     confirmarSenha: str
 
