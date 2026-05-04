@@ -61,7 +61,7 @@ async def login(body: RequisicaoLoginUsuario, service: AuthService = Depends(obt
     usuario = service.loginUsuario(body.model_dump())
     return RespostaLogin(
         token=RespostaTokenUsuario(
-            access_token=createAccessToken({"nome": usuario.nome, "nomeEmpresa": usuario.nomeEmpresa, "email": usuario.email}),
+            access_token=createAccessToken({"nome": usuario.nome, "email": usuario.email}),
             token_type="bearer",
             expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         ),

@@ -27,7 +27,6 @@ class RespostaUsuario(BaseModel):
     id: int
     nome: str
     email: EmailStr
-    nomeEmpresa: str
     estaAtivo: bool = Field(alias="esta_ativo")
     estaVerificado: bool = Field(alias="esta_verificado")
     dataCriacao:  datetime = Field(alias="data_criacao")
