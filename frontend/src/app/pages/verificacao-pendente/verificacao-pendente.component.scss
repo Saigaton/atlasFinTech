@@ -1,0 +1,22 @@
+/* Estilos compartilhados de auth estão em src/styles.scss */
+
+.info-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 24px;
+
+  svg { width: 20px; height: 20px; fill: #2563eb; flex-shrink: 0; margin-top: 1px; }
+  p   { font-size: 13px; color: #1e40af; line-height: 1.5; margin: 0; }
+}
+
+[data-theme='dark'] .info-banner {
+  background: #1e1b4b;
+  border-color: #3730a3;
+  p   { color: #a5b4fc; }
+  svg { fill: #818cf8; }
+}

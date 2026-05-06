@@ -1,0 +1,73 @@
+<!-- Tela de verificação pendente -->
+<div class="auth-wrap">
+  <div class="auth-shell">
+
+    <!-- Painel azul esquerdo (reutilizável) -->
+    <app-auth-panel />
+
+    <div class="auth-form-side">
+      <div class="auth-topbar">
+        <app-theme-toggle />
+      </div>
+
+      <div class="auth-scroll">
+
+        <h1 class="form-title">Verifique seu e-mail</h1>
+        <p class="form-desc">
+          Já verificou?
+          <a routerLink="/login">Ir para o login</a>
+        </p>
+
+        <div class="info-banner">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+          <p>Enviamos um link de verificação para seu e-mail. Clique no link para ativar sua conta.</p>
+        </div>
+
+        <form [formGroup]="formulario" (ngSubmit)="aoEnviar()" novalidate>
+          <div class="fld">
+            <label class="fld-lbl" for="vp-email">Seu e-mail cadastrado</label>
+            <div class="inp-w">
+              <input
+                id="vp-email"
+                type="email"
+                formControlName="email"
+                placeholder="seu@email.com"
+                [class.bad]="formulario.get('email')?.invalid && formulario.get('email')?.touched"
+                [class.good]="formulario.get('email')?.valid && formulario.get('email')?.touched"
+                autocomplete="email"
+                inputmode="email"
+              >
+              <span class="ico-s" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+              </span>
+            </div>
+            @if (formulario.get('email')?.invalid && formulario.get('email')?.touched) {
+              <div class="ferr" role="alert">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                @if (formulario.get('email')?.errors?.['required']) { E-mail obrigatório }
+                @else { Formato de e-mail inválido }
+              </div>
+            }
+          </div>
+        </form>
+
+      </div>
+
+      <!-- Botão principal — fora do scroll, fixo na base -->
+      <div class="auth-bottom">
+        <button class="btn-primary" type="button" (click)="aoEnviar()"
+          [disabled]="carregando || contagem > 0 || formulario.invalid">
+          @if (carregando) {
+            <span class="spin" aria-hidden="true"></span>
+          } @else if (contagem > 0) {
+            <span>Reenviar em {{ contagem }}s</span>
+          } @else {
+            <span>{{ enviado ? 'Reenviar e-mail' : 'Enviar verificação' }}</span>
+          }
+        </button>
+        <div class="btn-note">Verifique também a pasta de spam</div>
+      </div>
+
+    </div>
+  </div>
+</div>

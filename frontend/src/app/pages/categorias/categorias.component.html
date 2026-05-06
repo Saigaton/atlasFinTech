@@ -1,0 +1,82 @@
+<app-shell>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Categorias</h1>
+      <p class="page-sub">Organize suas transações por categoria</p>
+    </div>
+    <button class="btn-new" (click)="exibirModal = true">+ Nova categoria</button>
+  </div>
+
+  @if (carregando) {
+    <div class="loading-wrap"><span class="spin-lg"></span></div>
+  } @else {
+    <div class="cat-grid">
+      @for (cat of categorias; track cat.id) {
+        <div class="cat-card">
+          <div class="cat-ico" [style.background]="(cat.cor || '#64748b') + '22'">
+            <span class="cat-letter" [style.color]="cat.cor || '#64748b'">{{ cat.nome[0].toUpperCase() }}</span>
+          </div>
+          <div class="cat-info">
+            <span class="cat-name">{{ cat.nome }}</span>
+            <span class="cat-type">{{ rotuloPorTipo(cat.tipo) }}</span>
+          </div>
+          <div class="cat-dot" [style.background]="cat.cor || '#64748b'"></div>
+          <button class="cat-del" (click)="excluir(cat)" title="Excluir">
+            <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+          </button>
+        </div>
+      }
+    </div>
+  }
+
+  @if (exibirModal) {
+    <div class="modal-backdrop" (click)="exibirModal = false">
+      <div class="modal" (click)="$event.stopPropagation()">
+
+        <div class="modal-header">
+          <h2>Nova categoria</h2>
+          <button class="modal-close" (click)="exibirModal = false">✕</button>
+        </div>
+
+        <form [formGroup]="formulario" (ngSubmit)="aoEnviar()" class="modal-body">
+
+          <div class="fld">
+            <label class="fld-lbl">Nome *</label>
+            <input type="text" formControlName="nome" placeholder="Ex: Salário, Aluguel...">
+          </div>
+
+          <div class="fld">
+            <label class="fld-lbl">Tipo</label>
+            <select formControlName="tipo">
+              <option [value]="TipoCategoria.Receita">Receita</option>
+              <option [value]="TipoCategoria.Despesa">Despesa</option>
+              <option [value]="TipoCategoria.Ambos">Ambos</option>
+            </select>
+          </div>
+
+          <div class="fld">
+            <label class="fld-lbl">Cor</label>
+            <div class="color-presets">
+              @for (cor of cores; track cor) {
+                <button type="button" class="color-dot" [style.background]="cor"
+                  [class.selected]="formulario.get('cor')?.value === cor"
+                  (click)="formulario.get('cor')?.setValue(cor)">
+                </button>
+              }
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn-cancel" (click)="exibirModal = false">Cancelar</button>
+            <button type="submit" class="btn-save" [disabled]="enviando">
+              @if (enviando) { <span class="spin"></span> } @else { Criar }
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  }
+
+</app-shell>

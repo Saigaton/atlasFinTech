@@ -1,0 +1,107 @@
+<app-shell>
+  <div class="chat-page">
+
+    <!-- Header -->
+    <div class="chat-header">
+      <div class="chat-header-left">
+        <div class="bot-icon">
+          <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+        </div>
+        <div>
+          <h1 class="chat-title">Assistente Financeiro</h1>
+          <div class="chat-status">
+            <span class="status-dot"></span>
+            <span class="status-text">Dados em tempo real</span>
+          </div>
+        </div>
+      </div>
+      <button class="btn-clear" (click)="limparConversa()">
+        <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+        Limpar
+      </button>
+    </div>
+
+    <!-- Área de chat -->
+    <div class="chat-area" #chatArea>
+      <div class="messages">
+
+        @for (msg of mensagens; track $index) {
+          <div class="msg-row" [class.user]="msg.papel === 'usuario'">
+
+            @if (msg.papel === 'assistente') {
+              <div class="msg-avatar bot">
+                <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+              </div>
+            }
+
+            <div class="msg-bubble"
+              [class.user]="msg.papel === 'usuario'"
+              [class.bot]="msg.papel === 'assistente'">
+              <p class="msg-content" [innerHTML]="formatarConteudo(msg.conteudo)"></p>
+              <span class="msg-time">{{ msg.hora }}</span>
+            </div>
+
+            @if (msg.papel === 'usuario') {
+              <div class="msg-avatar user">
+                <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+              </div>
+            }
+
+          </div>
+        }
+
+        <!-- Indicador de digitação -->
+        @if (pensando) {
+          <div class="msg-row">
+            <div class="msg-avatar bot">
+              <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+            </div>
+            <div class="msg-bubble bot typing">
+              <span></span><span></span><span></span>
+            </div>
+          </div>
+        }
+
+        <div #fimMensagens></div>
+      </div>
+
+      <!-- Sugestões — mostradas apenas no início -->
+      @if (mensagens.length <= 1) {
+        <div class="suggestions">
+          <p class="sug-label">Sugestões de perguntas:</p>
+          <div class="sug-grid">
+            @for (sugestao of sugestoes; track sugestao.texto) {
+              <button class="sug-btn" (click)="enviarMensagem(sugestao.texto)">
+                <svg viewBox="0 0 24 24"><path [attr.d]="sugestao.icone"/></svg>
+                <span>{{ sugestao.texto }}</span>
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Input -->
+    <div class="chat-input-area">
+      <div class="chat-input-row">
+        <input
+          type="text"
+          class="chat-input"
+          placeholder="Pergunte sobre seus dados financeiros..."
+          [(ngModel)]="textoEntrada"
+          (keydown.enter)="enviarMensagem()"
+          [disabled]="pensando"
+        >
+        <button
+          class="send-btn"
+          (click)="enviarMensagem()"
+          [disabled]="!textoEntrada.trim() || pensando"
+        >
+          <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
+      </div>
+      <p class="chat-footer-note">O assistente tem acesso aos seus dados financeiros em tempo real</p>
+    </div>
+
+  </div>
+</app-shell>

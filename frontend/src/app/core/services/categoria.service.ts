@@ -20,7 +20,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { RespostaApi } from '../models/resposta-api';
-import { Categoria, TipoCategoria } from '../models/categoria.models';
+import { Categoria, CriarCategoria, TipoCategoria } from '../models/categoria.models';
 
 /** Serviço de categorias — Atlas FinTech. */
 @Injectable({ providedIn: 'root' })
@@ -38,7 +38,7 @@ export class CategoriaService {
     return this.http.get<RespostaApi<Categoria[]>>(`${this.base(empresaId)}${params}`);
   }
 
-  criarCategoria(empresaId: number, data: Categoria): Observable<RespostaApi<Categoria>> {
+  criarCategoria(empresaId: number, data: CriarCategoria): Observable<RespostaApi<Categoria>> {
     return this.http.post<RespostaApi<Categoria>>(this.base(empresaId), data);
   }
 

@@ -16,6 +16,11 @@ export const routes: Routes = [
       import('./pages/recuperar-senha/recuperar-senha.component').then(m => m.RecuperarSenhaComponent),
   },
   {
+    path: 'verificacao-pendente',
+    loadComponent: () =>
+      import('./pages/verificacao-pendente/verificacao-pendente.component').then(m => m.VerificacaoPendenteComponent),
+  },
+  {
     path: '',
     redirectTo: 'dashboard',
     pathMatch: 'full'
@@ -62,6 +67,16 @@ export const routes: Routes = [
       {
         path: 'relatorios',
         loadComponent: () => import('./pages/relatorios/relatorios.component').then(m => m.RelatoriosComponent),
+        data: { titulo: 'Relatórios' }
+      },
+      {
+        path: 'categorias',
+        loadComponent: () => import('./pages/categorias/categorias.component').then(m => m.CategoriasComponent),
+        data: { titulo: 'Relatórios' }
+      },
+      {
+        path: 'assistente-ia',
+        loadComponent: () => import('./pages/assistente-ia/assistente-ia.component').then(m => m.AssistenteIaComponent),
         data: { titulo: 'Relatórios' }
       },
       {

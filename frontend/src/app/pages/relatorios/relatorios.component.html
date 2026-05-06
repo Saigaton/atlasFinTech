@@ -1,30 +1,384 @@
-<div class="relatorios-container">
+<app-shell>
+
   <div class="page-header">
     <div>
-      <h1>Relatórios</h1>
-      <p>Gere e acompanhe seus relatórios financeiros</p>
+      <h1 class="page-title">Relatórios</h1>
+      <p class="page-sub">Exportação de dados, conciliação bancária e backup</p>
     </div>
-    <button class="btn-primary">+ Novo Relatório</button>
   </div>
 
-  <div *ngIf="relatorios.length === 0; else relatoriosList" class="empty-state">
-    <p>Nenhum relatório gerado ainda</p>
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab" [class.active]="abaAtiva === 'relatorios'"  (click)="abaAtiva = 'relatorios'">
+      <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+      Exportar dados
+    </button>
+    <button class="tab" [class.active]="abaAtiva === 'conciliacao'" (click)="abaAtiva = 'conciliacao'">
+      <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+      Conciliação bancária
+    </button>
+    <button class="tab" [class.active]="abaAtiva === 'backup'"      (click)="abaAtiva = 'backup'">
+      <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+      Backup
+    </button>
+    <button class="tab" [class.active]="abaAtiva === 'agendamento'" (click)="abaAtiva = 'agendamento'">
+      <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
+      E-mail Agendado
+    </button>
   </div>
 
-  <ng-template #relatoriosList>
-    <div class="relatorios-grid">
-      <div *ngFor="let relatorio of relatorios" class="relatorio-card">
-        <div class="relatorio-header">
-          <h3>{{ relatorio.nome }}</h3>
-          <span class="relatorio-tipo">{{ relatorio.tipo }}</span>
+  <!-- ── Cards de geração rápida ─────────────────────────────────────────── -->
+  <div class="quick-report-grid">
+    @for (tipo of tiposRelatorio; track tipo.valor) {
+      <button class="quick-report-btn" (click)="gerarRapido(tipo.valor)">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+        <span>{{ tipo.rotulo }}</span>
+      </button>
+    }
+  </div>
+
+  <!-- ── ABA: EXPORTAR ───────────────────────────────────────────────────── -->
+  @if (abaAtiva === 'relatorios') {
+
+    <!-- Filtro de período -->
+    <div class="card period-card">
+      <div class="card-title">Período</div>
+      <form [formGroup]="formularioFiltro" class="period-form">
+        <div class="fld">
+          <label class="fld-lbl">Mês</label>
+          <select formControlName="mes">
+            @for (m of meses; track m.v) {
+              <option [value]="m.v">{{ m.l }}</option>
+            }
+          </select>
         </div>
-        <p class="relatorio-descricao">{{ relatorio.descricao }}</p>
-        <p class="relatorio-data">{{ relatorio.data | date: 'dd/MM/yyyy HH:mm' }}</p>
-        <div class="relatorio-actions">
-          <button class="btn-secondary" (click)="baixarRelatorio(relatorio.id)">Baixar</button>
-          <button class="btn-secondary" (click)="gerarRelatorio(relatorio.tipo)">Regenerar</button>
+        <div class="fld">
+          <label class="fld-lbl">Ano</label>
+          <select formControlName="ano">
+            @for (a of anos; track a) {
+              <option [value]="a">{{ a }}</option>
+            }
+          </select>
         </div>
+      </form>
+    </div>
+
+    <!-- Cards de exportação -->
+    <div class="export-grid">
+
+      <!-- Transações CSV -->
+      <div class="export-card">
+        <div class="export-icon" style="background:rgba(34,197,94,.12)">
+          <svg viewBox="0 0 24 24" style="fill:#16a34a"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm4 18H6V4h7v5h5v11zM10 11H8v2h2v2h2v-2h2v-2h-2V9h-2v2z"/></svg>
+        </div>
+        <div class="export-info">
+          <div class="export-title">Transações — CSV</div>
+          <div class="export-desc">Todas as transações do período em formato planilha</div>
+        </div>
+        <button class="btn-download" (click)="baixar('tx-csv')" [disabled]="estaBaixando('tx-csv')">
+          @if (estaBaixando('tx-csv')) { <span class="spin"></span> }
+          @else { <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> }
+          Baixar CSV
+        </button>
+      </div>
+
+      <!-- Relatório PDF -->
+      <div class="export-card">
+        <div class="export-icon" style="background:rgba(239,68,68,.12)">
+          <svg viewBox="0 0 24 24" style="fill:#dc2626"><path d="M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8.5 7.5c0 .83-.67 1.5-1.5 1.5H9v2H7.5V7H10c.83 0 1.5.67 1.5 1.5v1zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V7H15c.83 0 1.5.67 1.5 1.5v3zm4-3H19v1h1.5V11H19v2h-1.5V7H20.5v1.5zM9 9.5h1v-1H9v1zM4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm10 5.5h1v-3h-1v3z"/></svg>
+        </div>
+        <div class="export-info">
+          <div class="export-title">Relatório — PDF</div>
+          <div class="export-desc">Relatório visual com KPIs, contas e transações</div>
+        </div>
+        <button class="btn-download btn-pdf" (click)="baixar('pdf')" [disabled]="estaBaixando('pdf')">
+          @if (estaBaixando('pdf')) { <span class="spin"></span> }
+          @else { <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> }
+          Baixar PDF
+        </button>
+      </div>
+
+      <!-- Contas a Pagar CSV -->
+      <div class="export-card">
+        <div class="export-icon" style="background:rgba(245,158,11,.12)">
+          <svg viewBox="0 0 24 24" style="fill:#d97706"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>
+        </div>
+        <div class="export-info">
+          <div class="export-title">Contas a Pagar — CSV</div>
+          <div class="export-desc">Todas as contas a pagar e parcelamentos</div>
+        </div>
+        <button class="btn-download" (click)="baixar('pagar-csv')" [disabled]="estaBaixando('pagar-csv')">
+          @if (estaBaixando('pagar-csv')) { <span class="spin"></span> }
+          @else { <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> }
+          Baixar CSV
+        </button>
+      </div>
+
+      <!-- Contas a Receber CSV -->
+      <div class="export-card">
+        <div class="export-icon" style="background:rgba(59,130,246,.12)">
+          <svg viewBox="0 0 24 24" style="fill:#2563eb"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>
+        </div>
+        <div class="export-info">
+          <div class="export-title">Contas a Receber — CSV</div>
+          <div class="export-desc">Receitas futuras e histórico de inadimplência</div>
+        </div>
+        <button class="btn-download" (click)="baixar('receber-csv')" [disabled]="estaBaixando('receber-csv')">
+          @if (estaBaixando('receber-csv')) { <span class="spin"></span> }
+          @else { <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> }
+          Baixar CSV
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Envio por e-mail -->
+    <div class="card email-card">
+      <div class="card-title">Enviar relatório por e-mail</div>
+      <p class="card-desc">O resumo financeiro do período selecionado será enviado para o e-mail informado.</p>
+      <form [formGroup]="formularioEmail" (ngSubmit)="enviarEmail()" novalidate class="email-form">
+        <div class="fld email-fld">
+          <label class="fld-lbl">E-mail de destino</label>
+          <input type="email" formControlName="email" placeholder="destinatario@email.com"
+            [class.bad]="formularioEmail.get('email')?.invalid && formularioEmail.get('email')?.touched">
+        </div>
+        <button type="submit" class="btn-send" [disabled]="enviandoEmail">
+          @if (enviandoEmail) { <span class="spin"></span> Enviando... }
+          @else {
+            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            Enviar relatório
+          }
+        </button>
+      </form>
+    </div>
+
+  }
+
+  <!-- ── ABA: CONCILIAÇÃO ────────────────────────────────────────────────── -->
+  @if (abaAtiva === 'conciliacao') {
+
+    <div class="card">
+      <div class="card-title">Importar extrato bancário</div>
+      <p class="card-desc">
+        Faça o upload do extrato em CSV exportado do seu banco.
+        O sistema irá comparar automaticamente com as transações cadastradas.
+      </p>
+
+      <div class="upload-area">
+        <label class="upload-label" [class.loading]="importando">
+          <input type="file" accept=".csv" (change)="aoSelecionarExtrato($event)"
+                 [disabled]="importando" style="display:none">
+          @if (importando) {
+            <span class="spin spin-lg"></span>
+            <span>Analisando extrato...</span>
+          } @else {
+            <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+            <span>Clique para selecionar o CSV do extrato</span>
+            <span class="upload-hint">Formatos: CSV com colunas de data, descrição e valor</span>
+          }
+        </label>
       </div>
     </div>
-  </ng-template>
-</div>
+
+    @if (conciliacao) {
+      <!-- Resumo da conciliação -->
+      <div class="concil-summary">
+        <div class="concil-stat concil-ok">
+          <div class="cs-val">{{ conciliacao.conciliadas }}</div>
+          <div class="cs-lbl">Conciliadas</div>
+        </div>
+        <div class="concil-stat concil-warn">
+          <div class="cs-val">{{ conciliacao.totalSomenteExtrato }}</div>
+          <div class="cs-lbl">Só no extrato</div>
+        </div>
+        <div class="concil-stat concil-info">
+          <div class="cs-val">{{ conciliacao.totalSomenteNosistema }}</div>
+          <div class="cs-lbl">Só no sistema</div>
+        </div>
+        <div class="concil-stat">
+          <div class="cs-val">{{ percentualConciliacao() }}%</div>
+          <div class="cs-lbl">Taxa de conciliação</div>
+        </div>
+      </div>
+
+      <!-- Itens conciliados -->
+      @if (conciliacao.itensConciliados.length > 0) {
+        <div class="card concil-card">
+          <div class="card-title">✅ Transações conciliadas ({{ conciliacao.itensConciliados.length }})</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th>Data extrato</th><th>Descrição extrato</th>
+                <th>Valor</th><th>ID sistema</th><th>Descrição sistema</th>
+              </tr></thead>
+              <tbody>
+                @for (item of conciliacao.itensConciliados; track item.idTransacao) {
+                  <tr>
+                    <td>{{ item.dataExtrato }}</td>
+                    <td class="td-desc">{{ item.descricaoExtrato }}</td>
+                    <td class="td-val">{{ formatarMoeda(item.valorExtrato) }}</td>
+                    <td class="td-id">#{{ item.idTransacao }}</td>
+                    <td class="td-desc">{{ item.descricaoTransacao }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+
+      <!-- Itens só no extrato -->
+      @if (conciliacao.somenteExtrato.length > 0) {
+        <div class="card concil-card">
+          <div class="card-title">⚠️ Só no extrato ({{ conciliacao.somenteExtrato.length }})</div>
+          <p class="card-desc">Estas entradas existem no extrato bancário mas não foram encontradas no sistema.</p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Data</th><th>Descrição</th><th>Valor</th></tr></thead>
+              <tbody>
+                @for (item of conciliacao.somenteExtrato; track item.data + item.descricao) {
+                  <tr>
+                    <td>{{ item.data }}</td>
+                    <td class="td-desc">{{ item.descricao }}</td>
+                    <td class="td-val">{{ formatarMoeda(item.valor) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+
+      <!-- Itens só no sistema -->
+      @if (conciliacao.somenteNosistema.length > 0) {
+        <div class="card concil-card">
+          <div class="card-title">ℹ️ Só no sistema ({{ conciliacao.somenteNosistema.length }})</div>
+          <p class="card-desc">Estas transações existem no sistema mas não foram encontradas no extrato.</p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>ID</th><th>Data</th><th>Descrição</th><th>Tipo</th><th>Valor</th></tr></thead>
+              <tbody>
+                @for (item of conciliacao.somenteNosistema; track item.id) {
+                  <tr>
+                    <td>#{{ item.id }}</td>
+                    <td>{{ item.data }}</td>
+                    <td class="td-desc">{{ item.descricao }}</td>
+                    <td><span [class]="item.tipo === 'receita' ? 'tag-income' : 'tag-expense'">
+                      {{ item.tipo === 'receita' ? 'Receita' : 'Despesa' }}
+                    </span></td>
+                    <td class="td-val">{{ formatarMoeda(item.valor) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+
+      @if (conciliacao.errosImportacao.length > 0) {
+        <div class="card concil-card">
+          <div class="card-title">⛔ Erros de importação ({{ conciliacao.errosImportacao.length }})</div>
+          @for (erro of conciliacao.errosImportacao; track erro) {
+            <div class="parse-error">{{ erro }}</div>
+          }
+        </div>
+      }
+    }
+  }
+
+  <!-- ── ABA: BACKUP ─────────────────────────────────────────────────────── -->
+  @if (abaAtiva === 'backup') {
+    <div class="card backup-card">
+      <div class="backup-icon">
+        <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+      </div>
+      <h3>Backup completo dos dados</h3>
+      <p>Exporta todas as transações, contas a pagar, contas a receber e contas bancárias em um arquivo ZIP com planilhas CSV.</p>
+      <ul class="backup-list">
+        <li>transacoes.csv — todas as transações</li>
+        <li>contas_a_pagar.csv — todas as contas a pagar</li>
+        <li>contas_a_receber.csv — todas as contas a receber</li>
+        <li>contas_bancarias.csv — contas e saldos</li>
+      </ul>
+      <button class="btn-backup" (click)="baixarBackup()" [disabled]="estaBaixando('backup')">
+        @if (estaBaixando('backup')) { <span class="spin"></span> Gerando backup... }
+        @else {
+          <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+          Baixar backup completo (ZIP)
+        }
+      </button>
+    </div>
+  }
+
+  <!-- ── ABA: E-MAIL AGENDADO ───────────────────────────────────────────── -->
+  @if (abaAtiva === 'agendamento') {
+    <div class="card">
+      <div class="card-title">Relatório financeiro periódico</div>
+      <p class="card-desc">
+        Configure o envio automático do resumo financeiro mensal por e-mail.
+        O relatório é enviado automaticamente no dia e hora configurados.
+      </p>
+
+      @if (carregandoAgendamento) {
+        <div style="display:flex;justify-content:center;padding:20px">
+          <span class="spin" style="width:24px;height:24px;border-width:3px;border-color:var(--border);border-top-color:#3b82f6"></span>
+        </div>
+      } @else {
+
+        @if (statusAgendamento?.inscrito) {
+          <div class="schedule-active">
+            <div class="sa-icon">📅</div>
+            <div class="sa-info">
+              <div class="sa-title">Agendamento ativo</div>
+              <div class="sa-desc">
+                Relatório enviado dia <strong>{{ statusAgendamento!.diaMes }}</strong>
+                de cada mês às <strong>{{ statusAgendamento!.hora | number:'2.0-0' }}h</strong>
+                para <strong>{{ statusAgendamento!.email }}</strong>
+              </div>
+            </div>
+            <div class="sa-actions">
+              <button class="btn-trigger" (click)="enviarAgora()">
+                <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                Enviar agora
+              </button>
+              <button class="btn-cancel-sched" (click)="cancelarAgendamento()">Cancelar</button>
+            </div>
+          </div>
+        }
+
+        <form [formGroup]="formularioAgendamento" (ngSubmit)="salvarAgendamento()" novalidate class="schedule-form">
+          <div class="fld">
+            <label class="fld-lbl">E-mail de destino *</label>
+            <input type="email" formControlName="email" placeholder="relatorios@empresa.com"
+              [class.bad]="formularioAgendamento.get('email')?.invalid && formularioAgendamento.get('email')?.touched">
+          </div>
+          <div class="duo">
+            <div class="fld">
+              <label class="fld-lbl">Dia do mês (1–28)</label>
+              <input type="number" formControlName="diaMes" min="1" max="28">
+            </div>
+            <div class="fld">
+              <label class="fld-lbl">Hora do envio (0–23)</label>
+              <input type="number" formControlName="hora" min="0" max="23">
+            </div>
+          </div>
+          <button type="submit" class="btn-save" [disabled]="salvandoAgendamento">
+            @if (salvandoAgendamento) { <span class="spin"></span> Salvando... }
+            @else {
+              <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
+              {{ statusAgendamento?.inscrito ? 'Atualizar agendamento' : 'Ativar envio periódico' }}
+            }
+          </button>
+        </form>
+
+        <div class="schedule-info">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+          O relatório inclui receitas, despesas e lucro líquido do mês anterior.
+          O envio é feito automaticamente enquanto o servidor estiver ativo.
+        </div>
+      }
+    </div>
+  }
+
+
+</app-shell>

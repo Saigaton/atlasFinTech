@@ -1,0 +1,187 @@
+.page-header { display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px }
+.page-title  { font-size:clamp(18px,3vw,24px);font-weight:800;color:var(--text-h);letter-spacing:-.3px;margin-bottom:2px }
+.page-sub    { font-size:13px;color:var(--text-muted) }
+
+// ─── Tabs ─────────────────────────────────────────────────────────────────────
+.tabs { display:flex;gap:6px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0;flex-wrap:wrap }
+.tab {
+  display:flex;align-items:center;gap:6px;padding:9px 16px;border:none;background:transparent;
+  font-size:13px;font-weight:500;color:var(--text-muted);cursor:pointer;font-family:inherit;
+  border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;
+  svg { width:15px;height:15px;fill:currentColor }
+  &.active { color:#2563eb;border-bottom-color:#2563eb;font-weight:600;
+    [data-theme='dark'] & { color:#818cf8;border-bottom-color:#818cf8 } }
+  &:hover:not(.active) { color:var(--text-h) }
+}
+
+// ─── Card ─────────────────────────────────────────────────────────────────────
+.card { background:var(--bg-form);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px;transition:background .2s }
+.card-title { font-size:14px;font-weight:700;color:var(--text-h);margin-bottom:8px }
+.card-desc  { font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.6 }
+
+// ─── Período ──────────────────────────────────────────────────────────────────
+.period-card { margin-bottom:20px }
+.period-form { display:flex;gap:12px;flex-wrap:wrap }
+.fld { display:flex;flex-direction:column;gap:5px }
+.fld-lbl { font-size:11px;font-weight:700;color:var(--text-label);text-transform:uppercase;letter-spacing:.4px }
+.fld select,.fld input {
+  background:var(--bg-page);border:1.5px solid var(--border);border-radius:10px;
+  padding:8px 12px;font-size:13px;color:var(--text-h);font-family:inherit;outline:none;
+  &:focus { border-color:var(--border-focus) }
+  &.bad { border-color:var(--err) }
+}
+
+// ─── Export grid ──────────────────────────────────────────────────────────────
+.export-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:20px }
+.export-card {
+  background:var(--bg-form);border:1px solid var(--border);border-radius:14px;padding:18px;
+  display:flex;flex-direction:column;gap:12px;transition:background .2s;
+}
+.export-icon { width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;svg{width:22px;height:22px} }
+.export-info { flex:1 }
+.export-title { font-size:14px;font-weight:700;color:var(--text-h);margin-bottom:4px }
+.export-desc  { font-size:12px;color:var(--text-muted);line-height:1.5 }
+
+.btn-download {
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 16px;
+  background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;border-radius:10px;
+  font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;
+  svg { width:15px;height:15px;fill:#fff }
+  &.btn-pdf { background:linear-gradient(135deg,#ef4444,#dc2626) }
+  &:disabled { opacity:.6;cursor:not-allowed }
+  &:hover:not(:disabled) { filter:brightness(1.05) }
+}
+
+// ─── E-mail ───────────────────────────────────────────────────────────────────
+.email-card { margin-top:4px }
+.email-form { display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end }
+.email-fld  { flex:1;min-width:220px }
+.btn-send {
+  display:inline-flex;align-items:center;gap:6px;padding:10px 20px;
+  background:var(--grad);color:#fff;border:none;border-radius:10px;
+  font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;
+  box-shadow:var(--shadow-btn);white-space:nowrap;
+  svg { width:15px;height:15px;fill:#fff }
+  &:disabled { opacity:.6;cursor:not-allowed }
+  &:hover:not(:disabled) { transform:translateY(-1px) }
+}
+
+// ─── Upload conciliação ───────────────────────────────────────────────────────
+.upload-area { margin-top:4px }
+.upload-label {
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  border:2px dashed var(--border);border-radius:14px;padding:40px 20px;cursor:pointer;
+  transition:border-color .15s,background .15s;
+  svg { width:40px;height:40px;fill:var(--text-muted) }
+  span { font-size:14px;font-weight:500;color:var(--text-h) }
+  &:hover { border-color:var(--border-focus);background:rgba(59,130,246,.04) }
+  &.loading { cursor:default;border-style:solid }
+}
+.upload-hint { font-size:11px;color:var(--text-muted) }
+
+// ─── Conciliação resumo ───────────────────────────────────────────────────────
+.concil-summary { display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;
+  @media(max-width:700px){grid-template-columns:repeat(2,1fr)}
+  @media(max-width:400px){grid-template-columns:1fr} }
+.concil-stat {
+  background:var(--bg-form);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;
+  &.concil-ok   { border-top:3px solid #16a34a }
+  &.concil-warn { border-top:3px solid #f59e0b }
+  &.concil-info { border-top:3px solid #3b82f6 }
+}
+.cs-val { font-size:28px;font-weight:800;color:var(--text-h);letter-spacing:-.4px }
+.cs-lbl { font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;margin-top:4px }
+
+// ─── Tabelas conciliação ──────────────────────────────────────────────────────
+.concil-card { margin-bottom:14px }
+.table-wrap  { overflow-x:auto }
+table { width:100%;border-collapse:collapse }
+th { font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;padding:8px 12px;border-bottom:1px solid var(--border);text-align:left;background:var(--bg-page);white-space:nowrap }
+td { padding:9px 12px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:middle }
+tr:last-child td { border-bottom:none }
+.td-desc { max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-h) }
+.td-val  { font-weight:600;color:var(--text-h);white-space:nowrap }
+.td-id   { color:var(--text-muted);white-space:nowrap }
+.tag-income  { font-size:10px;font-weight:600;padding:2px 7px;border-radius:8px;background:#dcfce7;color:#166534 }
+.tag-expense { font-size:10px;font-weight:600;padding:2px 7px;border-radius:8px;background:#fee2e2;color:#991b1b }
+.parse-error { font-size:12px;color:#dc2626;padding:4px 0;border-bottom:1px solid var(--border) }
+
+// ─── Backup ───────────────────────────────────────────────────────────────────
+.backup-card { display:flex;flex-direction:column;align-items:center;text-align:center;padding:40px 32px }
+.backup-icon { width:64px;height:64px;background:var(--grad);border-radius:16px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;svg{width:30px;height:30px;fill:#fff} }
+.backup-card h3 { font-size:18px;font-weight:800;color:var(--text-h);margin-bottom:8px }
+.backup-card p  { font-size:14px;color:var(--text-muted);margin-bottom:16px;line-height:1.6;max-width:440px }
+.backup-list { list-style:none;margin:0 0 24px;text-align:left;align-self:stretch;max-width:360px;
+  li { font-size:13px;color:var(--text-body);padding:4px 0;border-bottom:1px solid var(--border);
+    &::before { content:"📄 ";font-size:12px } } }
+.btn-backup {
+  display:inline-flex;align-items:center;gap:8px;padding:12px 28px;
+  background:var(--grad);color:#fff;border:none;border-radius:12px;
+  font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:var(--shadow-btn);
+  svg { width:18px;height:18px;fill:#fff }
+  &:disabled { opacity:.6;cursor:not-allowed }
+  &:hover:not(:disabled) { transform:translateY(-1px) }
+}
+
+// ─── Spinner ──────────────────────────────────────────────────────────────────
+.spin { width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:inline-block }
+.spin.spin-lg { width:28px;height:28px;border-width:3px }
+@keyframes spin { to { transform:rotate(360deg) } }
+
+// ─── E-mail agendado ──────────────────────────────────────────────────────────
+.schedule-active { display:flex;align-items:center;gap:14px;padding:14px 16px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:12px;margin-bottom:20px;flex-wrap:wrap }
+.sa-icon { font-size:28px;flex-shrink:0 }
+.sa-info { flex:1 }
+.sa-title { font-size:13px;font-weight:700;color:var(--text-h);margin-bottom:2px }
+.sa-desc  { font-size:12px;color:var(--text-muted) }
+.sa-actions { display:flex;gap:8px;flex-wrap:wrap }
+.btn-trigger { display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:var(--grad);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;svg{width:13px;height:13px;fill:#fff} }
+.btn-cancel-sched { padding:7px 14px;border:1.5px solid var(--border);background:transparent;border-radius:8px;font-size:12px;font-weight:600;color:var(--text-muted);cursor:pointer;font-family:inherit;&:hover{border-color:#dc2626;color:#dc2626} }
+
+.schedule-form { margin-top:4px }
+.schedule-info { display:flex;align-items:flex-start;gap:8px;padding:10px 12px;background:var(--bg-page);border-radius:10px;border:1px solid var(--border);font-size:12px;color:var(--text-muted);margin-top:16px;line-height:1.5;svg{width:14px;height:14px;fill:var(--text-muted);flex-shrink:0;margin-top:1px} }
+
+// ─── Cards de geração rápida — padrão SGFE ────────────────────────────────────
+.quick-report-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.quick-report-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-form);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: all .15s;
+
+  svg {
+    width: 22px;
+    height: 22px;
+    fill: #2563eb;
+    transition: transform .15s;
+    [data-theme='dark'] & { fill: #818cf8; }
+  }
+
+  span {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-h);
+    line-height: 1.3;
+  }
+
+  &:hover {
+    border-color: #6366f1;
+    background: rgba(99,102,241,.04);
+
+    svg { transform: scale(1.1); }
+  }
+}

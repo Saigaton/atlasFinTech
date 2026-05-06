@@ -1,7 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
-import { SidebarComponent } from './shared/components/sidebar/sidebar.component';
-import { HeaderComponent } from './shared/components/header/header.component';
 import { AuthService } from './core/services/auth.service';
 import { filter, map, startWith } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
