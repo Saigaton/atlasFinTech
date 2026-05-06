@@ -5,7 +5,7 @@ import { Observable, tap, BehaviorSubject } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   RespostaToken, AccessTokenResponse,
-  RequisicaoRegistroUsuario, Usuario, MensagemResposta, PostLoginRoute,
+  RequisicaoRegistroUsuario, Usuario, MensagemResposta,
   RequisicaoLoginUsuario,
 } from '../../core/models/auth.models';
 import { UnsubscriberComponent } from '../unsubscriber.component';
@@ -13,7 +13,6 @@ import { UnsubscriberComponent } from '../unsubscriber.component';
 @Injectable({ providedIn: 'root' })
 export class AuthService extends UnsubscriberComponent {
   private readonly API = environment.apiUrl;
-  private readonly POST_LOGIN_ROUTE: PostLoginRoute = '/dashboard';
 
   // Estado interno
   private user        = new BehaviorSubject<Usuario | null>(this.loadUser());
@@ -147,16 +146,16 @@ export class AuthService extends UnsubscriberComponent {
   // ── Navegação ──────────────────────────────────────────────────────────────
 
   navigateAfterLogin(): void {
-    this.router.navigate([this.POST_LOGIN_ROUTE]);
+    this.router.navigate(['/']);
   }
 
   // ── Helpers privados ───────────────────────────────────────────────────────
 
   private saveSession(res: RespostaToken): void {
-    localStorage.setItem('atlas_access',  res.access_token);
-    localStorage.setItem('atlas_refresh', res.refresh_token);
+    localStorage.setItem('atlas_access',  res.token.access_token);
+    localStorage.setItem('atlas_refresh', res.token.refresh_token);
     localStorage.setItem('atlas_user',    JSON.stringify(res.usuario));
-    this.accessToken.next(res.access_token);
+    this.accessToken.next(res.token.access_token);
     this.user.next(res.usuario);
   }
 

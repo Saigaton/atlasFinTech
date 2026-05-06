@@ -16,16 +16,13 @@ export interface Usuario {
 
 /** Resposta completa de autenticação (login e cadastro) */
 export interface RespostaToken {
-  access_token:  string;
-  refresh_token: string;
-  token_type:    string;
-  expires_in:    number;
+  token:    AccessTokenResponse
   usuario:          Usuario;
 }
 
-/** Resposta de renovação de token (apenas o novo access token) */
 export interface AccessTokenResponse {
   access_token: string;
+  refresh_token: string;
   token_type:   string;
   expires_in:   number;
 }
@@ -54,10 +51,3 @@ export interface MensagemResposta {
 export interface ApiError {
   detail: string;
 }
-
-/**
- * Rotas disponíveis após login bem-sucedido.
- * Centralizado aqui para que AuthService.POST_LOGIN_ROUTE seja type-safe.
- * Adicione novas rotas conforme o sistema cresce.
- */
-export type PostLoginRoute = '/dashboard' | '/transactions' | '/reports';
