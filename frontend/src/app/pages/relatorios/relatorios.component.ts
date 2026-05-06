@@ -12,7 +12,7 @@ import { ShellComponent } from '../../shared/components/shell/shell.component';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, ShellComponent],
   templateUrl: './relatorios.component.html',
-  styleUrl: './relatorios.component.scss'
+  styleUrls: ['./relatorios.component.scss', './relatorios.component.extra.scss']
 })
 export class RelatoriosComponent implements OnInit {
 
