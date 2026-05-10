@@ -18,7 +18,7 @@ def obterUsuarioService(db: Session = Depends(get_db)):
 
 @router.post(
     "/auth/registro",
-    response_model=RespostaMensagem,
+    response_model=RespostaMensagem[None],
     status_code=status.HTTP_201_CREATED,
     summary="Registro do usuário",
     description=(
@@ -65,7 +65,7 @@ async def login(body: RequisicaoLoginUsuario, service: AuthService = Depends(obt
     )
 
 @router.get("/auth/verificar-email",     
-    response_model=RespostaMensagem,    
+    response_model=RespostaMensagem[None],    
     status_code=200
 )
 async def verificarEmail(token: str, service: AuthService = Depends(obterUsuarioService)):
@@ -113,7 +113,7 @@ async def tokenAtualizacao(body: RequisicaoTokenAtualizacao, service: AuthServic
 
 @router.post(
     "/auth/reenviar-verificacao-email",
-    response_model=RespostaMensagem,
+    response_model=RespostaMensagem[None],
     status_code=status.HTTP_200_OK,
     summary="Reenviar e-mail de verificação",
     description="Reenvia o link de verificação de e-mail. Retorna sempre a mesma mensagem genérica por segurança.",
@@ -130,7 +130,7 @@ async def reenviarVerificacaoEmail(request: Request, backgroundTasks: Background
 
 @router.post(
     "/auth/esqueceu-senha",
-    response_model=RespostaMensagem,
+    response_model=RespostaMensagem[None],
     status_code=status.HTTP_200_OK,
     summary="Solicitar recuperação de senha",
     description="Envia um link de redefinição de senha por e-mail. Retorna sempre a mesma mensagem genérica por segurança.",
@@ -147,7 +147,7 @@ async def esqueceuSenha(request: Request, backgroundTasks: BackgroundTasks, body
 
 @router.post(
     "/auth/redefinir-senha",
-    response_model=RespostaMensagem,
+    response_model=RespostaMensagem[None],
     status_code=status.HTTP_200_OK,
     summary="Redefinir senha",
     description="Redefine a senha usando o token de reset recebido por e-mail. O token é invalidado após o uso.",
@@ -162,7 +162,7 @@ async def redefinirSenha(body: RequisicaoRedefinirSenha, service: AuthService = 
 
 @router.post(
     "/auth/me/trocar-senha",
-    response_model=RespostaMensagem,
+    response_model=RespostaMensagem[None],
     status_code=status.HTTP_200_OK,
     summary="Trocar senha",
     description="Troca a senha do usuário autenticado, exigindo a senha atual.",

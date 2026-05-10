@@ -12,8 +12,13 @@ class Contas(Base):
     nome: Mapped[str] = mapped_column(String(100))
     saldo_inicial: Mapped[Decimal] = mapped_column(Numeric(precision=10, scale=2))
     saldo_atual: Mapped[Decimal] = mapped_column(Numeric(precision=10, scale=2))
-    descricao: Mapped[str] = mapped_column(String(255))
+    agencia: Mapped[str] = mapped_column(String(8))
+    nome_banco: Mapped[str] = mapped_column(String(100))
     data_criacao: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    cor: Mapped[str]   = mapped_column(String(8))
+
+    empresa_id: Mapped[int] = mapped_column(ForeignKey("empresas.id", ondelete="CASCADE"), index=True)
+    empresa:    Mapped["Empresas"] = relationship(back_populates="contas")
 
     usuario_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id"))
     usuario: Mapped["Usuarios"] = relationship(back_populates="conta")
