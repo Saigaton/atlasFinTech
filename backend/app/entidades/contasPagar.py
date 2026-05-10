@@ -14,8 +14,5 @@ class ContasPagar(Base):
     data_vencimento: Mapped[str] = mapped_column(String(255))
     data_pagamento: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
-    categoria_id: Mapped[int] = mapped_column(ForeignKey("categorias.id"))
-    categoria: Mapped["Categorias"] = relationship(back_populates="contas_pagar")
-
     situacao_id: Mapped[TipoSituacaoContaEnum] = mapped_column(Integer, ForeignKey("tipo_situacao_conta.id"))
     situacao: Mapped["TipoSituacaoConta"] = relationship(back_populates="contas_pagar")     

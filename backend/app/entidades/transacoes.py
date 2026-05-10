@@ -18,4 +18,7 @@ class Transacoes(Base):
     categoria: Mapped["Categorias"] = relationship(back_populates="transacoes")
 
     transacao_id: Mapped[TipoTransacaoEnum] = mapped_column(Integer, ForeignKey("tipo_transacoes.id"))
-    tipo_transacao: Mapped["TipoTransacoes"] = relationship(back_populates="transacoes")    
+    tipo_transacao: Mapped["TipoTransacoes"] = relationship(back_populates="transacoes")  
+
+    empresa_id: Mapped[int] = mapped_column(ForeignKey("empresas.id"))
+    empresa: Mapped["Empresas"] = relationship(back_populates="transacoes")  

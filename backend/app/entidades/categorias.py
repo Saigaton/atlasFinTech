@@ -8,8 +8,7 @@ class Categorias(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     nome: Mapped[str] = mapped_column()
     
-    usuario_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id"))
+    empresa_id: Mapped[int] = mapped_column(ForeignKey("empresas.id")) 
 
     transacoes: Mapped[list["Transacoes"]] = relationship(back_populates="categoria")
-    contas_receber: Mapped[list["ContasReceber"]] = relationship(back_populates="categoria")
-    contas_pagar: Mapped[list["ContasPagar"]] = relationship(back_populates="categoria")
+    empresa: Mapped["Empresas"] = relationship(back_populates="categorias")

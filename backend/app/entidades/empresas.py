@@ -1,8 +1,7 @@
-import datetime
-from time import timezone
+from datetime import datetime, timezone
 from typing import List, Optional
 
-from sqlalchemy import Boolean, DateTime, Integer, String
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String
 from app.configuracoes.database import Base
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -22,7 +21,10 @@ class Empresas(Base):
                      default=lambda: datetime.now(timezone.utc),
                      onupdate=lambda: datetime.now(timezone.utc))
 
+    usuario_id:   Mapped[int]           = mapped_column(ForeignKey("usuarios.id"), nullable=False)
+    usuario:      Mapped["Usuarios"]    = relationship(back_populates="empresas")
+
     # Relacionamentos
-    contas:       Mapped[List["Conta"]]        = relationship(back_populates="empresa", cascade="all, delete-orphan")
-    categorias:   Mapped[List["Categoria"]]    = relationship(back_populates="empresa", cascade="all, delete-orphan")
-    transacoes:   Mapped[List["Transacao"]]    = relationship(back_populates="empresa", cascade="all, delete-orphan")
+    contas:       Mapped[List["Contas"]]       = relationship(back_populates="empresa", cascade="all, delete-orphan")
+    categorias:   Mapped[List["Categorias"]]    = relationship(back_populates="empresa", cascade="all, delete-orphan")
+    transacoes:   Mapped[List["Transacoes"]]    = relationship(back_populates="empresa", cascade="all, delete-orphan")

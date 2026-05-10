@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.controllers import authController, contaBancariaController
+from app.controllers import authController, contaBancariaController, empresaController
 from app.configuracoes.database import Base, engine
 from app.exceptions.exceptionHandler import setupExceptionHandlers
 from app.entidades import *
@@ -36,6 +36,7 @@ app.add_middleware(
 )
 
 app.include_router(authController.router, prefix="/api/v1", tags=["Autenticação"])
+app.include_router(empresaController.router, prefix="/api/v1", tags=["Empresa"])
 app.include_router(contaBancariaController.router, prefix="/api/v1", tags=["Financeiro"])
 setupExceptionHandlers(app)
 
