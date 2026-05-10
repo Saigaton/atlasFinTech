@@ -6,12 +6,13 @@ import resend
 from app.configuracoes.config import settings
 
 resend.api_key = settings.RESEND_API_KEY
+remetente = settings.MAIL_FROM
 tentativas = 3
 delay = 5
 
 def dispararEmailComTentativas(emailDestino: str, corpoEmail: str, assunto: str):
     params = {
-        "from": "Atlas Fintech <onboarding@resend.dev>",
+        "from": remetente,
         "to": emailDestino,
         "subject": assunto,
         "html": corpoEmail

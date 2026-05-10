@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     RESEND_API_KEY: str
     FRONTEND_URL: str
+    MAIL_FROM: str
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
