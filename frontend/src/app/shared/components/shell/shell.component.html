@@ -33,13 +33,12 @@
 
     <!-- Empresa ativa -->
     @if (!collapsed && empresaService.ativo) {
-      <div class="sb-empresaService">
-        <div class="empresaService-badge">
+      <div class="sb-company">
+        <div class="company-badge">
           {{ empresaService.ativo!.nome.slice(0, 1).toUpperCase() }}
         </div>
-        <div class="empresaService-info">
-          <span class="empresaService-name">{{ empresaService.ativo!.nome }}</span>
-          <span class="empresaService-role">Administrador</span>
+        <div class="company-info">
+          <span class="company-name">{{ empresaService.ativo!.nome }}</span>
         </div>
       </div>
     }

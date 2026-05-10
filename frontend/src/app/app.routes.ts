@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
+import { empresaGuard } from './core/guards/empresa.guard';
 
 export const routes: Routes = [
   {
@@ -36,13 +37,18 @@ export const routes: Routes = [
       import('./pages/verificacao-pendente/verificacao-pendente.component').then(m => m.VerificacaoPendenteComponent),
   },
   {
+    path: 'empresa/nova',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/empresas/empresas.component').then(m => m.EmpresasComponent),
+  },
+  {
     path: '',
     redirectTo: 'dashboard',
     pathMatch: 'full'
   },
   {
     path: '',
-    canActivate: [authGuard],
+    canActivate: [authGuard, empresaGuard],
     children: [
       {
         path: 'dashboard',

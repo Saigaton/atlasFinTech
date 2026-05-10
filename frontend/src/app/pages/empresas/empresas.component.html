@@ -1,0 +1,66 @@
+<div class="setup-wrap">
+  <div class="setup-topbar">
+    <div class="setup-logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+      </div>
+      <span class="logo-name">Atlas FinTech</span>
+    </div>
+    <app-theme-toggle />
+  </div>
+
+  <div class="setup-center">
+    <div class="setup-card">
+
+      <div class="setup-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>
+      </div>
+
+      <h1>Configure sua empresa</h1>
+      <p>Crie sua empresa para começar a controlar suas finanças com o Atlas FinTech.</p>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+
+        <div class="fld">
+          <label class="fld-lbl" for="co-nome">Nome da empresa *</label>
+          <input
+            id="co-nome"
+            type="text"
+            formControlName="nome"
+            placeholder="Ex: Minha Empresa LTDA"
+            [class.bad]="nome.invalid && nome.touched"
+            autocomplete="organization"
+          >
+          @if (nome.invalid && nome.touched) {
+            <div class="ferr">
+              @if (nome.errors?.['required']) { Nome obrigatório }
+              @else { Mínimo de 2 caracteres }
+            </div>
+          }
+        </div>
+
+        <div class="fld">
+          <label class="fld-lbl" for="co-doc">CNPJ / CPF <span class="optional">(opcional)</span></label>
+          <input
+            id="co-doc"
+            type="text"
+            formControlName="documento"
+            placeholder="00.000.000/0001-00"
+          >
+        </div>
+
+        <button type="submit" class="btn-setup" [disabled]="carregando">
+          @if (carregando) {
+            <span class="spin"></span>
+            Criando...
+          } @else {
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            Criar empresa e entrar
+          }
+        </button>
+
+      </form>
+
+    </div>
+  </div>
+</div>

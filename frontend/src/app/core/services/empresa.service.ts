@@ -25,7 +25,7 @@ import { Empresa } from '../models/usuario.model';
  */
 @Injectable({ providedIn: 'root' })
 export class EmpresaService {
-  private readonly API = `${environment.apiUrl}/api/v1`;
+  private readonly API = environment.apiUrl;
 
   /** Empresa atualmente selecionada */
   private _ativo: Empresa | null = this._carregarAtivo();
