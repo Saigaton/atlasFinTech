@@ -1,12 +1,15 @@
-import secrets
 import bcrypt
 
+from app.configuracoes.security import criarRecuperarSenhaTokenPorUsuario, criarTokenAcesso, criarTokenVerificacaoEmail, decodificarTokenAtualizacao, decodificarTokenVerificacaoEmail
+from app.configuracoes.config import settings
+from app.entidades.atualizacaoTokens import AtualizacaoTokens
 from app.entidades.tokenResetSenha import TokenResetSenha
-from app.schemas.auth import RespostaUsuario
+from app.schemas.auth import RespostaTokenUsuario, RespostaUsuario
+from app.schemas.respostaMensagem import RespostaMensagem
 from app.exceptions.businessException import BusinessException
 from app.repositories.authRepository import AuthRepository
 from app.entidades.usuarios import Usuarios
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 class AuthService:
     def __init__(self, repository: AuthRepository):
@@ -38,7 +41,7 @@ class AuthService:
             self.repository.session.refresh(novo_usuario)
 
             return RespostaUsuario.model_validate(novo_usuario)
-        except Exception as e:
+        except Exception:
             self.repository.session.rollback()
             raise BusinessException("Erro ao salvar novo usuário.", status_code=400)
 
@@ -71,33 +74,139 @@ class AuthService:
         if not usuario:
             raise BusinessException("Usuário invalido.", status_code=404)
 
-        token = self.criarRecuperarSenhaTokenPorUsuario(usuario.id)
+        token = criarRecuperarSenhaTokenPorUsuario(usuario.id)
         try:
             self.repository.invalidarRecuperarSenhaTokenPorUsuario(usuario)
             self.repository.salvarRecuperarSenhaTokenPorUsuario(token)
             self.repository.session.commit()
             return token
-        except Exception as e:
+        except Exception:
             raise BusinessException("Erro ao processar recuperação de senha.", status_code=400)
 
-    # def redefinirSenha(token_str: str, nova_senha: str, session: Session):
-    #     token = session.query(TokenResetSenha).filter(
-    #         TokenResetSenha.token == token_str,
-    #         TokenResetSenha.usado == False,
-    #         TokenResetSenha.expira_em > datetime.now()
-    #     ).first()
+    def verificarEmail(self, token: str) -> RespostaMensagem:
+        payload = decodificarTokenVerificacaoEmail(token)
+        if not payload:
+            raise BusinessException("Token de verificação inválido ou expirado.", status_code=400)
 
-    #     if not token:
-    #         raise ValueError("Token inválido ou expirado")
+        usuario_id = int(payload.get("sub"))
+        usuario = self.repository.buscarUsuarioPorId(usuario_id)
+        if not usuario:
+            raise BusinessException("Usuário não encontrado.", status_code=404)
 
-    #     token.usuario.senha_hash = pwd_context.hash(nova_senha)
-    #     token.usado = True  # invalida após uso
-    #     session.commit()
+        if usuario.esta_verificado:
+            raise BusinessException("E-mail já verificado.", status_code=400)
 
-    def criarRecuperarSenhaTokenPorUsuario(self, usuarioId: int) -> TokenResetSenha:
-        token = TokenResetSenha(
-            token=secrets.token_urlsafe(32),
-            expira_em=datetime.now() + timedelta(hours=1),
-            usuario_id=usuarioId,
+        try:
+            self.repository.marcarEmailVerificado(usuario_id)
+            self.repository.session.commit()
+            return RespostaMensagem(mensagem="E-mail verificado com sucesso.")
+        except Exception:
+            self.repository.session.rollback()
+            raise BusinessException("Erro ao verificar e-mail.", status_code=400)
+    
+    def salvarTokenRefresh(self, usuarioId: int, jti: str, expiracao: datetime) -> None:
+        token = AtualizacaoTokens(
+            jti=jti,
+            user_id=usuarioId,
+            expira_em=expiracao,
         )
-        return token
+        try:
+            self.repository.salvarTokenAtualizacao(token)
+            self.repository.session.commit()
+        except Exception:
+            self.repository.session.rollback()
+            raise BusinessException("Erro ao salvar token de atualização.", status_code=400)
+
+    def logoutUsuario(self, refresh_token: str) -> None:
+        payload = decodificarTokenAtualizacao(refresh_token)
+        if not payload:
+            raise BusinessException("Refresh token inválido ou expirado.", status_code=401)
+
+        jti = payload.get("jti")
+        token_db = self.repository.buscarTokenAtualizacaoPorJti(jti)
+        if not token_db or token_db.revogado:
+            raise BusinessException("Refresh token inválido ou já revogado.", status_code=401)
+
+        try:
+            self.repository.revogarTokenAtualizacao(jti)
+            self.repository.session.commit()
+        except Exception:
+            self.repository.session.rollback()
+            raise BusinessException("Erro ao realizar logout.", status_code=400)
+
+    def tokenAtualizacao(self, refresh_token: str) -> RespostaTokenUsuario:
+        payload = decodificarTokenAtualizacao(refresh_token)
+        if not payload:
+            raise BusinessException("Refresh token inválido ou expirado.", status_code=401)
+
+        jti = payload.get("jti")
+        token_db = self.repository.buscarTokenAtualizacaoPorJti(jti)
+        if not token_db or not token_db.esta_valido:
+            raise BusinessException("Refresh token inválido ou expirado.", status_code=401)
+
+        usuario_id = int(payload.get("sub"))
+        usuario = self.repository.buscarUsuarioPorId(usuario_id)
+        if not usuario or not usuario.esta_ativo:
+            raise BusinessException("Usuário inválido.", status_code=401)
+
+        return RespostaTokenUsuario(
+            access_token=criarTokenAcesso({"id": str(usuario_id), "nome": usuario.nome, "email": usuario.email}),
+            refresh_token=refresh_token,
+            token_type="bearer",
+            expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        )
+    
+    def esqueceuSenha(self, email: str) -> str | None:
+        usuario = self.repository.buscarUsuarioPorEmail(email.lower())
+        if not usuario:
+            return None
+
+        token = criarRecuperarSenhaTokenPorUsuario(usuario.id)
+        try:
+            self.repository.invalidarRecuperarSenhaTokenPorUsuario(usuario)
+            self.repository.salvarRecuperarSenhaTokenPorUsuario(token)
+            self.repository.session.commit()
+            return token.token
+        except Exception:
+            self.repository.session.rollback()
+            raise BusinessException("Erro ao processar recuperação de senha.", status_code=400)
+
+    def reenviarVerificacaoEmail(self, email: str) -> str | None:
+        usuario = self.repository.buscarUsuarioPorEmail(email.lower())
+        if not usuario or usuario.esta_verificado:
+            return None
+        return criarTokenVerificacaoEmail(usuario.id)
+    
+    def trocarSenha(self, usuarioId: int, senhaAtual: str, novaSenha: str) -> RespostaMensagem:
+        usuario = self.repository.buscarUsuarioPorId(usuarioId)
+        if not self.validarSenha(senhaAtual, usuario.senha_hash):
+            raise BusinessException("Senha atual incorreta.", status_code=400)
+
+        senhaHash = self.criarSenhaHash(novaSenha)
+        try:
+            self.repository.atualizarSenhaUsuario(usuarioId, senhaHash)
+            self.repository.revogarTodosTokensDoUsuario(usuarioId)
+            self.repository.session.commit()
+            return RespostaMensagem(mensagem="Senha alterada com sucesso.")
+        except Exception:
+            self.repository.session.rollback()
+            raise BusinessException("Erro ao alterar senha.", status_code=400)
+
+    def redefinirSenha(self, tokenStr: str, novaSenha: str) -> RespostaMensagem:
+        tokenReset = self.repository.buscarTokenResetPorToken(tokenStr)
+        if not tokenReset or tokenReset.usado:
+            raise BusinessException("Token inválido ou já utilizado.", status_code=400)
+
+        if datetime.now() > tokenReset.expira_em:
+            raise BusinessException("Token de recuperação expirado.", status_code=400)
+
+        senhaHash = self.criarSenhaHash(novaSenha)
+        try:
+            self.repository.atualizarSenhaUsuario(tokenReset.usuario_id, senhaHash)
+            self.repository.invalidarRecuperarSenhaTokenPorUsuario(tokenReset.usuario)
+            self.repository.revogarTodosTokensDoUsuario(tokenReset.usuario_id)
+            self.repository.session.commit()
+            return RespostaMensagem(mensagem="Senha redefinida com sucesso.")
+        except Exception:
+            self.repository.session.rollback()
+            raise BusinessException("Erro ao redefinir senha.", status_code=400)

@@ -28,6 +28,12 @@ def dispararEmailComTentativas(emailDestino: str, corpoEmail: str, assunto: str)
                 logging.error(f"Todas as {tentativas} tentativas falharam para {emailDestino}.")
     return False
 
+def corpoEmailVerificacao(link: str) -> str:
+    return f"""<p>Olá!</p>
+                <p>Para verificar seu e-mail, clique no link abaixo:</p>
+                <a href="{link}">Verificar meu e-mail</a>
+            """
+
 def corpoEmailParaRecuperarSenha(link: str) -> str:
     return f""" <p>Olá!</p>
                 <p>Para recuperar sua senha, clique no link abaixo:</p>

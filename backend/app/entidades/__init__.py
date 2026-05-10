@@ -7,3 +7,4 @@ from app.entidades.contasReceber import ContasReceber
 from app.entidades.contasPagar import ContasPagar
 from app.entidades.contas import Contas
 from app.entidades.categorias import Categorias
+from app.entidades.atualizacaoTokens import AtualizacaoTokens

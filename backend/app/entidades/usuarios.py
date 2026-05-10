@@ -16,3 +16,4 @@ class Usuarios(Base):
 
     conta: Mapped["Contas"] = relationship(back_populates="usuario")
     tokens_reset: Mapped[list["TokenResetSenha"]] = relationship(back_populates="usuario")
+    refresh_tokens: Mapped[list["AtualizacaoTokens"]] = relationship(back_populates="usuario")
