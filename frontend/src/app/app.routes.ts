@@ -16,6 +16,21 @@ export const routes: Routes = [
       import('./pages/recuperar-senha/recuperar-senha.component').then(m => m.RecuperarSenhaComponent),
   },
   {
+    path: 'esqueceu-senha',
+    loadComponent: () =>
+      import('./pages/esqueceu-senha/esqueceu-senha.component').then(m => m.EsqueceuSenhaComponent),
+  },
+  {
+    path: 'redefinir-senha',
+    loadComponent: () =>
+      import('./pages/redefinir-senha/redefinir-senha.component').then(m => m.RedefinirSenhaComponent),
+  },
+  {
+    path: 'verificar-email',
+    loadComponent: () =>
+      import('./pages/verificar-email/verificar-email.component').then(m => m.VerificarEmailComponent),
+  },
+  {
     path: 'verificacao-pendente',
     loadComponent: () =>
       import('./pages/verificacao-pendente/verificacao-pendente.component').then(m => m.VerificacaoPendenteComponent),

@@ -1,0 +1,57 @@
+<!-- Tela de verificação de e-mail -->
+<div class="auth-wrap">
+  <div class="auth-shell">
+    <app-auth-panel />
+    <div class="auth-form-side">
+      <div class="auth-topbar"><app-theme-toggle /></div>
+      <div class="auth-scroll verify-content">
+
+        @switch (estado) {
+          @case ('carregando') {
+            <div class="state-box">
+              <div class="state-icon info">
+                <span class="spin-lg"></span>
+              </div>
+              <h2>Verificando seu e-mail...</h2>
+              <p>Aguarde um momento.</p>
+            </div>
+          }
+
+          @case ('sucesso') {
+            <div class="state-box">
+              <div class="state-icon success">
+                <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              </div>
+              <h2>E-mail verificado!</h2>
+              <p>Sua conta está ativa. Agora você pode acessar o sistema.</p>
+              <a routerLink="/login" class="btn-state-action">Ir para o login</a>
+            </div>
+          }
+
+          @case ('jaVerificado') {
+            <div class="state-box">
+              <div class="state-icon info">
+                <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              </div>
+              <h2>Já verificado</h2>
+              <p>{{ mensagem }}</p>
+              <a routerLink="/login" class="btn-state-action">Ir para o login</a>
+            </div>
+          }
+
+          @case ('erro') {
+            <div class="state-box">
+              <div class="state-icon error">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+              </div>
+              <h2>Link inválido</h2>
+              <p>{{ mensagem }}</p>
+              <a routerLink="/verificacao-pendente" class="btn-state-action">Reenviar verificação</a>
+            </div>
+          }
+        }
+
+      </div>
+    </div>
+  </div>
+</div>

@@ -95,13 +95,15 @@ export class AuthService extends UnsubscriberComponent {
 
   // ── Verificação de e-mail ──────────────────────────────────────────────────
 
-  verifyEmail(token: string): Observable<MensagemResposta> {
-    return this.http.post<MensagemResposta>(`${this.API}/auth/verify-email`, { token });
+  verificarEmail(token: string): Observable<MensagemResposta> {
+    return this.http.get<MensagemResposta>(`${this.API}/auth/verificar-email`, {
+      params: { token }
+    });    
   }
 
   resendVerification(email: string): Observable<MensagemResposta> {
     return this.http.post<MensagemResposta>(
-      `${this.API}/auth/resend-verification`, { email }
+      `${this.API}/auth/reenviar-verificacao-email`, { email }
     );
   }
 
@@ -123,23 +125,23 @@ export class AuthService extends UnsubscriberComponent {
   alterarSenha(dados: {
     senha_atual: string; nova_senha: string; confirmar_nova_senha: string;
   }): Observable<MensagemResposta> {
-    return this.http.post<MensagemResposta>(`${this.API}/auth/me/change-password`, dados);
+    return this.http.post<MensagemResposta>(`${this.API}/auth/me/trocar-senha`, dados);
   }
 
   // ── Recuperação de senha ───────────────────────────────────────────────────
 
   solicitarRecuperacaoSenha(email: string): Observable<MensagemResposta> {
-    return this.http.post<MensagemResposta>(`${this.API}/auth/recuperar-senha`, { email });
+    return this.http.post<MensagemResposta>(`${this.API}/auth/esqueceu-senha`, { email });
   }
 
-  resetPassword(
+  redefinirSenha(
     token: string,
-    new_password: string,
-    confirm_password: string
+    novaSenha: string,
+    confirmarSenha: string
   ): Observable<MensagemResposta> {
     return this.http.post<MensagemResposta>(
-      `${this.API}/auth/reset-password`,
-      { token, new_password, confirm_password }
+      `${this.API}/auth/redefinir-senha`,
+      { token, novaSenha, confirmarSenha }
     );
   }
 
