@@ -32,7 +32,7 @@ def obterUsuarioService(db: Session = Depends(get_db)):
 )
 async def registro(body: RequisicaoRegistroUsuario, service: AuthService = Depends(obterUsuarioService)):
     service.criarUsuario(body.model_dump())
-    RespostaMensagem(mensagem="Usuário criado com sucesso.")
+    return RespostaMensagem(mensagem="Usuário criado com sucesso.")
 
 @router.post(
     "/auth/login",
