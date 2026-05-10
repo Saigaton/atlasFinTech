@@ -2,9 +2,9 @@ from fastapi import APIRouter, BackgroundTasks, Depends, Request, status
 from sqlalchemy.orm import Session
 from app.configuracoes.database import get_db
 
-from app.schemas.auth import RequisicaoEmail, RequisicaoRedefinirSenha, RequisicaoTokenAtualizacao, RequisicaoTrocarSenha, RespostaRegistro, RequisicaoRegistroUsuario, RespostaLogin, RequisicaoLoginUsuario, RespostaTokenUsuario, RespostaUsuario
+from app.schemas.auth import RequisicaoEmail, RequisicaoRedefinirSenha, RequisicaoTokenAtualizacao, RequisicaoTrocarSenha, RequisicaoRegistroUsuario, RespostaLogin, RequisicaoLoginUsuario, RespostaTokenUsuario, RespostaUsuario
 from app.configuracoes.config import settings
-from app.configuracoes.security import criarTokenAcesso, criarTokenRefresh, criarTokenVerificacaoEmail, obterUsuarioAtual, obterUsuarioAtualDB
+from app.configuracoes.security import criarTokenAcesso, criarTokenRefresh, obterUsuarioAtual, obterUsuarioAtualDB
 from app.repositories.authRepository import AuthRepository
 from app.schemas.respostaMensagem import RespostaMensagem
 from app.services.authService import AuthService
@@ -18,7 +18,7 @@ def obterUsuarioService(db: Session = Depends(get_db)):
 
 @router.post(
     "/auth/registro",
-    response_model=RespostaRegistro,
+    response_model=RespostaMensagem,
     status_code=status.HTTP_201_CREATED,
     summary="Registro do usuário",
     description=(
@@ -31,20 +31,8 @@ def obterUsuarioService(db: Session = Depends(get_db)):
     },
 )
 async def registro(body: RequisicaoRegistroUsuario, service: AuthService = Depends(obterUsuarioService)):
-    usuario = service.criarUsuario(body.model_dump())
-    tokenRefresh = criarTokenRefresh(str(usuario.id))
-    service.salvarTokenRefresh(str(usuario.id), tokenRefresh.jti, tokenRefresh.expiracao)
-    tokenEmail = criarTokenVerificacaoEmail(usuario.id)
-    return RespostaRegistro(
-        token=RespostaTokenUsuario(
-            access_token=criarTokenAcesso({"id": str(usuario.id), "nome": usuario.nome, "email": usuario.email}),
-            refresh_token=tokenRefresh.token,
-            token_type="bearer",
-            expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        ),
-        tokenVerificarEmail=tokenEmail,
-        usuario=usuario
-    )
+    service.criarUsuario(body.model_dump())
+    RespostaMensagem(mensagem="Usuário criado com sucesso.")
 
 @router.post(
     "/auth/login",

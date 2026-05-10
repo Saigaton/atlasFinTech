@@ -35,11 +35,6 @@ class RespostaLogin(BaseModel):
     token: RespostaTokenUsuario
     usuario: RespostaUsuario
 
-class RespostaRegistro(BaseModel):
-    token: RespostaTokenUsuario
-    tokenVerificarEmail: str
-    usuario: RespostaUsuario
-
 class RespostaRecuperarSenha(BaseModel):
     link: str
 

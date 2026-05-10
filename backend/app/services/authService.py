@@ -51,7 +51,7 @@ class AuthService:
         # Verificação de e-mail existente
         if not usuario or not self.validarSenha(dados["senha"], usuario.senha_hash):
             raise BusinessException("E-mail ou senha incorretos", status_code=401)
-
+                
         return RespostaUsuario.model_validate(usuario)
 
     def validarSenha(self, senhaPura: str, senhaHash: str) -> bool:
