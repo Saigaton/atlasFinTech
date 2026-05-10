@@ -51,7 +51,7 @@ def criarTokenRefresh(usuarioId: Any) -> DadosTokenRefresh:
     token = jwt.encode(payload, settings.REFRESH_SECRET_KEY, algorithm=settings.ALGORITHM)
     return DadosTokenRefresh(token=token, jti=jti, expiracao=expiracao)
 
-def criarRecuperarSenhaTokenPorUsuario(self, usuarioId: int) -> TokenResetSenha:
+def criarRecuperarSenhaTokenPorUsuario(usuarioId: int) -> TokenResetSenha:
         token = TokenResetSenha(
             token=secrets.token_urlsafe(32),
             expira_em=datetime.now() + timedelta(hours=1),

@@ -81,7 +81,6 @@ async def login(body: RequisicaoLoginUsuario, service: AuthService = Depends(obt
     status_code=200
 )
 async def verificarEmail(token: str, service: AuthService = Depends(obterUsuarioService)):
-  """Confirma o e-mail do usuário via token JWT enviado por e-mail."""
   return service.verificarEmail(token)
 
 @router.get(
@@ -137,7 +136,7 @@ async def tokenAtualizacao(body: RequisicaoTokenAtualizacao, service: AuthServic
 async def reenviarVerificacaoEmail(request: Request, backgroundTasks: BackgroundTasks, body: RequisicaoEmail, service: AuthService = Depends(obterUsuarioService)):
     token = service.reenviarVerificacaoEmail(body.email)
     if token:
-        linkVerificacao = f"{str(request.base_url)}api/v1/auth/verificar-email?token={token}"
+        linkVerificacao = f"{str(settings.FRONTEND_URL)}verificar-email?token={token}"
         backgroundTasks.add_task(dispararEmailComTentativas, body.email, corpoEmailVerificacao(linkVerificacao), "Verificar E-mail")
     return RespostaMensagem(mensagem="Se o e-mail existir e não estiver verificado, um novo link será enviado.")
 
@@ -169,8 +168,8 @@ async def esqueceuSenha(request: Request, backgroundTasks: BackgroundTasks, body
         400: {"description": "Token inválido, expirado ou já utilizado"},
     },
 )
-async def redefinirSenha(token: str, body: RequisicaoRedefinirSenha, service: AuthService = Depends(obterUsuarioService)):
-    return service.redefinirSenha(token, body.novaSenha)
+async def redefinirSenha(body: RequisicaoRedefinirSenha, service: AuthService = Depends(obterUsuarioService)):
+    return service.redefinirSenha(body.token, body.novaSenha)
 
 
 @router.post(

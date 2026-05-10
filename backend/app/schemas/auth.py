@@ -50,6 +50,7 @@ class RequisicaoToken(BaseModel):
     token: str
 
 class RequisicaoRedefinirSenha(BaseModel):
+    token: str
     novaSenha: str = Field(..., min_length=8, max_length=128)
     confirmarSenha: str
 
