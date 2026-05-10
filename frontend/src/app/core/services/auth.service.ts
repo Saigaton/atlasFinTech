@@ -52,9 +52,7 @@ export class AuthService extends UnsubscriberComponent {
   // ── Autenticação ───────────────────────────────────────────────────────────
 
   registro(data: RequisicaoRegistroUsuario): Observable<RespostaToken> {
-    return this.http.post<RespostaToken>(`${this.API}/auth/registro`, data).pipe(
-      tap(res => this.saveSession(res)),
-    );
+    return this.http.post<RespostaToken>(`${this.API}/auth/registro`, data);
   }
 
   login(data: RequisicaoLoginUsuario): Observable<RespostaToken> {

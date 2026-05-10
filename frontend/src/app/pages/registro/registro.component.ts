@@ -55,12 +55,12 @@ export class RegistroComponent extends UnsubscriberComponent implements OnInit {
         this.toast.success('Conta criada! Verifique seu e-mail para ativar. 📧');
         this.router.navigate(['/verificacao-pendente']);
       },
-      error: (err: HttpErrorResponse) => {
+      error: (err: any) => {
         this.carregando = false;
         if (err.status === 0) { 
           this.toast.error("Erro na comunicação com backend.");
         }
-        const msg = err.error?.detail ?? 'Erro ao criar conta.';
+        const msg = err.error?.erro ?? 'Erro ao criar conta.';
         this.toast.error(msg);
         if (msg.toLowerCase().includes('e-mail')) {
           this.formRegistro.get('email')?.setErrors({ emailTaken: true });
