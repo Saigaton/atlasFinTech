@@ -11,7 +11,6 @@ class Transacoes(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     descricao: Mapped[str] = mapped_column(String(100))
     valor: Mapped[Decimal] = mapped_column(Numeric(precision=10, scale=2))
-    senha_hash: Mapped[str] = mapped_column(String(255))
     data: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
     categoria_id: Mapped[int] = mapped_column(ForeignKey("categorias.id"))

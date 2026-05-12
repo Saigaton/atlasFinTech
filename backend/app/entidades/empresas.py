@@ -25,6 +25,8 @@ class Empresas(Base):
     usuario:      Mapped["Usuarios"]    = relationship(back_populates="empresas")
 
     # Relacionamentos
-    contas:       Mapped[List["Contas"]]       = relationship(back_populates="empresa", cascade="all, delete-orphan")
-    categorias:   Mapped[List["Categorias"]]    = relationship(back_populates="empresa", cascade="all, delete-orphan")
-    transacoes:   Mapped[List["Transacoes"]]    = relationship(back_populates="empresa", cascade="all, delete-orphan")
+    contas:        Mapped[List["Contas"]]       = relationship(back_populates="empresa", cascade="all, delete-orphan")
+    categorias:    Mapped[List["Categorias"]]   = relationship(back_populates="empresa", cascade="all, delete-orphan")
+    transacoes:    Mapped[List["Transacoes"]]   = relationship(back_populates="empresa", cascade="all, delete-orphan")
+    contas_pagar:   Mapped[List["ContasPagar"]]   = relationship(back_populates="empresa", cascade="all, delete-orphan")
+    contas_receber: Mapped[List["ContasReceber"]] = relationship(back_populates="empresa", cascade="all, delete-orphan")
