@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.controllers import authController, contaBancariaController, empresaController
+from app.controllers import authController, categoriaController, contaBancariaController, contaPagarController, contaReceberController, dashboardController, empresaController, relatorioController, transacaoController
 from app.configuracoes.database import Base, engine
 from app.exceptions.exceptionHandler import setupExceptionHandlers
 from app.entidades import *
@@ -37,7 +37,13 @@ app.add_middleware(
 
 app.include_router(authController.router, prefix="/api/v1", tags=["Autenticação"])
 app.include_router(empresaController.router, prefix="/api/v1", tags=["Empresa"])
-app.include_router(contaBancariaController.router, prefix="/api/v1", tags=["Financeiro"])
+app.include_router(categoriaController.router, prefix="/api/v1", tags=["Categoria"])
+app.include_router(contaBancariaController.router, prefix="/api/v1", tags=["Conta Bancária"])
+app.include_router(contaPagarController.router, prefix="/api/v1", tags=["Conta Pagar"])
+app.include_router(contaReceberController.router, prefix="/api/v1", tags=["Conta Pagar"])
+app.include_router(transacaoController.router, prefix="/api/v1", tags=["Transação"])
+app.include_router(dashboardController.router, prefix="/api/v1", tags=["Dashboard"])
+app.include_router(relatorioController.router, prefix="/api/v1", tags=["Relatório"])
 setupExceptionHandlers(app)
 
 Base.metadata.drop_all(bind=engine)
