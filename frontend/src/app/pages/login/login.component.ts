@@ -52,7 +52,8 @@ export class LoginComponent extends UnsubscriberComponent implements OnInit {
         if (err.status === 0) { 
           this.toast.error("Erro na comunicação com backend.");
         }
-        const msg = err.error?.detail ?? 'Erro ao fazer login.';
+
+        const msg = err.error?.erro ?? 'Erro ao fazer login.';
         this.toast.error(msg);
         if (err.status === 401) {
           this.formLogin.get('senha')?.setErrors({ invalidCredentials: true });
