@@ -52,6 +52,7 @@ export class RegistroComponent extends UnsubscriberComponent implements OnInit {
     this.carregando = true;
     this.authService.registro(this.formRegistro.value as RequisicaoRegistroUsuario).subscribe({
       next: () => {
+        this.authService.setEmailParaConfirmacao(this.formRegistro.value.email); 
         this.toast.success('Conta criada! Verifique seu e-mail para ativar. 📧');
         this.router.navigate(['/verificacao-pendente']);
       },
