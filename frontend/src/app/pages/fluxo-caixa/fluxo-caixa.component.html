@@ -5,10 +5,10 @@
       <p class="page-sub">Entradas e saídas confirmadas · {{ anoSelecionado }}</p>
     </div>
     <select class="period-select"
-            [value]="anoSelecionado"
-            (change)="anoSelecionado = +$any($event.target).value; loadData()">
+            [(ngModel)]="anoSelecionado"
+            (ngModelChange)="_carregar()">
       @for (y of anos; track y) {
-        <option [value]="y">{{ y }}</option>
+        <option [ngValue]="y">{{ y }}</option>
       }
     </select>
   </div>

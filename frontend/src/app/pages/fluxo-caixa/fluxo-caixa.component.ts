@@ -3,11 +3,18 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TransacaoService } from '../../core/services/transacao.service';
 import { EmpresaService } from '../../core/services/empresa.service';
-import { firstValueFrom } from 'rxjs/internal/firstValueFrom';
-import { UnsubscriberComponent } from '../../core/unsubscriber.component';
+import { MesGrafico } from '../../core/models/dashboard.models';
 import { ShellComponent } from '../../shared/components/shell/shell.component';
 
+interface PontoFluxoCaixa {
+  label:   string;
+  receita: number;
+  despesa: number;
+  liquido: number;
+}
+
 const MONTH_LABELS = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
 @Component({
   selector: 'app-fluxo-caixa',
   standalone: true,
@@ -15,53 +22,49 @@ const MONTH_LABELS = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out
   templateUrl: './fluxo-caixa.component.html',
   styleUrl: './fluxo-caixa.component.scss'
 })
-export class FluxoCaixaComponent extends UnsubscriberComponent implements OnInit {
-  // ── Estado ───────────────────────────────────────────────────────────────
-  carregando      = true;
+export class FluxoCaixaComponent implements OnInit {
+
+  carregando     = true;
   anoSelecionado = new Date().getFullYear();
-  readonly anos = Array.from({ length: 5 }, (_, i) => this.anoSelecionado - i);
+  readonly anos  = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i);
 
-  private rawData: Array<{ mes: number; receita: number; despesa: number }> = [];
+  private rawData: MesGrafico[] = [];
 
-  // ── Dados computados ──────────────────────────────────────────────────────
   get grafico(): PontoFluxoCaixa[] {
-    return this.rawData
-      .filter(pt => pt.receita > 0 || pt.despesa > 0)
-      .map(pt => ({
+    return this.rawData.map(pt => {
+      const rec = Number(pt.receitas) || 0;
+      const des = Number(pt.despesas) || 0;
+      return {
         label:   MONTH_LABELS[pt.mes - 1] ?? String(pt.mes),
-        receita:  pt.receita,
-        despesa: pt.despesa,
-        liquido:     pt.receita - pt.despesa,
-      }));
+        receita: rec,
+        despesa: des,
+        liquido: rec - des,
+      };
+    });
   }
 
-  get totalReceita():  number { return this.rawData.reduce((s, p) => s + p.receita,  0); }
-  get totalDespesa(): number { return this.rawData.reduce((s, p) => s + p.despesa, 0); }
-  get liquidoAtual():   number { return this.totalReceita - this.totalDespesa; }
-  get valorMaximo():     number {
+  get totalReceita(): number { return this.rawData.reduce((s, p) => s + (Number(p.receitas) || 0), 0); }
+  get totalDespesa(): number { return this.rawData.reduce((s, p) => s + (Number(p.despesas) || 0), 0); }
+  get liquidoAtual(): number { return this.totalReceita - this.totalDespesa; }
+  get valorMaximo(): number {
     return Math.max(...this.grafico.flatMap(p => [p.receita, p.despesa]), 1);
   }
 
   constructor(
-    private empresaService: EmpresaService,
+    private empresaService:   EmpresaService,
     private transacaoService: TransacaoService,
-  ) {
-    super();
-  }
+  ) {}
 
-  ngOnInit(): void { this.loadData(); }
+  ngOnInit(): void { this._carregar(); }
 
-  async loadData(): Promise<void> {
+  _carregar(): void {
+    const id = this.empresaService.ativoId();
+    if (!id) { this.carregando = false; return; }
     this.carregando = true;
-    const cid = this.empresaService.ativoId();
-    if (!cid) { this.carregando = false; return; }
-    try {
-      const resp = await firstValueFrom(this.transacaoService.obterMesGrafico(cid, this.anoSelecionado));
-      this.rawData = resp?.conteudo ?? [];
-    } catch {
-      this.rawData = [];
-    }
-    this.carregando = false;
+    this.transacaoService.obterMesGrafico(id, this.anoSelecionado).subscribe({
+      next:  r  => { this.rawData = r?.conteudo ?? []; this.carregando = false; },
+      error: () => { this.rawData = [];                this.carregando = false; },
+    });
   }
 
   fmt(v: number): string {
@@ -69,7 +72,7 @@ export class FluxoCaixaComponent extends UnsubscriberComponent implements OnInit
   }
 
   fmtK(v: number): string {
-    if (v >= 1000) return 'R$' + (v / 1000).toFixed(0) + 'k';
+    if (v >= 1_000) return 'R$' + (v / 1_000).toFixed(0) + 'k';
     return 'R$' + Math.round(v).toString();
   }
 }
