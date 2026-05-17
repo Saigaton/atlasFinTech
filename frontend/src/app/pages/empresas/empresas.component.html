@@ -30,10 +30,15 @@
             placeholder="Ex: Minha Empresa LTDA"
             [class.bad]="nome.invalid && nome.touched"
             autocomplete="organization"
+            maxlength="120"
           >
+          <div class="fld-hint" [class.warn]="nome.value?.length >= 100">
+            {{ nome.value?.length ?? 0 }}/120
+          </div>
           @if (nome.invalid && nome.touched) {
             <div class="ferr">
-              @if (nome.errors?.['required']) { Nome obrigatório }
+              @if (nome.errors?.['required'])   { Nome obrigatório }
+              @else if (nome.errors?.['maxlength']) { Máximo de 120 caracteres }
               @else { Mínimo de 2 caracteres }
             </div>
           }
@@ -44,9 +49,20 @@
           <input
             id="co-doc"
             type="text"
+            inputmode="numeric"
             formControlName="documento"
             placeholder="00.000.000/0001-00"
+            cpfCnpjMask
+            [class.bad]="documento.invalid && documento.touched"
+            autocomplete="off"
           >
+          @if (documento.invalid && documento.touched) {
+            <div class="ferr">
+              @if (documento.errors?.['cpfInvalido'])  { CPF inválido }
+              @else if (documento.errors?.['cnpjInvalido']) { CNPJ inválido }
+              @else { CPF deve ter 11 dígitos ou CNPJ 14 dígitos }
+            </div>
+          }
         </div>
 
         <button type="submit" class="btn-setup" [disabled]="carregando">
