@@ -21,15 +21,15 @@
     <div class="filter-group">
       <select [value]="filtroTipo" (change)="aplicarFiltro('tipo', $any($event.target).value)">
         <option value="">Todos os tipos</option>
-        <option value="income">Receita</option>
-        <option value="expense">Despesa</option>
-        <option value="transfer">Transferência</option>
+        <option value="0">Receita</option>
+        <option value="1">Despesa</option>
+        <option value="3">Transferência</option>
       </select>
       <select [value]="filtroSituacao" (change)="aplicarFiltro('situacao', $any($event.target).value)">
         <option value="">Todos os status</option>
-        <option value="confirmed">Confirmado</option>
-        <option value="pending">Pendente</option>
-        <option value="cancelled">Cancelado</option>
+        <option value="1">Confirmado</option>
+        <option value="0">Pendente</option>
+        <option value="2">Cancelado</option>
       </select>
     </div>
   </div>
@@ -84,22 +84,24 @@
                   </div>
                 </td>
                 <td class="hide-sm td-date">{{ formatarData(tx.data) }}</td>
-                <td class="hide-md td-sub">{{ tx.conta.nome || '—' }}</td>
+                <td class="hide-md td-conta">{{ tx.conta?.nome || '—' }}</td>
                 <td class="hide-md">
-                  @if (tx.categoria!.nome) {
-                    <span class="cat-tag" [style.background]="(tx.categoria!.cor || '#64748b') + '22'" [style.color]="tx.categoria!.cor || '#64748b'">
-                      {{ tx.categoria!.nome }}
+                  @if (tx.categoria?.nome) {
+                    <span class="cat-tag" [style.background]="(tx.categoria?.cor || '#64748b') + '22'" [style.color]="tx.categoria?.cor || '#64748b'">
+                      {{ tx.categoria?.nome }}
                     </span>
-                  } @else { <span class="td-sub">—</span> }
+                  } @else {
+                    <span class="cat-tag cat-tag--none">{{ tipoLabel(tx.tipo) }}</span>
+                  }
                 </td>
                 <td>
-                  <!-- <span [class]="tx.tipo === 'income' ? 'val-pos' : tx.tipo === 'expense' ? 'val-neg' : 'val-neutral'">
-                    {{ tx.tipo === 'income' ? '+' : tx.tipo === 'expense' ? '−' : '⇄' }}
+                  <span [class]="tx.tipo === TipoTransacao.Receita ? 'val-pos' : tx.tipo === TipoTransacao.Despesa ? 'val-neg' : 'val-neutral'">
+                    {{ tx.tipo === TipoTransacao.Receita ? '+' : tx.tipo === TipoTransacao.Despesa ? '−' : '⇄' }}
                     {{ formatarCurrency(tx.valor) }}
-                  </span> -->
+                  </span>
                 </td>
                 <td class="hide-sm">
-                  <span [class]="situacaoClass('SituacaoTransacao[tx.situacaoId]')">{{ situacaoLabel('SituacaoTransacao[tx.situacaoId]') }}</span>
+                  <span [class]="situacaoClass(tx.situacao)">{{ situacaoLabel(tx.situacao) }}</span>
                 </td>
                 <td>
                   <div class="row-actions">
@@ -150,34 +152,39 @@
           <!-- Tipo -->
           @if (!editandoTransacao) {
             <div class="type-tabs">
-              @for (t of [{val:'expense',label:'Despesa'},{val:'income',label:'Receita'},{val:'transfer',label:'Transferência'}]; track t.val) {
-                <button type="button"
-                  [class.active]="formTransacao.get('tipo')?.value === t.val"
-                  [class]="'tab-' + t.val"
-                  (click)="formTransacao.get('tipo')?.setValue(t.val)">
-                  {{ t.label }}
-                </button>
-              }
+              <button type="button"
+                [class.active]="formTransacao.get('tipo')?.value == TipoTransacao.Despesa"
+                class="tab-expense"
+                (click)="formTransacao.get('tipo')?.setValue(TipoTransacao.Despesa)">Despesa</button>
+              <button type="button"
+                [class.active]="formTransacao.get('tipo')?.value == TipoTransacao.Receita"
+                class="tab-income"
+                (click)="formTransacao.get('tipo')?.setValue(TipoTransacao.Receita)">Receita</button>
+              <button type="button"
+                [class.active]="formTransacao.get('tipo')?.value == TipoTransacao.Transferencia"
+                class="tab-transfer"
+                (click)="formTransacao.get('tipo')?.setValue(TipoTransacao.Transferencia)">Transferência</button>
             </div>
           }
 
           <!-- Descrição -->
           <div class="fld">
             <label class="fld-lbl">Descrição *</label>
-            <input type="text" formControlName="descricao" placeholder="Ex: Salário, Aluguel..."
+            <input type="text" formControlName="descricao" maxlength="100" placeholder="Ex: Salário, Aluguel..."
               [class.bad]="formTransacao.get('descricao')?.invalid && formTransacao.get('descricao')?.touched">
+            <span class="char-count">{{ (formTransacao.get('descricao')?.value?.length || 0) }}/100</span>
           </div>
 
           <!-- Valor + Data -->
           <div class="duo">
             <div class="fld">
               <label class="fld-lbl">Valor (R$) *</label>
-              <input type="number" formControlName="amount" placeholder="0,00" min="0.01" step="0.01"
+              <input type="number" formControlName="valor" placeholder="0,00" min="0.01" max="99999999.99" step="0.01"
                 [class.bad]="formTransacao.get('valor')?.invalid && formTransacao.get('valor')?.touched">
             </div>
             <div class="fld">
               <label class="fld-lbl">Data *</label>
-              <input type="date" formControlName="date"
+              <input type="date" formControlName="data"
                 [class.bad]="formTransacao.get('data')?.invalid && formTransacao.get('data')?.touched">
             </div>
           </div>
@@ -195,9 +202,9 @@
             </div>
             <div class="fld">
               <label class="fld-lbl">Status</label>
-              <select formControlName="status">
-                <option value="confirmed">Confirmado</option>
-                <option value="pending">Pendente</option>
+              <select formControlName="situacao">
+                <option [value]="SituacaoTransacao.Confirmado">Confirmado</option>
+                <option [value]="SituacaoTransacao.Pendente">Pendente</option>
               </select>
             </div>
           </div>
@@ -206,23 +213,26 @@
           @if (isTransferencia) {
             <div class="fld">
               <label class="fld-lbl">Conta de destino *</label>
-              <select formControlName="transfer_to_account_id">
+              <select formControlName="transferenciaParaContaId"
+                [class.bad]="formTransacao.hasError('contasIguais') || (formTransacao.get('transferenciaParaContaId')?.invalid && formTransacao.get('transferenciaParaContaId')?.touched)">
                 <option [value]="null">Selecione...</option>
                 @for (acc of contas; track acc.id) {
-                  @if (acc.id !== formTransacao.get('account_id')?.value) {
-                    <option [value]="acc.id">{{ acc.nome }}</option>
-                  }
+                  <option [value]="acc.id">{{ acc.nome }}</option>
                 }
               </select>
+              @if (formTransacao.hasError('contasIguais')) {
+                <span class="fld-err">A conta de destino deve ser diferente da conta de origem.</span>
+              }
             </div>
           }
 
           <!-- Categoria -->
           @if (!isTransferencia) {
             <div class="fld">
-              <label class="fld-lbl">Categoria</label>
-              <select formControlName="category_id">
-                <option [value]="null">Sem categoria</option>
+              <label class="fld-lbl">Categoria *</label>
+              <select formControlName="categoriaId"
+                      [class.bad]="formTransacao.get('categoriaId')?.invalid && formTransacao.get('categoriaId')?.touched">
+                <option [value]="null">Selecione...</option>
                 @for (cat of categoriasFiltradas; track cat.id) {
                   <option [value]="cat.id">{{ cat.nome }}</option>
                 }
@@ -234,11 +244,11 @@
           @if (!editandoTransacao && !isTransferencia) {
             <div class="fld">
               <label class="fld-lbl">Recorrência</label>
-              <select formControlName="recurrence">
-                <option value="none">Sem recorrência</option>
-                <option value="monthly">Mensal</option>
-                <option value="weekly">Semanal</option>
-                <option value="yearly">Anual</option>
+              <select formControlName="recorrencia">
+                <option value="nenhuma">Sem recorrência</option>
+                <option value="mensal">Mensal</option>
+                <option value="semanal">Semanal</option>
+                <option value="anual">Anual</option>
               </select>
             </div>
           }
@@ -246,7 +256,8 @@
           <!-- Observação -->
           <div class="fld">
             <label class="fld-lbl">Observação</label>
-            <textarea formControlName="notes" rows="2" placeholder="Opcional..."></textarea>
+            <textarea formControlName="notas" maxlength="500" rows="2" placeholder="Opcional..."></textarea>
+            <span class="char-count">{{ (formTransacao.get('notas')?.value?.length || 0) }}/500</span>
           </div>
 
           <div class="modal-footer">

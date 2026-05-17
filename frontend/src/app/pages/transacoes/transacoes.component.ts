@@ -14,12 +14,10 @@
  */
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
-import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators, FormGroup, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ToastService } from '../../core/services/toast.service';
-import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 import { ShellComponent } from '../../shared/components/shell/shell.component';
-import { FiltroTransacao, SituacaoTransacao, Transacao } from '../../core/models/transacao.model';
+import { AtualizarTransacaoDto, CriarTransacaoDto, FiltroTransacao, SituacaoTransacao, TipoTransacao, Transacao } from '../../core/models/transacao.model';
 import { Conta } from '../../core/models/conta.model';
 import { Categoria, TipoCategoria } from '../../core/models/categoria.models';
 import { EmpresaService } from '../../core/services/empresa.service';
@@ -35,12 +33,14 @@ import { UnsubscriberComponent } from '../../core/unsubscriber.component';
 @Component({
   selector: 'app-transacao',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, ShellComponent,
-           LoadingSkeletonComponent],
+  imports: [CommonModule, ReactiveFormsModule, ShellComponent],
   templateUrl: './transacoes.component.html',
   styleUrls: ['./transacoes.component.scss', './transacoes.component.extra.scss'],
 })
 export class TransacoesComponent extends UnsubscriberComponent implements OnInit {
+
+  readonly TipoTransacao    = TipoTransacao;
+  readonly SituacaoTransacao = SituacaoTransacao;
 
   // ── Estado ───────────────────────────────────────────────────────────────
   carregando    = true;
@@ -68,13 +68,16 @@ export class TransacoesComponent extends UnsubscriberComponent implements OnInit
   formTransacao!: FormGroup;
 
   get isTransferencia(): boolean {
-    return this.formTransacao.get('tipo')?.value === 'transferencia';
+    return Number(this.formTransacao.get('tipo')?.value) === TipoTransacao.Transferencia;
   }
 
   get categoriasFiltradas(): Categoria[] {
-    const tipo = this.formTransacao.get('tipo')?.value;
+    const tipo = Number(this.formTransacao.get('tipo')?.value) as TipoTransacao;
+    if (tipo === TipoTransacao.Transferencia) return [];
     return this.categorias.filter(c =>
-      tipo === 'transfer' ? false : c.tipo === TipoCategoria.Ambos || c.tipo === tipo
+      c.tipo === TipoCategoria.Ambos ||
+      (tipo === TipoTransacao.Receita && c.tipo === TipoCategoria.Receita) ||
+      (tipo === TipoTransacao.Despesa && c.tipo === TipoCategoria.Despesa)
     );
   }
 
@@ -98,6 +101,7 @@ export class TransacoesComponent extends UnsubscriberComponent implements OnInit
   }
 
   ngOnInit(): void {
+    this.criarFormularioTransacao();
     const id = this.empresaService.ativoId();
     if (!id) return;
     this._carregarContas(id);
@@ -105,18 +109,44 @@ export class TransacoesComponent extends UnsubscriberComponent implements OnInit
     this._carregarTransacoes();
   }
 
+  private _contasIguaisValidator = (group: AbstractControl): ValidationErrors | null => {
+    const tipo    = Number(group.get('tipo')?.value);
+    const contaId = group.get('contaId')?.value;
+    const destId  = group.get('transferenciaParaContaId')?.value;
+    if (tipo === TipoTransacao.Transferencia && contaId && destId && Number(contaId) === Number(destId)) {
+      return { contasIguais: true };
+    }
+    return null;
+  };
+
   criarFormularioTransacao(){
     this.formTransacao = this.formBuilder.group({
       contaId:             [null as number | null, Validators.required],
-      categoriaId:            [null as number | null],
-      descricao:            ['', [Validators.required, Validators.minLength(1), Validators.maxLength(200)]],
-      valor:                 [null as number | null, [Validators.required, Validators.min(0.01)]],
+      categoriaId:            [null as number | null, Validators.required],
+      descricao:            ['', [Validators.required, Validators.minLength(1), Validators.maxLength(100)]],
+      valor:                 [null as number | null, [Validators.required, Validators.min(0.01), Validators.max(99999999.99)]],
       tipo:                   [0, Validators.required],
       situacao:                 [0, Validators.required],
       data:                   [new Date().toISOString().slice(0, 10), Validators.required],
-      notas:                  [''],
-      recorrencia:             ['none'],
+      notas:                  ['', Validators.maxLength(500)],
+      recorrencia:             ['nenhuma'],
       transferenciaParaContaId: [null as number | null],
+    }, { validators: this._contasIguaisValidator });
+
+    this.formTransacao.get('tipo')?.valueChanges.subscribe(tipo => {
+      const categoriaCtrl = this.formTransacao.get('categoriaId');
+      const destinoCtrl   = this.formTransacao.get('transferenciaParaContaId');
+      if (Number(tipo) === TipoTransacao.Transferencia) {
+        categoriaCtrl?.clearValidators();
+        categoriaCtrl?.setValue(null);
+        destinoCtrl?.setValidators(Validators.required);
+      } else {
+        categoriaCtrl?.setValidators(Validators.required);
+        destinoCtrl?.clearValidators();
+        destinoCtrl?.setValue(null);
+      }
+      categoriaCtrl?.updateValueAndValidity();
+      destinoCtrl?.updateValueAndValidity();
     });
   }
 
@@ -137,8 +167,8 @@ export class TransacoesComponent extends UnsubscriberComponent implements OnInit
 
     this.transacaoService.listarTransacoes(id, filtros).subscribe({
       next: res => {
-        this.transacoes = res.conteudo;
-        this.total        = res.total;
+        this.transacoes = res.conteudo ?? [];
+        this.total        = res.total ?? 0;
         this.carregando      = false;
       },
       error: () => { this.carregando = false; },
@@ -148,7 +178,7 @@ export class TransacoesComponent extends UnsubscriberComponent implements OnInit
   private _carregarContas(id: number): void {
     this._subscriptions.push(
       this.contaService.listarContas(id).subscribe({
-        next: res => { this.contas = res; },
+        next: res => { this.contas = res ?? []; },
       })
     );
   }
@@ -156,7 +186,7 @@ export class TransacoesComponent extends UnsubscriberComponent implements OnInit
   private _carregarCategorias(id: number): void {
     this._subscriptions.push(
       this.categoriaService.listarCategoria(id).subscribe({
-        next: res => { this.categorias = res.conteudo; },
+        next: res => { this.categorias = res.conteudo ?? []; },
       })
     );
   }
@@ -182,9 +212,10 @@ export class TransacoesComponent extends UnsubscriberComponent implements OnInit
   abrirCriarTransacao(): void {
     this.editandoTransacao = null;
     this.formTransacao.reset({
-      tipo: TipoCategoria.Despesa, situacao: SituacaoTransacao,
-      data: new Date().toISOString().slice(0, 10),
-      recorrencia: 'none',
+      tipo:        TipoTransacao.Despesa,
+      situacao:    SituacaoTransacao.Pendente,
+      data:        new Date().toISOString().slice(0, 10),
+      recorrencia: 'nenhuma',
     });
     this.showModal = true;
   }
@@ -192,15 +223,14 @@ export class TransacoesComponent extends UnsubscriberComponent implements OnInit
   abrirEditarTransacao(transacao: Transacao): void {
     this.editandoTransacao = transacao;
     this.formTransacao.patchValue({
-      conta:  transacao.conta,
-      categoria: transacao.categoria,
-      descricao: transacao.descricao,
-      valor:      transacao.valor,
+      contaId:     transacao.conta?.id ?? null,
+      categoriaId: transacao.categoria?.id ?? null,
+      descricao:   transacao.descricao,
+      valor:       transacao.valor,
       tipo:        transacao.tipo,
-      situacao:      transacao.situacao,
-      data:        transacao.data,
+      situacao:    transacao.situacao,
+      data:        transacao.data ? transacao.data.split('T')[0] : new Date().toISOString().slice(0, 10),
       notas:       transacao.notas ?? '',
-      recorrencia:  transacao.recorrencia,
     });
     this.showModal = true;
   }
@@ -211,27 +241,54 @@ export class TransacoesComponent extends UnsubscriberComponent implements OnInit
 
   onSubmit(): void {
     if (this.formTransacao.invalid) { this.formTransacao.markAllAsTouched(); return; }
-    const id = this.empresaService.ativoId();
-    if (!id) return;
+    const empresaId = this.empresaService.ativoId();
+    if (!empresaId) return;
 
     this.enviando = true;
+    const v = this.formTransacao.value;
 
     if (this.editandoTransacao) {
-      this.transacaoService.atualizarTransacao(id, this.editandoTransacao.id, this.formTransacao.value as Transacao).subscribe({
-        next: () => {
-          this.toast.success('Transação atualizada!');
-          this.enviando = false;
-          this.closeModal();
-          this._carregarTransacoes();
-        },
-        error: err => {
-          this.toast.error(err.error?.message ?? 'Erro ao atualizar.');
-          this.enviando = false;
-        },
-      })
-    } else {
+      const payload: AtualizarTransacaoDto = {
+        descricao:    v.descricao,
+        valor:        Number(v.valor),
+        data:         v.data,
+        conta_id:     Number(v.contaId),
+        categoria_id: Number(v.categoriaId),
+        tipo:         Number(v.tipo) as TipoTransacao,
+        situacao:     Number(v.situacao) as SituacaoTransacao,
+        notas:        v.notas || null,
+      };
+
       this._subscriptions.push(
-        this.transacaoService.criarTransacao(id, this.formTransacao.value as Transacao).subscribe({
+        this.transacaoService.atualizarTransacao(empresaId, this.editandoTransacao.id, payload).subscribe({
+          next: () => {
+            this.toast.success('Transação atualizada!');
+            this.enviando = false;
+            this.closeModal();
+            this._carregarTransacoes();
+          },
+          error: err => {
+            this.toast.error(err.error?.erro ?? 'Erro ao atualizar.');
+            this.enviando = false;
+          },
+        })
+      );
+    } else {
+      const isTransf = Number(v.tipo) === TipoTransacao.Transferencia;
+      const payload: CriarTransacaoDto = {
+        descricao:    v.descricao,
+        valor:        Number(v.valor),
+        data:         v.data,
+        conta_id:     Number(v.contaId),
+        categoria_id: isTransf ? null : Number(v.categoriaId),
+        tipo:         Number(v.tipo) as TipoTransacao,
+        situacao:     Number(v.situacao) as SituacaoTransacao,
+        notas:        v.notas || null,
+        recorrencia:  v.recorrencia || 'nenhuma',
+      };
+
+      this._subscriptions.push(
+        this.transacaoService.criarTransacao(empresaId, payload).subscribe({
           next: () => {
             this.toast.success('Transação registrada!');
             this.enviando = false;
@@ -239,7 +296,7 @@ export class TransacoesComponent extends UnsubscriberComponent implements OnInit
             this._carregarTransacoes();
           },
           error: err => {
-            this.toast.error(err.error?.message ?? 'Erro ao registrar.');
+            this.toast.error(err.error?.erro ?? 'Erro ao registrar.');
             this.enviando = false;
           },
         })
@@ -289,18 +346,31 @@ export class TransacoesComponent extends UnsubscriberComponent implements OnInit
   }
 
   formatarData(iso: string): string {
-    return new Date(iso + 'T00:00:00').toLocaleDateString('pt-BR');
+    const datePart = iso ? iso.split('T')[0] : '';
+    return new Date(datePart + 'T00:00:00').toLocaleDateString('pt-BR');
   }
 
-  situacaoLabel(s: string): string {
-    return ({ confirmed: 'Confirmado', pending: 'Pendente', cancelled: 'Cancelado' } as Record<string, string>)[s] ?? s;
+  situacaoLabel(s: SituacaoTransacao): string {
+    return ({
+      [SituacaoTransacao.Confirmado]: 'Confirmado',
+      [SituacaoTransacao.Pendente]:   'Pendente',
+      [SituacaoTransacao.Cancelado]:  'Cancelado',
+    } as Record<number, string>)[s] ?? String(s);
   }
 
-  situacaoClass(s: string): string {
-    return ({ confirmed: 'tag-confirmed', pending: 'tag-pending', cancelled: 'tag-cancelled' } as Record<string, string>)[s] ?? '';
+  situacaoClass(s: SituacaoTransacao): string {
+    return ({
+      [SituacaoTransacao.Confirmado]: 'tag-confirmed',
+      [SituacaoTransacao.Pendente]:   'tag-pending',
+      [SituacaoTransacao.Cancelado]:  'tag-cancelled',
+    } as Record<number, string>)[s] ?? '';
   }
 
-  tipoLabel(t: string): string {
-    return ({ income: 'Receita', expense: 'Despesa', transfer: 'Transferência' } as Record<string, string>)[t] ?? t;
+  tipoLabel(t: TipoTransacao): string {
+    return ({
+      [TipoTransacao.Receita]:       'Receita',
+      [TipoTransacao.Despesa]:       'Despesa',
+      [TipoTransacao.Transferencia]: 'Transferência',
+    } as Record<number, string>)[t] ?? String(t);
   }
 }

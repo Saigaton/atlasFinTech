@@ -23,12 +23,12 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { RespostaApi, RespostaPaginada } from '../models/resposta-api';
-import { FiltroTransacao, Transacao } from '../models/transacao.model';
+import { AtualizarTransacaoDto, CriarTransacaoDto, FiltroTransacao, Transacao } from '../models/transacao.model';
 import { DashboardKPI, MesGrafico } from '../models/dashboard.models';
 
 @Injectable({ providedIn: 'root' })
 export class TransacaoService {
-  private readonly API = `${environment.apiUrl}/api/v1`;
+  private readonly API = environment.apiUrl;
 
   constructor(private http: HttpClient) {}
 
@@ -46,12 +46,12 @@ export class TransacaoService {
     return this.http.get<RespostaPaginada<Transacao>>(this.base(empresaId), { params });
   }
 
-  criarTransacao(empresaId: number, data: Transacao): Observable<RespostaApi<Transacao>> {
+  criarTransacao(empresaId: number, data: CriarTransacaoDto): Observable<RespostaApi<Transacao>> {
     return this.http.post<RespostaApi<Transacao>>(this.base(empresaId), data);
   }
 
-  atualizarTransacao(empresaId: number, id: number, data: Transacao): Observable<RespostaApi<Transacao>> {
-    return this.http.patch<RespostaApi<Transacao>>(`${this.base(empresaId)}/${id}`, data);
+  atualizarTransacao(empresaId: number, id: number, data: AtualizarTransacaoDto): Observable<RespostaApi<Transacao>> {
+    return this.http.put<RespostaApi<Transacao>>(`${this.base(empresaId)}/${id}`, data);
   }
 
   deletarTransacao(empresaId: number, id: number): Observable<RespostaApi<null>> {
@@ -77,7 +77,7 @@ export class TransacaoService {
 
   obterTransacoesRecente(empresaId: number, limit = 8): Observable<RespostaApi<Transacao[]>> {
     return this.http.get<RespostaApi<Transacao[]>>(
-      `${this.API}/empresas/${empresaId}/dashboard/transacoes-recente`,
+      `${this.API}/empresas/${empresaId}/dashboard/transacoes-recentes`,
       { params: new HttpParams().set('limit', limit) }
     );
   }
