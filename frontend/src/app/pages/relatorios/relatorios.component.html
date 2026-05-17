@@ -82,19 +82,19 @@
         </button>
       </div>
 
-      <!-- Relatório PDF -->
+      <!-- Relatório TXT -->
       <div class="export-card">
         <div class="export-icon" style="background:rgba(239,68,68,.12)">
-          <svg viewBox="0 0 24 24" style="fill:#dc2626"><path d="M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8.5 7.5c0 .83-.67 1.5-1.5 1.5H9v2H7.5V7H10c.83 0 1.5.67 1.5 1.5v1zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V7H15c.83 0 1.5.67 1.5 1.5v3zm4-3H19v1h1.5V11H19v2h-1.5V7H20.5v1.5zM9 9.5h1v-1H9v1zM4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm10 5.5h1v-3h-1v3z"/></svg>
+          <svg viewBox="0 0 24 24" style="fill:#dc2626"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm4 18H6V4h7v5h5v11zM9 13h6v2H9zm0-4h2v2H9zm0 8h6v2H9z"/></svg>
         </div>
         <div class="export-info">
-          <div class="export-title">Relatório — PDF</div>
-          <div class="export-desc">Relatório visual com KPIs, contas e transações</div>
+          <div class="export-title">Relatório — TXT</div>
+          <div class="export-desc">Resumo financeiro com receitas, despesas e saldo do período</div>
         </div>
         <button class="btn-download btn-pdf" (click)="baixar('pdf')" [disabled]="estaBaixando('pdf')">
           @if (estaBaixando('pdf')) { <span class="spin"></span> }
           @else { <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> }
-          Baixar PDF
+          Baixar TXT
         </button>
       </div>
 
@@ -293,12 +293,11 @@
         <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
       </div>
       <h3>Backup completo dos dados</h3>
-      <p>Exporta todas as transações, contas a pagar, contas a receber e contas bancárias em um arquivo ZIP com planilhas CSV.</p>
+      <p>Exporta todas as transações, contas a pagar e contas a receber em um arquivo ZIP com planilhas CSV.</p>
       <ul class="backup-list">
         <li>transacoes.csv — todas as transações</li>
         <li>contas_a_pagar.csv — todas as contas a pagar</li>
         <li>contas_a_receber.csv — todas as contas a receber</li>
-        <li>contas_bancarias.csv — contas e saldos</li>
       </ul>
       <button class="btn-backup" (click)="baixarBackup()" [disabled]="estaBaixando('backup')">
         @if (estaBaixando('backup')) { <span class="spin"></span> Gerando backup... }
@@ -331,9 +330,9 @@
             <div class="sa-info">
               <div class="sa-title">Agendamento ativo</div>
               <div class="sa-desc">
-                Relatório enviado dia <strong>{{ statusAgendamento!.diaMes }}</strong>
-                de cada mês às <strong>{{ statusAgendamento!.hora | number:'2.0-0' }}h</strong>
-                para <strong>{{ statusAgendamento!.email }}</strong>
+                Relatório enviado dia <strong>{{ statusAgendamento!.diaMes ?? '—' }}</strong>
+                de cada mês às <strong>{{ (statusAgendamento!.hora ?? 0) | number:'2.0-0' }}h</strong>
+                para <strong>{{ statusAgendamento!.email ?? '—' }}</strong>
               </div>
             </div>
             <div class="sa-actions">
@@ -355,11 +354,19 @@
           <div class="duo">
             <div class="fld">
               <label class="fld-lbl">Dia do mês (1–28)</label>
-              <input type="number" formControlName="diaMes" min="1" max="28">
+              <input type="number" formControlName="diaMes" min="1" max="28"
+                [class.bad]="formularioAgendamento.get('diaMes')?.invalid && formularioAgendamento.get('diaMes')?.touched">
+              @if (formularioAgendamento.get('diaMes')?.invalid && formularioAgendamento.get('diaMes')?.touched) {
+                <span class="fld-err">Informe um dia entre 1 e 28</span>
+              }
             </div>
             <div class="fld">
-              <label class="fld-lbl">Hora do envio (0–23)</label>
-              <input type="number" formControlName="hora" min="0" max="23">
+              <label class="fld-lbl">Hora do envio (0–23) — horário local</label>
+              <input type="number" formControlName="hora" min="0" max="23"
+                [class.bad]="formularioAgendamento.get('hora')?.invalid && formularioAgendamento.get('hora')?.touched">
+              @if (formularioAgendamento.get('hora')?.invalid && formularioAgendamento.get('hora')?.touched) {
+                <span class="fld-err">Informe uma hora entre 0 e 23</span>
+              }
             </div>
           </div>
           <button type="submit" class="btn-save" [disabled]="salvandoAgendamento">

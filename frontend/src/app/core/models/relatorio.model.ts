@@ -1,10 +1,8 @@
 export interface StatusAgendamento {
-  ativo:              boolean;
-  inscrito:           boolean;
-  email:              string | null;
-  diaMes:             number;
-  hora:               number;
-  totalDestinatarios: number;
+  inscrito: boolean;
+  email:    string | null;
+  diaMes:   number | null;
+  hora:     number | null;
 }
 
 export interface ItemConciliado {

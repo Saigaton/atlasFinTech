@@ -66,8 +66,8 @@ export class RelatoriosComponent implements OnInit {
     });
     this.formularioAgendamento = this.formBuilder.group({
       email:  ['', [Validators.required, Validators.email]],
-      diaMes: [1,  [Validators.min(1),   Validators.max(28)]],
-      hora:   [8,  [Validators.min(0),   Validators.max(23)]],
+      diaMes: [1,  [Validators.required, Validators.min(1),  Validators.max(28)]],
+      hora:   [8,  [Validators.required, Validators.min(0),  Validators.max(23)]],
     });
     this._carregarStatusAgendamento();
   }
@@ -77,7 +77,17 @@ export class RelatoriosComponent implements OnInit {
     if (!id) return;
     this.carregandoAgendamento = true;
     this.relatorioService.obterStatusAgendamento(id).subscribe({
-      next:  r  => { this.statusAgendamento = r.conteudo; this.carregandoAgendamento = false; },
+      next: r => {
+        this.statusAgendamento = r.conteudo;
+        this.carregandoAgendamento = false;
+        if (r.conteudo?.inscrito) {
+          this.formularioAgendamento.patchValue({
+            email:  r.conteudo.email  ?? '',
+            diaMes: r.conteudo.diaMes ?? 1,
+            hora:   r.conteudo.hora   ?? 8,
+          });
+        }
+      },
       error: () => { this.carregandoAgendamento = false; },
     });
   }
@@ -150,7 +160,7 @@ export class RelatoriosComponent implements OnInit {
     const nomeArquivo = tipo === 'tx-csv'      ? 'transacoes.csv'
                       : tipo === 'pagar-csv'   ? 'contas_a_pagar.csv'
                       : tipo === 'receber-csv' ? 'contas_a_receber.csv'
-                      :                          'relatorio.pdf';
+                      :                          'relatorio.txt';
 
     req$.subscribe({
       next:  blob => {
@@ -198,19 +208,25 @@ export class RelatoriosComponent implements OnInit {
   // ── Conciliação ────────────────────────────────────────────────────────────
 
   aoSelecionarExtrato(evento: Event): void {
-    const arquivo = (evento.target as HTMLInputElement).files?.[0];
+    const input   = evento.target as HTMLInputElement;
+    const arquivo = input.files?.[0];
     if (!arquivo) return;
     const id = this.empresaId;
     if (!id) return;
     this.importando  = true;
     this.conciliacao = null;
     this.relatorioService.importarExtrato(id, arquivo).subscribe({
-      next:  res => {
+      next: res => {
         this.conciliacao = res.conteudo;
         this.importando  = false;
+        input.value = '';
         this.toast.success(`Conciliação concluída: ${res.conteudo.conciliadas} transações conciliadas.`);
       },
-      error: err => { this.toast.error(err.error?.mensagem ?? 'Erro ao importar extrato.'); this.importando = false; },
+      error: err => {
+        this.toast.error(err.error?.mensagem ?? 'Erro ao importar extrato.');
+        this.importando = false;
+        input.value = '';
+      },
     });
   }
 
