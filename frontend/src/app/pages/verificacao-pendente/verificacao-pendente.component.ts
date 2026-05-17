@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme-toggle.component';
 import { AuthPanelComponent } from '../../shared/components/auth-panel/auth-panel.component';
@@ -20,6 +20,8 @@ export class VerificacaoPendenteComponent extends UnsubscriberComponent implemen
   enviado    = false;
   contagem   = 0;
 
+  email = '';
+
   private _temporizador: ReturnType<typeof setInterval> | null = null;
 
   formulario!: FormGroup;
@@ -28,30 +30,37 @@ export class VerificacaoPendenteComponent extends UnsubscriberComponent implemen
     private authService: AuthService,
     private toast:       ToastService,
     private formBuilder: FormBuilder,
+    private router: Router
   ) {
     super();
   }
 
   ngOnInit(): void {
+    this.email = this.authService.getEmailParaConfirmacao();
     this.formulario = this.formBuilder.group({
-      email: [this.authService.getEmailUsuario(), [Validators.required, Validators.email]],
+      email: [this.email, [Validators.required, Validators.email]],
     });
+    if (!this.email || this.email.trim() === '') {
+      this.router.navigate(['/registro']);
+      return;
+    }
+    this.aoEnviar();
   }
 
   aoEnviar(): void {
     if (this.formulario.invalid || this.contagem > 0) return;
     this.carregando = true;
 
-    this.authService.resendVerification(this.formulario.get('email')!.value).subscribe({
+    this.authService.enviarEmailVerificacao(this.email).subscribe({
       next: () => {
         this.carregando = false;
         this.enviado    = true;
-        this.toast.success('E-mail de verificação reenviado!');
+        this.toast.success('E-mail de verificação enviado!');
         this._iniciarContagem();
       },
       error: () => {
         this.carregando = false;
-        this.toast.error('Erro ao reenviar. Tente novamente.');
+        this.toast.error('Erro ao enviar. Tente novamente.');
       },
     });
   }
