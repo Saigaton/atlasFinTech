@@ -11,7 +11,7 @@ async def businessExceptionHandler(request: Request, exc: BusinessException) -> 
 async def erroNaoTratadoHandler(request: Request, exc: Exception) -> JSONResponse:
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"erro": "Ocorreu um erro interno inesperado no servidor.", "detalhe": exc}
+        content={"erro": "Ocorreu um erro interno inesperado no servidor.", "detalhe": str(exc)}
     )
 
 def setupExceptionHandlers(app: FastAPI):
