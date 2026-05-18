@@ -19,7 +19,11 @@ export class ConfiguracoesComponent implements OnInit {
   salvandoPerfil = false;
   alterandoSenha = false;
   mostrarAtual = false;
-  mostrarNova = false;
+  mostrarNova  = false;
+
+  ativarCampoSenha(event: FocusEvent): void {
+    (event.target as HTMLInputElement).removeAttribute('readonly');
+  }
 
   formPerfil: FormGroup;
   formSenha: FormGroup;
@@ -34,9 +38,9 @@ export class ConfiguracoesComponent implements OnInit {
     });
 
     this.formSenha = this.formBuilder.group({
-      senha_atual:          ['', Validators.required],
-      nova_senha:           ['', [Validators.required, Validators.minLength(8)]],
-      confirmar_nova_senha: ['', Validators.required],
+      senhaAtual:          ['', Validators.required],
+      novaSenha:           ['', [Validators.required, Validators.minLength(8)]],
+      confirmarSenha: ['', Validators.required],
     }, { validators: this._senhasConferem });
   }
 
@@ -48,10 +52,10 @@ export class ConfiguracoesComponent implements OnInit {
   }
 
   private _carregarPerfil(): void {
-    this.auth.obterPerfil().subscribe({
+    this.auth.obterUsuario().subscribe({
       next: res => {
-        this.perfil = res.data;
-        this.formPerfil.patchValue({ nome: res.data.nome });
+        this.perfil = res;
+        this.formPerfil.patchValue({ nome: res.nome });
       },
     });
   }
@@ -82,15 +86,15 @@ export class ConfiguracoesComponent implements OnInit {
         this.alterandoSenha = false;
       },
       error: (err: any) => {
-        this.toast.error(err.error?.message ?? 'Erro ao alterar senha.');
+        this.toast.error(err.error?.erro ?? 'Erro ao alterar senha.');
         this.alterandoSenha = false;
       },
     });
   }
 
   private _senhasConferem(group: AbstractControl): { [key: string]: boolean } | null {
-    const np = group.get('nova_senha')?.value;
-    const cp = group.get('confirmar_nova_senha')?.value;
+    const np = group.get('novaSenha')?.value;
+    const cp = group.get('confirmarSenha')?.value;
     return np === cp ? null : { mismatch: true };
   }
 
