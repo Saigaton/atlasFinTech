@@ -1,6 +1,7 @@
 from decimal import Decimal
 from sqlalchemy import extract, func
 
+from app.entidades.agendamentosRelatorio import AgendamentosRelatorio
 from app.entidades.contasPagar import ContasPagar
 from app.entidades.contasReceber import ContasReceber
 from app.entidades.empresas import Empresas
@@ -67,3 +68,53 @@ class RelatorioRepository:
             "total_recebido":  self._soma_contas_receber(empresa_id, usuario_id, TipoSituacaoContaEnum.PAGO),
             "total_atrasado":  self._soma_contas_receber(empresa_id, usuario_id, TipoSituacaoContaEnum.ATRASADO),
         }
+
+    def buscarAgendamento(self, empresa_id: int, usuario_id: int) -> AgendamentosRelatorio | None:
+        return (
+            self.session.query(AgendamentosRelatorio)
+            .join(Empresas, AgendamentosRelatorio.empresa_id == Empresas.id)
+            .filter(AgendamentosRelatorio.empresa_id == empresa_id, Empresas.usuario_id == usuario_id)
+            .first()
+        )
+
+    def salvarAgendamento(self, ag: AgendamentosRelatorio) -> AgendamentosRelatorio:
+        self.session.add(ag)
+        return ag
+
+    def cancelarAgendamento(self, empresa_id: int, usuario_id: int) -> None:
+        ag = self.buscarAgendamento(empresa_id, usuario_id)
+        if ag:
+            self.session.delete(ag)
+
+    def listarContasPagar(self, empresa_id: int, usuario_id: int, mes: int | None = None, ano: int | None = None) -> list[ContasPagar]:
+        q = (
+            self.session.query(ContasPagar)
+            .join(Empresas, ContasPagar.empresa_id == Empresas.id)
+            .filter(ContasPagar.empresa_id == empresa_id, Empresas.usuario_id == usuario_id)
+        )
+        if mes:
+            q = q.filter(extract("month", ContasPagar.data_vencimento) == mes)
+        if ano:
+            q = q.filter(extract("year", ContasPagar.data_vencimento) == ano)
+        return q.all()
+
+    def listarContasReceber(self, empresa_id: int, usuario_id: int, mes: int | None = None, ano: int | None = None) -> list[ContasReceber]:
+        q = (
+            self.session.query(ContasReceber)
+            .join(Empresas, ContasReceber.empresa_id == Empresas.id)
+            .filter(ContasReceber.empresa_id == empresa_id, Empresas.usuario_id == usuario_id)
+        )
+        if mes:
+            q = q.filter(extract("month", ContasReceber.data_vencimento) == mes)
+        if ano:
+            q = q.filter(extract("year", ContasReceber.data_vencimento) == ano)
+        return q.all()
+
+    def todasTransacoes(self, empresa_id: int, usuario_id: int) -> list[Transacoes]:
+        return (
+            self.session.query(Transacoes)
+            .join(Empresas, Transacoes.empresa_id == Empresas.id)
+            .filter(Transacoes.empresa_id == empresa_id, Empresas.usuario_id == usuario_id)
+            .order_by(Transacoes.data.desc())
+            .all()
+        )
