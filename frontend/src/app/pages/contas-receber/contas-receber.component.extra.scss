@@ -21,6 +21,7 @@
 .fld-lbl{font-size:11px;font-weight:700;color:var(--text-label);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
 .fld input,.fld select,.fld textarea{width:100%;background:var(--bg-page);border:1.5px solid var(--border);border-radius:10px;padding:9px 12px;font-size:13px;color:var(--text-h);font-family:inherit;outline:none;transition:border-color .15s;&:focus{border-color:var(--border-focus)}&.bad{border-color:var(--err)}}
 .fld textarea{resize:vertical;min-height:60px}
+.char-count{font-size:11px;color:var(--text-label);text-align:right;margin-top:3px}
 .duo{display:grid;grid-template-columns:1fr 1fr;gap:12px;@media(max-width:400px){grid-template-columns:1fr}}
 
 .pay-info{margin:12px 24px 0;padding:14px;background:var(--bg-page);border-radius:12px;border:1px solid var(--border)}

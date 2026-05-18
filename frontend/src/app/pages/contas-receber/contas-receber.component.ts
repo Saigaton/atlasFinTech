@@ -2,10 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ContaReceberService } from '../../core/services/conta-receber.service';
-import { ContaReceber, RequisicaoRecebimento, ResumoContasAReceber } from '../../core/models/conta-receber.model';
+import { AtualizarContaReceberDto, ContaReceber, CriarContaReceberDto, RequisicaoRecebimento, ResumoContasAReceber } from '../../core/models/conta-receber.model';
 import { Conta } from '../../core/models/conta.model';
 import { Categoria, TipoCategoria } from '../../core/models/categoria.models';
-import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 import { ShellComponent } from '../../shared/components/shell/shell.component';
 import { EmpresaService } from '../../core/services/empresa.service';
 import { ContaService } from '../../core/services/conta.service';
@@ -15,7 +14,7 @@ import { ToastService } from '../../core/services/toast.service';
 @Component({
   selector: 'app-contas-receber',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ShellComponent, LoadingSkeletonComponent],
+  imports: [CommonModule, ReactiveFormsModule, ShellComponent],
   templateUrl: './contas-receber.component.html',
   styleUrls: ['./contas-receber.component.scss', './contas-receber.component.extra.scss']
 })
@@ -27,13 +26,13 @@ export class ContasReceberComponent implements OnInit {
   recebendo      = false;
   showModal      = false;
   showRecModal   = false;
-  editandoId:    number | null      = null;
+  editandoId:    number | null       = null;
   recebendoItem: ContaReceber | null = null;
 
-  items:      ContaReceber[]             = [];
+  items:      ContaReceber[]              = [];
   resumo:     ResumoContasAReceber | null = null;
-  contas:     Conta[]                    = [];
-  categorias: Categoria[]                = [];
+  contas:     Conta[]                     = [];
+  categorias: Categoria[]                 = [];
 
   total     = 0;
   pagina    = 1;
@@ -69,7 +68,7 @@ export class ContasReceberComponent implements OnInit {
       next: r => { this.contas = r; },
     });
     this.categoriaService.listarCategoria(id, TipoCategoria.Receita).subscribe({
-      next: r => { this.categorias = r.conteudo; },
+      next: r => { this.categorias = r.conteudo ?? []; },
     });
 
     this._carregar();
@@ -77,13 +76,13 @@ export class ContasReceberComponent implements OnInit {
 
   private criarFormularioContaReceber(): void {
     this.formContaReceber = this.formBuilder.group({
-      descricao:      ['', [Validators.required, Validators.maxLength(200)]],
-      valor:          [null as number | null, [Validators.required, Validators.min(0.01)]],
+      descricao:      ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+      valor:          [null as number | null, [Validators.required, Validators.min(0.01), Validators.max(99999999.99)]],
       dataVencimento: [new Date().toISOString().slice(0, 10), Validators.required],
-      cliente:        [''],
       contaId:        [null as number | null],
       categoriaId:    [null as number | null],
-      notas:          [''],
+      cliente:        ['', Validators.maxLength(100)],
+      notas:          ['', Validators.maxLength(500)],
     });
   }
 
@@ -91,7 +90,7 @@ export class ContasReceberComponent implements OnInit {
     this.formRecebimento = this.formBuilder.group({
       contaId:         [null as number | null, Validators.required],
       dataRecebimento: [new Date().toISOString().slice(0, 10), Validators.required],
-      valor:           [null as number | null],
+      valor:           [null as number | null, [Validators.min(0.01), Validators.max(99999999.99)]],
     });
   }
 
@@ -103,26 +102,32 @@ export class ContasReceberComponent implements OnInit {
     this.carregando = true;
 
     this.contaReceberService.listarContasReceber(id, {
-      search:   this.filtroPesquisa || undefined,
+      pesquisa: this.filtroPesquisa || undefined,
       status:   this.filtroSituacao || undefined,
       page:     this.pagina,
       per_page: this.porPagina,
     }).subscribe({
       next: r => {
-        this.items      = r.conteudo;
-        this.total      = r.total;
+        this.items      = r.conteudo ?? [];
+        this.total      = r.total ?? 0;
         this.carregando = false;
       },
       error: () => { this.carregando = false; },
     });
 
     this.contaReceberService.obterResumoContaReceber(id).subscribe({
-      next: r => { this.resumo = r.conteudo; },
+      next: r => { this.resumo = r.conteudo ?? null; },
     });
   }
 
   definirFiltro(s: string): void {
     this.filtroSituacao = s;
+    this.pagina = 1;
+    this._carregar();
+  }
+
+  pesquisar(termo: string): void {
+    this.filtroPesquisa = termo;
     this.pagina = 1;
     this._carregar();
   }
@@ -137,7 +142,13 @@ export class ContasReceberComponent implements OnInit {
 
   abrirCriar(): void {
     this.editandoId = null;
-    this.formContaReceber.reset({ dataVencimento: new Date().toISOString().slice(0, 10) });
+    this.formContaReceber.reset({
+      dataVencimento: new Date().toISOString().slice(0, 10),
+      contaId:        null,
+      categoriaId:    null,
+      cliente:        '',
+      notas:          '',
+    });
     this.showModal = true;
   }
 
@@ -146,10 +157,10 @@ export class ContasReceberComponent implements OnInit {
     this.formContaReceber.patchValue({
       descricao:      item.descricao,
       valor:          item.valor,
-      dataVencimento: String(item.dataVencimento).slice(0, 10),
+      dataVencimento: String(item.data_vencimento).split('T')[0],
+      contaId:        item.conta?.id ?? null,
+      categoriaId:    item.categoria?.id ?? null,
       cliente:        item.cliente ?? '',
-      contaId:        item.contaId ?? null,
-      categoriaId:    item.categoriaId ?? null,
       notas:          item.notas ?? '',
     });
     this.showModal = true;
@@ -164,25 +175,33 @@ export class ContasReceberComponent implements OnInit {
     this.enviando = true;
     const v = this.formContaReceber.value;
 
-    const payload: Partial<ContaReceber> = {
-      descricao:      v.descricao!,
-      valor:          v.valor!,
-      dataVencimento: v.dataVencimento!,
-      cliente:        v.cliente || undefined,
-      contaId:        v.contaId ?? undefined,
-      categoriaId:    v.categoriaId ?? undefined,
-      notas:          v.notas || undefined,
-    };
-
     if (this.editandoId) {
+      const payload: AtualizarContaReceberDto = {
+        descricao:       v.descricao,
+        valor:           Number(v.valor),
+        data_vencimento: v.dataVencimento,
+        conta_id:        v.contaId ? Number(v.contaId) : null,
+        categoria_id:    v.categoriaId ? Number(v.categoriaId) : null,
+        cliente:         v.cliente || null,
+        notas:           v.notas || null,
+      };
       this.contaReceberService.atualizarContaReceber(id, this.editandoId, payload).subscribe({
         next: ()          => { this.toast.success('Conta atualizada!'); this._concluir(); },
-        error: (err: any) => { this.toast.error(err.error?.message ?? 'Erro.'); this.enviando = false; },
+        error: (err: any) => { this.toast.error(err.error?.erro ?? 'Erro.'); this.enviando = false; },
       });
     } else {
+      const payload: CriarContaReceberDto = {
+        descricao:       v.descricao,
+        valor:           Number(v.valor),
+        data_vencimento: v.dataVencimento,
+        conta_id:        v.contaId ? Number(v.contaId) : null,
+        categoria_id:    v.categoriaId ? Number(v.categoriaId) : null,
+        cliente:         v.cliente || null,
+        notas:           v.notas || null,
+      };
       this.contaReceberService.criarContaReceber(id, payload).subscribe({
-        next: ()          => { this.toast.success('Conta a receber criada!'); this._concluir(); },
-        error: (err: any) => { this.toast.error(err.error?.message ?? 'Erro.'); this.enviando = false; },
+        next: () => { this.toast.success('Conta a receber criada!'); this._concluir(); },
+        error: (err: any) => { this.toast.error(err.error?.erro ?? 'Erro.'); this.enviando = false; },
       });
     }
   }
@@ -226,7 +245,7 @@ export class ContasReceberComponent implements OnInit {
         this.showRecModal = false;
         this._carregar();
       },
-      error: (err: any) => { this.toast.error(err.error?.message ?? 'Erro.'); this.recebendo = false; },
+      error: (err: any) => { this.toast.error(err.error?.erro ?? 'Erro.'); this.recebendo = false; },
     });
   }
 
@@ -252,12 +271,17 @@ export class ContasReceberComponent implements OnInit {
     return new Date(s + 'T00:00:00').toLocaleDateString('pt-BR');
   }
 
+  diasAte(vencimento: string): number {
+    const d = new Date(vencimento.split('T')[0] + 'T00:00:00');
+    return Math.ceil((d.getTime() - Date.now()) / 86_400_000);
+  }
+
   labelSituacao(s: number): string {
-    return ({ 0: 'Pendente', 2: 'Inadimplente', 3: 'Recebido', 4: 'Cancelado' } as Record<number, string>)[s] ?? 'Desconhecido';
+    return ({ 0: 'Pendente', 1: 'Recebido', 2: 'Inadimplente' } as Record<number, string>)[s] ?? 'Desconhecido';
   }
 
   situacaoClass(s: number): string {
-    return ({ 0: 'tag-pending', 2: 'tag-overdue', 3: 'tag-received', 4: 'tag-cancelled' } as Record<number, string>)[s] ?? '';
+    return ({ 0: 'tag-pending', 1: 'tag-received', 2: 'tag-overdue' } as Record<number, string>)[s] ?? '';
   }
 
   get arrayPaginas(): number[] {

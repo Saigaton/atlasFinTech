@@ -19,7 +19,7 @@
       </div>
       <div>
         <div class="sum-lbl">Aguardando</div>
-        <div class="sum-val">{{ formatarMoeda(resumo?.pendente ?? 0) }}</div>
+        <div class="sum-val">{{ formatarMoeda(resumo?.total_pendente ?? 0) }}</div>
       </div>
     </div>
     <div class="sum-card sum-card-danger">
@@ -28,7 +28,7 @@
       </div>
       <div>
         <div class="sum-lbl">Inadimplente</div>
-        <div class="sum-val danger">{{ formatarMoeda(resumo?.atrasado ?? 0) }}</div>
+        <div class="sum-val danger">{{ formatarMoeda(resumo?.total_atrasado ?? 0) }}</div>
       </div>
     </div>
     <div class="sum-card">
@@ -37,7 +37,7 @@
       </div>
       <div>
         <div class="sum-lbl">Recebido</div>
-        <div class="sum-val success">{{ formatarMoeda(resumo?.recebido ?? 0) }}</div>
+        <div class="sum-val success">{{ formatarMoeda(resumo?.total_recebido ?? 0) }}</div>
       </div>
     </div>
   </div>
@@ -47,13 +47,13 @@
     <div class="search-wrap">
       <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
       <input type="text" placeholder="Buscar contas..." [value]="filtroPesquisa"
-        (input)="filtroPesquisa = $any($event.target).value">
+        (input)="pesquisar($any($event.target).value)">
     </div>
   </div>
 
   <!-- Filtros por situação -->
   <div class="filter-tabs">
-    @for (f of [{v:'',l:'Todas'},{v:'0',l:'Pendentes'},{v:'2',l:'Inadimplentes'},{v:'3',l:'Recebidas'}]; track f.v) {
+    @for (f of [{v:'',l:'Todas'},{v:'0',l:'Pendentes'},{v:'2',l:'Inadimplentes'},{v:'1',l:'Recebidas'}]; track f.v) {
       <button class="ftab" [class.active]="filtroSituacao === f.v" (click)="definirFiltro(f.v)">
         {{ f.l }}
       </button>
@@ -87,8 +87,7 @@
           </thead>
           <tbody>
             @for (item of items; track item.id) {
-              <tr [class.row-received]="item.situacao === 3"
-                  [class.row-cancelled]="item.situacao === 4">
+              <tr [class.row-received]="item.situacao_id === 1">
                 <td>
                   <div class="td-main">{{ item.descricao }}</div>
                   @if (item.cliente) {
@@ -100,31 +99,33 @@
                   <div class="td-sub show-sm">{{ formatarMoeda(item.valor) }}</div>
                 </td>
                 <td>
-                  <div class="due-date" [class.overdue]="item.situacao === 2">
-                    {{ formatarData(item.dataVencimento) }}
+                  <div class="due-date" [class.overdue]="item.situacao_id === 2">
+                    {{ formatarData(item.data_vencimento) }}
                   </div>
-                  @if (item.diasAtraso > 0) {
-                    <div class="overdue-days">{{ item.diasAtraso }}d em atraso</div>
+                  @if (item.situacao_id === 2) {
+                    <div class="overdue-days">{{ -diasAte(item.data_vencimento) }}d em atraso</div>
+                  } @else if (item.situacao_id === 0 && diasAte(item.data_vencimento) <= 7) {
+                    <div class="due-soon">vence em {{ diasAte(item.data_vencimento) }}d</div>
                   }
                 </td>
                 <td class="hide-sm td-amount">{{ formatarMoeda(item.valor) }}</td>
                 <td class="hide-md">
-                  @if (item.nomeCategoria) {
+                  @if (item.categoria) {
                     <span class="cat-tag"
-                      [style.background]="(item.corCategoria || '#64748b') + '20'"
-                      [style.color]="item.corCategoria || '#64748b'">
-                      {{ item.nomeCategoria }}
+                      [style.background]="item.categoria.cor ? item.categoria.cor + '22' : null"
+                      [style.color]="item.categoria.cor ?? null">
+                      {{ item.categoria.nome }}
                     </span>
                   } @else {
                     <span class="td-sub">—</span>
                   }
                 </td>
                 <td>
-                  <span [class]="situacaoClass(item.situacao)">{{ labelSituacao(item.situacao) }}</span>
+                  <span [class]="situacaoClass(item.situacao_id)">{{ labelSituacao(item.situacao_id) }}</span>
                 </td>
                 <td>
                   <div class="row-actions">
-                    @if (item.situacao !== 3 && item.situacao !== 4) {
+                    @if (item.situacao_id !== 1) {
                       <button class="action-btn rec-btn" (click)="abrirRecebimento(item)" title="Confirmar recebimento">
                         <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                       </button>
@@ -167,19 +168,24 @@
           </button>
         </div>
         <form [formGroup]="formContaReceber" (ngSubmit)="aoEnviar()" novalidate class="modal-body">
+
           <div class="fld">
             <label class="fld-lbl">Descrição *</label>
-            <input type="text" formControlName="descricao" placeholder="Ex: Mensalidade, Projeto..."
+            <input type="text" formControlName="descricao" maxlength="100"
+              placeholder="Ex: Mensalidade, Projeto, Serviço..."
               [class.bad]="formContaReceber.get('descricao')?.invalid && formContaReceber.get('descricao')?.touched">
+            <span class="char-count">{{ (formContaReceber.get('descricao')?.value?.length || 0) }}/100</span>
           </div>
+
           <div class="fld">
             <label class="fld-lbl">Cliente / Pagador</label>
-            <input type="text" formControlName="cliente" placeholder="Nome do cliente (opcional)">
+            <input type="text" formControlName="cliente" maxlength="100" placeholder="Nome do cliente (opcional)">
           </div>
+
           <div class="duo">
             <div class="fld">
               <label class="fld-lbl">Valor (R$) *</label>
-              <input type="number" formControlName="valor" placeholder="0,00" min="0.01" step="0.01"
+              <input type="number" formControlName="valor" placeholder="0,00" min="0.01" max="99999999.99" step="0.01"
                 [class.bad]="formContaReceber.get('valor')?.invalid && formContaReceber.get('valor')?.touched">
             </div>
             <div class="fld">
@@ -188,11 +194,12 @@
                 [class.bad]="formContaReceber.get('dataVencimento')?.invalid && formContaReceber.get('dataVencimento')?.touched">
             </div>
           </div>
+
           <div class="duo">
             <div class="fld">
               <label class="fld-lbl">Conta bancária</label>
               <select formControlName="contaId">
-                <option [value]="null">Sem conta</option>
+                <option [value]="null">Selecione... (opcional)</option>
                 @for (c of contas; track c.id) {
                   <option [value]="c.id">{{ c.nome }}</option>
                 }
@@ -201,17 +208,20 @@
             <div class="fld">
               <label class="fld-lbl">Categoria</label>
               <select formControlName="categoriaId">
-                <option [value]="null">Sem categoria</option>
+                <option [value]="null">Selecione... (opcional)</option>
                 @for (cat of categorias; track cat.id) {
                   <option [value]="cat.id">{{ cat.nome }}</option>
                 }
               </select>
             </div>
           </div>
+
           <div class="fld">
             <label class="fld-lbl">Observação</label>
-            <textarea formControlName="notas" rows="2" placeholder="Opcional..."></textarea>
+            <textarea formControlName="notas" maxlength="500" rows="2" placeholder="Opcional..."></textarea>
+            <span class="char-count">{{ (formContaReceber.get('notas')?.value?.length || 0) }}/500</span>
           </div>
+
           <div class="modal-footer">
             <button type="button" class="btn-cancel" (click)="fecharModal()">Cancelar</button>
             <button type="submit" class="btn-save" [disabled]="enviando">
@@ -262,7 +272,7 @@
             </div>
             <div class="fld">
               <label class="fld-lbl">Valor recebido (R$)</label>
-              <input type="number" formControlName="valor" min="0.01" step="0.01" placeholder="Total">
+              <input type="number" formControlName="valor" min="0.01" max="99999999.99" step="0.01" placeholder="Total">
             </div>
           </div>
           <div class="pay-notice">
