@@ -4,31 +4,57 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.enums.tipoTransacaoEnum import TipoTransacaoEnum
+from app.enums.situacaoTransacaoEnum import SituacaoTransacaoEnum
+
+
+class _ContaSimples(BaseModel):
+    id:   int
+    nome: str
+    cor:  Optional[str] = None
+    model_config = ConfigDict(from_attributes=True)
+
+
+class _CategoriaSimples(BaseModel):
+    id:   int
+    nome: str
+    cor:  Optional[str] = None
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CriarTransacao(BaseModel):
-    descricao:    str              = Field(..., min_length=2, max_length=100)
-    valor:        Decimal          = Field(..., gt=0)
+    descricao:    str                    = Field(..., min_length=2, max_length=100)
+    valor:        Decimal                = Field(..., gt=0)
     data:         datetime
-    categoria_id: int
+    conta_id:     int
+    categoria_id: Optional[int] = None
     tipo:         TipoTransacaoEnum
+    situacao:     SituacaoTransacaoEnum  = SituacaoTransacaoEnum.PENDENTE
+    notas:        Optional[str]          = Field(None, max_length=500)
+    recorrencia:  str                    = "nenhuma"
 
 
 class AtualizarTransacao(BaseModel):
-    descricao:    Optional[str]              = Field(None, min_length=2, max_length=100)
-    valor:        Optional[Decimal]          = Field(None, gt=0)
-    data:         Optional[datetime]         = None
-    categoria_id: Optional[int]             = None
-    tipo:         Optional[TipoTransacaoEnum] = None
+    descricao:    Optional[str]                   = Field(None, min_length=2, max_length=100)
+    valor:        Optional[Decimal]               = Field(None, gt=0)
+    data:         Optional[datetime]              = None
+    conta_id:     Optional[int]                   = None
+    categoria_id: Optional[int]                   = None
+    tipo:         Optional[TipoTransacaoEnum]     = None
+    situacao:     Optional[SituacaoTransacaoEnum] = None
+    notas:        Optional[str]                   = Field(None, max_length=500)
 
 
 class TransacaoResposta(BaseModel):
-    id:           int
-    empresa_id:   int
-    categoria_id: int
-    descricao:    str
-    valor:        Decimal
-    data:         datetime
-    transacao_id: TipoTransacaoEnum
+    id:          int
+    empresa_id:  int
+    descricao:   str
+    valor:       Decimal
+    data:        datetime
+    notas:       Optional[str] = None
+    recorrencia: str           = "nenhuma"
+    tipo:        TipoTransacaoEnum    = Field(validation_alias="transacao_id")
+    situacao:    SituacaoTransacaoEnum
+    conta:       Optional[_ContaSimples]    = None
+    categoria:   Optional[_CategoriaSimples] = None
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
