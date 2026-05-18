@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, tap, BehaviorSubject } from 'rxjs';
+import { Observable, tap, BehaviorSubject, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   RespostaToken, AccessTokenResponse,
@@ -14,8 +14,10 @@ import { UnsubscriberComponent } from '../unsubscriber.component';
 export class AuthService extends UnsubscriberComponent {
   private readonly API = environment.apiUrl;
 
+  private emailParaConfirmacao: string = '';
+
   // Estado interno
-  private user        = new BehaviorSubject<Usuario | null>(this.loadUser());
+  private user        = new BehaviorSubject<Usuario | null>(null);
   private accessToken = new BehaviorSubject<string | null>(localStorage.getItem('atlas_access'));
 
   // Observables públicos para os componentes assinarem
@@ -32,7 +34,6 @@ export class AuthService extends UnsubscriberComponent {
     });
   }
 
-  // ── Getters síncronos ──────────────────────────────────────────────────────
 
   isLoggedIn(): boolean { return !!this.accessToken.getValue(); }
 
@@ -40,14 +41,16 @@ export class AuthService extends UnsubscriberComponent {
 
   getEmailUsuario(): string { return this.user.getValue()?.email ?? ''; }
 
+  getEmailParaConfirmacao(): string { return this.emailParaConfirmacao ?? ''; }
+
+  setEmailParaConfirmacao(email: string): void { this.emailParaConfirmacao = email }
+
   getNomeUsuario(): string { return this.user.getValue()?.nome?.split(' ')[0] ?? ''; }
 
   getIniciaisUsuario(): string {
     return (this.user.getValue()?.nome ?? '')
       .split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase();
   }
-
-  isVerified(): boolean { return this.user.getValue()?.estaVerificado ?? false; }
 
   // ── Autenticação ───────────────────────────────────────────────────────────
 
@@ -99,7 +102,7 @@ export class AuthService extends UnsubscriberComponent {
     });    
   }
 
-  resendVerification(email: string): Observable<MensagemResposta> {
+  enviarEmailVerificacao(email: string): Observable<MensagemResposta> {
     return this.http.post<MensagemResposta>(
       `${this.API}/auth/reenviar-verificacao-email`, { email }
     );
@@ -107,14 +110,13 @@ export class AuthService extends UnsubscriberComponent {
 
   // ── Perfil do usuário ──────────────────────────────────────────────────────
 
-  obterPerfil(): Observable<{ data: Usuario }> {
-    return this.http.get<{ data: Usuario }>(`${this.API}/auth/me`);
+  obterUsuario(): Observable<Usuario> {
+    return this.http.get<Usuario>(`${this.API}/auth/me`);
   }
 
   atualizarPerfil(dados: { nome: string }): Observable<{ data: Usuario }> {
     return this.http.put<{ data: Usuario }>(`${this.API}/auth/me`, dados).pipe(
       tap(res => {
-        localStorage.setItem('atlas_user', JSON.stringify(res.data));
         this.user.next(res.data);
       }),
     );
@@ -154,7 +156,6 @@ export class AuthService extends UnsubscriberComponent {
   private saveSession(res: RespostaToken): void {
     localStorage.setItem('atlas_access',  res.token.access_token);
     localStorage.setItem('atlas_refresh', res.token.refresh_token);
-    localStorage.setItem('atlas_user',    JSON.stringify(res.usuario));
     this.accessToken.next(res.token.access_token);
     this.user.next(res.usuario);
   }
@@ -162,15 +163,20 @@ export class AuthService extends UnsubscriberComponent {
   private clearSession(): void {
     localStorage.removeItem('atlas_access');
     localStorage.removeItem('atlas_refresh');
-    localStorage.removeItem('atlas_user');
+    localStorage.removeItem('atlas_empresa');
     this.accessToken.next(null);
     this.user.next(null);
   }
 
-  private loadUser(): Usuario | null {
-    try {
-      const raw = localStorage.getItem('atlas_user');
-      return raw ? JSON.parse(raw) : null;
-    } catch { return null; }
+  loadUser(): void {
+    this.obterUsuario().subscribe({
+      next: res => {
+        this.user.next(res ?? null);
+      },
+      error: (erro: any) => {
+        console.error('Erro ao carregar usuário:', erro);
+        this.user.next(null);
+      }
+    });
   }
 }
