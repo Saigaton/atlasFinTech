@@ -15,6 +15,10 @@ class EmpresaService:
         return [EmpresaResposta.model_validate(e) for e in empresas]
 
     def criarEmpresa(self, dados: CriarEmpresa, usuario_id: int) -> EmpresaResposta:
+        empresas_existentes = self.repository.listarEmpresasPorUsuario(usuario_id)
+        if empresas_existentes:
+            raise BusinessException("Usuário já possui uma empresa cadastrada.", status_code=400)
+
         empresa = Empresas(
             nome=dados.nome,
             documento=dados.documento,
