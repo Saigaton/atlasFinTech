@@ -19,16 +19,14 @@ import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angula
 import { EmpresaService } from '../../core/services/empresa.service';
 import { ContaService } from '../../core/services/conta.service';
 import { ToastService } from '../../core/services/toast.service';
-import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 import { ShellComponent } from '../../shared/components/shell/shell.component';
-import { Conta } from '../../core/models/conta.model';
+import { Conta, TipoConta } from '../../core/models/conta.model';
 import { UnsubscriberComponent } from '../../core/unsubscriber.component';
 
 @Component({
   selector: 'app-contas',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ShellComponent,
-           LoadingSkeletonComponent],
+  imports: [CommonModule, ReactiveFormsModule, ShellComponent],
   templateUrl: './contas.component.html',
   styleUrl: './contas.component.scss',
 })
@@ -41,6 +39,9 @@ export class ContasComponent extends UnsubscriberComponent implements OnInit {
   showTransfer = false;
   transferindo = false;
 
+  modoEdicao       = false;
+  contaEditandoId: number | null = null;
+
   // ── Dados ────────────────────────────────────────────────────────────────
   contas: Conta[] = [];
 
@@ -48,11 +49,9 @@ export class ContasComponent extends UnsubscriberComponent implements OnInit {
   formTransferencia!: FormGroup;
 
   tiposConta = [
-    { value: 'checking',   label: 'Conta corrente' },
-    { value: 'savings',    label: 'Poupança' },
-    { value: 'investment', label: 'Investimento' },
-    { value: 'cash',       label: 'Dinheiro' },
-    { value: 'other',      label: 'Outros' },
+    { value: TipoConta.ContaCorrente.toString(),   label: 'Conta corrente' },
+    { value: TipoConta.Poupança.toString(),    label: 'Poupança' },
+    { value: TipoConta.Investimento.toString(), label: 'Investimento' },
   ];
 
   colorPresets = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ef4444','#06b6d4','#ec4899','#64748b'];
@@ -74,12 +73,11 @@ export class ContasComponent extends UnsubscriberComponent implements OnInit {
 
   private criarFormularioConta(){
     this.formConta = this.formBuilder.group({
-      nome:            ['', [Validators.required, Validators.minLength(2)]],
-      tipo:            ['checking'],
-      nomeBanco:       [''],
-      agencia:          [''],
-      numeroConta:  [''],
-      saldoInicial: [0, [Validators.min(0)]],
+      nome:      ['', [Validators.required, Validators.minLength(2), Validators.maxLength(80)]],
+      tipo:      [TipoConta.ContaCorrente.toString()],
+      nomeBanco: ['', Validators.maxLength(80)],
+      agencia:   ['', Validators.maxLength(8)],
+      saldoInicial: [0, [Validators.min(0), Validators.max(99999999.99)]],
       cor:           ['#3b82f6'],
     });
   }
@@ -88,8 +86,8 @@ export class ContasComponent extends UnsubscriberComponent implements OnInit {
     this.formTransferencia = this.formBuilder.group({
       deContaId: [null as number | null, Validators.required],
       paraContaId:   [null as number | null, Validators.required],
-      valor:          [null as number | null, [Validators.required, Validators.min(0.01)]],
-      descricao:     ['Transferência entre contas', Validators.required],
+      valor:          [null as number | null, [Validators.required, Validators.min(0.01), Validators.max(99999999.99)]],
+      descricao:     ['Transferência entre contas', [Validators.required, Validators.maxLength(100)]],
       data:            [new Date().toISOString().split('T')[0], Validators.required],
     });
   }
@@ -107,29 +105,63 @@ export class ContasComponent extends UnsubscriberComponent implements OnInit {
   }
 
   abrirCriarConta(): void {
-    this.formConta.reset({ type: 'checking', initial_balance: 0, color: '#3b82f6' });
+    this.modoEdicao = false;
+    this.contaEditandoId = null;
+    this.formConta.reset({ tipo: TipoConta.ContaCorrente.toString(), saldoInicial: 0, cor: '#3b82f6' });
     this.showModal = true;
   }
 
-  fecharModal(): void { this.showModal = false; }
+  abrirEditar(conta: Conta): void {
+    this.modoEdicao = true;
+    this.contaEditandoId = conta.id;
+    this.formConta.reset({
+      nome:         conta.nome,
+      tipo:         conta.tipo.toString(),
+      nomeBanco:    (conta as any).nomeBanco ?? '',
+      agencia:      (conta as any).agencia ?? '',
+      saldoInicial: conta.saldoAtual,
+      cor:          conta.cor ?? '#3b82f6',
+    });
+    this.showModal = true;
+  }
+
+  fecharModal(): void {
+    this.showModal = false;
+    this.modoEdicao = false;
+    this.contaEditandoId = null;
+  }
 
   onSubmit(): void {
     if (this.formConta.invalid) { this.formConta.markAllAsTouched(); return; }
-    const id = this.empresaService.ativoId();
-    if (!id) return;
+    const empresaId = this.empresaService.ativoId();
+    if (!empresaId) return;
 
     this.enviando = true;
 
+    const v = this.formConta.value;
+    const operacao = this.modoEdicao && this.contaEditandoId != null
+      ? this.contaService.atualizarConta(empresaId, this.contaEditandoId, {
+          nome:      v.nome,
+          tipo:      v.tipo,
+          saldoAtual: Number(v.saldoInicial),
+          nomeBanco: v.nomeBanco,
+          agencia:   v.agencia,
+          cor:       v.cor,
+        } as any)
+      : this.contaService.criarConta(empresaId, v as Conta);
+
+    const mensagem = this.modoEdicao ? 'Conta atualizada com sucesso!' : 'Conta criada com sucesso!';
+
     this._subscriptions.push(
-      this.contaService.criarConta(id, this.formConta.value as Conta).subscribe({
+      operacao.subscribe({
         next: () => {
-          this.toast.success('Conta criada com sucesso!');
+          this.toast.success(mensagem);
           this.enviando = false;
           this.fecharModal();
           this._load();
         },
         error: err => {
-          this.toast.error(err.error?.message ?? 'Erro ao criar conta.');
+          this.toast.error(err.error?.erro ?? (this.modoEdicao ? 'Erro ao atualizar conta.' : 'Erro ao criar conta.'));
           this.enviando = false;
         },
       })
@@ -159,26 +191,26 @@ export class ContasComponent extends UnsubscriberComponent implements OnInit {
 
     this.transferindo = true;
 
-    // this._subscriptions.push(
-    //   this.contaService.transfer(id, {
-    //     from_account_id: v.from_account_id!,
-    //     to_account_id:   v.to_account_id!,
-    //     amount:          Number(v.amount),
-    //     description:     v.description!,
-    //     date:            v.date!,
-    //   }).subscribe({
-    //     next: () => {
-    //       this.toast.success('Transferência realizada com sucesso!');
-    //       this.transferindo = false;
-    //       this.fecharTransferencia();
-    //       this._load();
-    //     },
-    //     error: err => {
-    //       this.toast.error(err.error?.message ?? 'Erro ao realizar transferência.');
-    //       this.transferindo = false;
-    //     },
-    //   })
-    // );
+    this._subscriptions.push(
+      this.contaService.transferirConta(id, {
+        deContaId:   v.deContaId!,
+        paraContaId: v.paraContaId!,
+        valor:       Number(v.valor),
+        descricao:   v.descricao ?? null,
+        data:        v.data!,
+      }).subscribe({
+        next: () => {
+          this.toast.success('Transferência realizada com sucesso!');
+          this.transferindo = false;
+          this.fecharTransferencia();
+          this._load();
+        },
+        error: err => {
+          this.toast.error(err.error?.erro ?? 'Erro ao realizar transferência.');
+          this.transferindo = false;
+        },
+      })
+    );
   }
 
   onDelete(conta: Conta): void {
@@ -189,7 +221,7 @@ export class ContasComponent extends UnsubscriberComponent implements OnInit {
     this._subscriptions.push(
       this.contaService.deletarConta(id, conta.id).subscribe({
         next: () => { this.toast.success('Conta desativada.'); this._load(); },
-        error: err => this.toast.error(err.error?.message ?? 'Erro ao desativar conta.'),
+        error: err => this.toast.error(err.error?.erro ?? 'Erro ao desativar conta.'),
       })
     );
   }

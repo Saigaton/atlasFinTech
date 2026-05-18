@@ -1,6 +1,6 @@
 export enum TipoConta {
-  Banco = 0,
-  CartaoCredito = 1,
+  ContaCorrente = 0,
+  Investimento = 1,
   Poupança = 2
 }
 

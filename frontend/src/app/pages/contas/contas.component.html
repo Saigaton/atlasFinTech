@@ -4,10 +4,16 @@
       <h1 class="page-title">Contas bancárias</h1>
       <p class="page-sub">Gerencie suas contas e visualize saldos em tempo real</p>
     </div>
-    <button class="btn-new" (click)="abrirCriarConta()">
-      <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-      Nova conta
-    </button>
+    <div class="header-actions">
+      <button class="btn-secondary" (click)="abrirTransferencia()" [disabled]="contas.length < 2">
+        <svg viewBox="0 0 24 24"><path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z"/></svg>
+        Transferência
+      </button>
+      <button class="btn-new" (click)="abrirCriarConta()">
+        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        Nova conta
+      </button>
+    </div>
   </div>
 
   @if (carregando) {
@@ -31,7 +37,7 @@
             </div>
             <div>
               <div class="acc-name">{{ acc.nome }}</div>
-              <!-- <div class="acc-type-tag">{{ typeLabel(acc.tipo) }}</div> -->
+              <div class="acc-type-tag">{{ typeLabel(acc.tipo.toString()) }}</div>
             </div>
           </div>
           @if (acc.nome) { <div class="acc-bank">{{ acc.nome }}</div> }
@@ -40,10 +46,10 @@
           </div>
           <div class="acc-balance-lbl">Saldo atual</div>
           <div class="acc-actions">
-            <!-- <button class="acc-btn" (click)="openEdit(acc)" title="Editar">
+            <button class="acc-btn" (click)="abrirEditar(acc)" title="Editar">
               <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
               Editar
-            </button> -->
+            </button>
             <button class="acc-btn acc-btn-danger" (click)="onDelete(acc)" title="Desativar">
               <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
               Desativar
@@ -58,7 +64,7 @@
     <div class="modal-backdrop" (click)="fecharModal()">
       <div class="modal" (click)="$event.stopPropagation()">
         <div class="modal-header">
-          <h2>Nova conta bancária</h2>
+          <h2>{{ modoEdicao ? 'Editar conta bancária' : 'Nova conta bancária' }}</h2>
           <button class="modal-close" (click)="fecharModal()">
             <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
           </button>
@@ -66,28 +72,38 @@
         <form [formGroup]="formConta" (ngSubmit)="onSubmit()" class="modal-body">
           <div class="fld">
             <label class="fld-lbl">Nome da conta *</label>
-            <input type="text" formControlName="name" placeholder="Ex: Banco do Brasil, Caixa..." [class.bad]="formConta.get('nome')?.invalid && formConta.get('nome')?.touched">
+            <input type="text" formControlName="nome" placeholder="Ex: Banco do Brasil, Caixa..." maxlength="80"
+                   [class.bad]="formConta.get('nome')?.invalid && formConta.get('nome')?.touched">
+            <span class="fld-counter" [class.fld-counter--limit]="(formConta.get('nome')?.value?.length ?? 0) >= 80">
+              {{ formConta.get('nome')?.value?.length ?? 0 }}/80
+            </span>
           </div>
           <div class="duo">
             <div class="fld">
               <label class="fld-lbl">Tipo</label>
-              <select formControlName="type">
+              <select formControlName="tipo">
                 @for (t of tiposConta; track t.value) { <option [value]="t.value">{{ t.label }}</option> }
               </select>
             </div>
             <div class="fld">
-              <label class="fld-lbl">Saldo inicial (R$)</label>
-              <input type="number" formControlName="initial_balance" placeholder="0,00" min="0" step="0.01">
+              <label class="fld-lbl">{{ modoEdicao ? 'Saldo atual (R$)' : 'Saldo inicial (R$)' }}</label>
+              <input type="number" formControlName="saldoInicial" placeholder="0,00" min="0" max="99999999.99" step="0.01">
             </div>
           </div>
           <div class="duo">
             <div class="fld">
               <label class="fld-lbl">Banco</label>
-              <input type="text" formControlName="bank_name" placeholder="Opcional">
+              <input type="text" formControlName="nomeBanco" placeholder="Opcional" maxlength="80">
+              <span class="fld-counter" [class.fld-counter--limit]="(formConta.get('nomeBanco')?.value?.length ?? 0) >= 80">
+                {{ formConta.get('nomeBanco')?.value?.length ?? 0 }}/80
+              </span>
             </div>
             <div class="fld">
               <label class="fld-lbl">Agência</label>
-              <input type="text" formControlName="agency" placeholder="Opcional">
+              <input type="text" formControlName="agencia" placeholder="Opcional" maxlength="8">
+              <span class="fld-counter" [class.fld-counter--limit]="(formConta.get('agencia')?.value?.length ?? 0) >= 8">
+                {{ formConta.get('agencia')?.value?.length ?? 0 }}/8
+              </span>
             </div>
           </div>
           <div class="fld">
@@ -103,7 +119,7 @@
           <div class="modal-footer">
             <button type="button" class="btn-cancel" (click)="fecharModal()">Cancelar</button>
             <button type="submit" class="btn-save" [disabled]="enviando">
-              @if (enviando) { <span class="spin"></span> } @else { Criar conta }
+              @if (enviando) { <span class="spin"></span> } @else { {{ modoEdicao ? 'Salvar alterações' : 'Criar conta' }} }
             </button>
           </div>
         </form>
@@ -113,59 +129,60 @@
 
   <!-- Modal de Transferência -->
   @if (showTransfer) {
-    <div class="modal-overlay" (click)="fecharTransferencia()">
+    <div class="modal-backdrop" (click)="fecharTransferencia()">
       <div class="modal" (click)="$event.stopPropagation()">
         <div class="modal-header">
-          <h2 class="modal-title">Transferência entre Contas</h2>
+          <h2>Transferência entre contas</h2>
           <button class="modal-close" (click)="fecharTransferencia()">
             <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
           </button>
         </div>
         <form [formGroup]="formTransferencia" (ngSubmit)="onTransferencia()" class="modal-body">
-
           <div class="duo">
-            <div class="field">
-              <label class="field-label">Conta de Origem *</label>
-              <select class="input" formControlName="from_account_id">
+            <div class="fld">
+              <label class="fld-lbl">Conta de origem *</label>
+              <select formControlName="deContaId" [class.bad]="formTransferencia.get('deContaId')?.invalid && formTransferencia.get('deContaId')?.touched">
                 <option [ngValue]="null">Selecione</option>
                 @for (acc of contas; track acc.id) {
                   <option [ngValue]="acc.id">{{ acc.nome }} — {{ formatCurrency(acc.saldoAtual) }}</option>
                 }
               </select>
             </div>
-            <div class="field">
-              <label class="field-label">Conta de Destino *</label>
-              <select class="input" formControlName="to_account_id">
+            <div class="fld">
+              <label class="fld-lbl">Conta de destino *</label>
+              <select formControlName="paraContaId" [class.bad]="formTransferencia.get('paraContaId')?.invalid && formTransferencia.get('paraContaId')?.touched">
                 <option [ngValue]="null">Selecione</option>
                 @for (acc of contas; track acc.id) {
-                  <option [ngValue]="acc.id">{{ acc.nome }}</option>
+                  <option [ngValue]="acc.id">{{ acc.nome }} — {{ formatCurrency(acc.saldoAtual) }}</option>
                 }
               </select>
             </div>
           </div>
-
           <div class="duo">
-            <div class="field">
-              <label class="field-label">Valor *</label>
-              <input type="number" class="input" formControlName="amount"
-                     placeholder="0,00" min="0.01" step="0.01">
+            <div class="fld">
+              <label class="fld-lbl">Valor *</label>
+              <input type="number" formControlName="valor" placeholder="0,00" min="0.01" max="99999999.99" step="0.01"
+                     [class.bad]="formTransferencia.get('valor')?.invalid && formTransferencia.get('valor')?.touched">
             </div>
-            <div class="field">
-              <label class="field-label">Data *</label>
-              <input type="date" class="input" formControlName="date">
+            <div class="fld">
+              <label class="fld-lbl">Data *</label>
+              <input type="date" formControlName="data"
+                     [class.bad]="formTransferencia.get('data')?.invalid && formTransferencia.get('data')?.touched">
             </div>
           </div>
-
-          <div class="field">
-            <label class="field-label">Descrição *</label>
-            <input type="text" class="input" formControlName="descricao"
-                   placeholder="Transferência entre contas">
+          <div class="fld">
+            <label class="fld-lbl">Descrição *</label>
+            <input type="text" formControlName="descricao" placeholder="Transferência entre contas"
+                   maxlength="100"
+                   [class.bad]="formTransferencia.get('descricao')?.invalid && formTransferencia.get('descricao')?.touched">
+            <span class="fld-counter" [class.fld-counter--limit]="(formTransferencia.get('descricao')?.value?.length ?? 0) >= 100">
+              {{ formTransferencia.get('descricao')?.value?.length ?? 0 }}/100
+            </span>
           </div>
-
           <div class="modal-footer">
-            <button type="button" class="btn btn-outline" (click)="fecharTransferencia()">Cancelar</button>
-            <button type="submit" class="btn btn-primary" [disabled]="transferindo">
-              {{ transferindo ? 'Transferindo...' : 'Realizar Transferência' }}
+            <button type="button" class="btn-cancel" (click)="fecharTransferencia()">Cancelar</button>
+            <button type="submit" class="btn-save" [disabled]="transferindo">
+              @if (transferindo) { <span class="spin"></span> } @else { Realizar transferência }
             </button>
           </div>
         </form>

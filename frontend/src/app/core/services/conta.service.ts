@@ -23,7 +23,7 @@ import { Conta } from '../models/conta.model';
  */
 @Injectable({ providedIn: 'root' })
 export class ContaService {
-  private readonly API = `${environment.apiUrl}/api/v1`;
+  private readonly API = environment.apiUrl;
 
   private base(empresaId: number): string {
     return `${this.API}/empresas/${empresaId}/contas`;
@@ -45,9 +45,20 @@ export class ContaService {
 
   /** Atualiza nome, tipo ou cor de uma conta bancária. */
   atualizarConta(empresaId: number, accountId: number, data: Conta): Observable<Conta> {
-    return this.http.patch<Conta>(`${this.base(empresaId)}/${accountId}`, data);
+    return this.http.put<Conta>(`${this.base(empresaId)}/${accountId}`, data);
   }
 
+
+  /** Transfere saldo entre duas contas da mesma empresa. */
+  transferirConta(empresaId: number, dados: {
+    deContaId: number;
+    paraContaId: number;
+    valor: number;
+    descricao: string | null;
+    data: string;
+  }): Observable<void> {
+    return this.http.post<void>(`${this.base(empresaId)}/transferir`, dados);
+  }
 
   /** Desativa uma conta bancária (soft delete). */
   deletarConta(empresaId: number, accountId: number): Observable<null> {
