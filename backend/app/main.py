@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.controllers import analiseController, authController, categoriaController, contaBancariaController, contaPagarController, contaReceberController, dashboardController, empresaController, relatorioController, transacaoController
 from app.configuracoes.database import Base, engine
 from app.exceptions.exceptionHandler import setupExceptionHandlers
+from app.configuracoes.database import SessionLocal as _SessionLocal
 from app.entidades import *
 from app.utilitarios.seed import seed_tipo_categorias, seed_tipo_situacao_conta, seed_tipo_transacoes
 from app.utilitarios.scheduler import criar_scheduler
@@ -63,7 +64,7 @@ app.include_router(relatorioController.router, prefix="/api/v1", tags=["Relatór
 app.include_router(analiseController.router,   prefix="/api/v1", tags=["Análise"])
 setupExceptionHandlers(app)
 
-# Base.metadata.drop_all(bind=engine)
+Base.metadata.drop_all(bind=engine)
 Base.metadata.create_all(bind=engine)
 
 # TODO: remover em produção — migrations devem ser rodadas manualmente via "alembic upgrade head"
@@ -71,7 +72,6 @@ _alembic_cfg = Config("alembic.ini")
 command.stamp(_alembic_cfg, "base")  # reseta o controle do alembic para re-executar os seeds
 command.upgrade(_alembic_cfg, "head")
 
-from app.configuracoes.database import SessionLocal as _SessionLocal
 with _SessionLocal() as _db:
     seed_tipo_categorias(_db)
     seed_tipo_transacoes(_db)
