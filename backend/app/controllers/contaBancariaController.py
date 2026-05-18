@@ -5,7 +5,7 @@ from app.configuracoes.database import get_db
 from app.configuracoes.security import obterUsuarioAtualDB
 from app.entidades.usuarios import Usuarios
 from app.repositories.contaBancariaRepository import ContaBancariaRepository
-from app.schemas.contaBancaria import ContaAtualizar, ContaResposta, CriarContaBancaria
+from app.schemas.contaBancaria import ContaAtualizar, ContaResposta, CriarContaBancaria, TransferirConta
 from app.services.contaBancariaService import ContaBancariaService
 
 router = APIRouter()
@@ -66,6 +66,24 @@ async def atualizarConta(
     usuario: Usuarios = Depends(obterUsuarioAtualDB),
 ):
     return service.atualizarConta(empresaId, contaId, usuario.id, body)
+
+@router.post(
+    "/empresas/{empresaId}/contas/transferir",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Transferir entre contas",
+    responses={
+        204: {"description": "Transferência realizada com sucesso"},
+        400: {"description": "Saldo insuficiente ou contas inválidas"},
+        404: {"description": "Conta não encontrada"},
+    },
+)
+async def transferir(
+    empresaId: int,
+    body: TransferirConta,
+    service: ContaBancariaService = Depends(obterContaBancariaService),
+    usuario: Usuarios = Depends(obterUsuarioAtualDB),
+):
+    service.transferir(empresaId, usuario.id, body)
 
 @router.delete(
     "/empresas/{empresaId}/contas/{contaId}",

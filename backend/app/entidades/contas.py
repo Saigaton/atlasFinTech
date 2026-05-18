@@ -1,5 +1,6 @@
 from decimal import Decimal
 from datetime import datetime
+from typing import Optional
 from sqlalchemy import Integer, String, DateTime, Numeric, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.configuracoes.database import Base
@@ -12,8 +13,8 @@ class Contas(Base):
     nome: Mapped[str] = mapped_column(String(100))
     saldo_inicial: Mapped[Decimal] = mapped_column(Numeric(precision=10, scale=2))
     saldo_atual: Mapped[Decimal] = mapped_column(Numeric(precision=10, scale=2))
-    agencia: Mapped[str] = mapped_column(String(8))
-    nome_banco: Mapped[str] = mapped_column(String(100))
+    agencia: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    nome_banco: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     data_criacao: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     cor: Mapped[str]   = mapped_column(String(8))
 
