@@ -405,13 +405,13 @@ class AnaliseService:
         hoje     = datetime.now(timezone.utc)
         prox_mes = hoje.month % 12 + 1
         prox_ano = hoje.year + (1 if hoje.month == 12 else 0)
-        sinal = "positivo ✅" if previsao.saldo_previsto >= 0 else "negativo ⚠️"
+        sinal = "positivo ✅" if previsao.saldoProjetado >= 0 else "negativo ⚠️"
         return (
             f"**Projeção para {self._MESES_NOME[prox_mes]}/{prox_ano}**\n"
             f"_(baseada na média dos últimos 3 meses)_\n\n"
-            f"Receitas projetadas: {self._fmt(previsao.receitas_previstas)}\n"
-            f"Despesas projetadas: {self._fmt(previsao.despesas_previstas)}\n"
-            f"Saldo projetado: {self._fmt(previsao.saldo_previsto)} ({sinal})"
+            f"Receitas projetadas: {self._fmt(previsao.receitaProjetada)}\n"
+            f"Despesas projetadas: {self._fmt(previsao.despesaProjetada)}\n"
+            f"Saldo projetado: {self._fmt(previsao.saldoProjetado)} ({sinal})"
         )
 
     def _chat_receber(self, empresa_id: int, usuario_id: int) -> str:

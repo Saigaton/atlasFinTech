@@ -64,7 +64,7 @@ app.include_router(relatorioController.router, prefix="/api/v1", tags=["Relatór
 app.include_router(analiseController.router,   prefix="/api/v1", tags=["Análise"])
 setupExceptionHandlers(app)
 
-Base.metadata.drop_all(bind=engine)
+# Base.metadata.drop_all(bind=engine)
 Base.metadata.create_all(bind=engine)
 
 # TODO: remover em produção — migrations devem ser rodadas manualmente via "alembic upgrade head"
