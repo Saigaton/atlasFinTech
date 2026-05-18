@@ -6,33 +6,34 @@ from app.configuracoes.security import obterUsuarioAtualDB
 from app.entidades.usuarios import Usuarios
 from app.repositories.categoriaRepository import CategoriaRepository
 from app.schemas.categoria import AtualizarCategoria, CategoriaResposta, CriarCategoria
+from app.schemas.respostaApi import RespostaApi
 from app.services.categoriaService import CategoriaService
 
 router = APIRouter()
+
 
 def obterCategoriaService(db: Session = Depends(get_db)):
     repo = CategoriaRepository(db)
     return CategoriaService(repo)
 
+
 @router.get(
     "/empresas/{empresaId}/categorias",
-    response_model=list[CategoriaResposta],
     status_code=status.HTTP_200_OK,
     summary="Listar categorias",
-    responses={
-        200: {"description": "Lista de categorias da empresa"},
-    },
+    responses={200: {"description": "Lista de categorias da empresa"}},
 )
 async def listarCategorias(
     empresaId: int,
     service: CategoriaService = Depends(obterCategoriaService),
     usuario: Usuarios = Depends(obterUsuarioAtualDB),
 ):
-    return service.listarCategorias(empresaId, usuario.id)
+    dados = service.listarCategorias(empresaId, usuario.id)
+    return RespostaApi(conteudo=dados)
+
 
 @router.post(
     "/empresas/{empresaId}/categorias",
-    response_model=CategoriaResposta,
     status_code=status.HTTP_201_CREATED,
     summary="Criar categoria",
     responses={
@@ -46,11 +47,12 @@ async def criarCategoria(
     service: CategoriaService = Depends(obterCategoriaService),
     usuario: Usuarios = Depends(obterUsuarioAtualDB),
 ):
-    return service.criarCategoria(empresaId, usuario.id, body)
+    dados = service.criarCategoria(empresaId, body)
+    return RespostaApi(conteudo=dados, mensagem="Categoria criada com sucesso.")
+
 
 @router.put(
     "/empresas/{empresaId}/categorias/{categoriaId}",
-    response_model=CategoriaResposta,
     status_code=status.HTTP_200_OK,
     summary="Atualizar categoria",
     responses={
@@ -65,14 +67,16 @@ async def atualizarCategoria(
     service: CategoriaService = Depends(obterCategoriaService),
     usuario: Usuarios = Depends(obterUsuarioAtualDB),
 ):
-    return service.atualizarCategoria(empresaId, categoriaId, usuario.id, body)
+    dados = service.atualizarCategoria(empresaId, categoriaId, usuario.id, body)
+    return RespostaApi(conteudo=dados, mensagem="Categoria atualizada com sucesso.")
+
 
 @router.delete(
     "/empresas/{empresaId}/categorias/{categoriaId}",
-    status_code=status.HTTP_204_NO_CONTENT,
+    status_code=status.HTTP_200_OK,
     summary="Deletar categoria",
     responses={
-        204: {"description": "Categoria deletada com sucesso"},
+        200: {"description": "Categoria deletada com sucesso"},
         404: {"description": "Categoria não encontrada"},
     },
 )
@@ -83,3 +87,4 @@ async def deletarCategoria(
     usuario: Usuarios = Depends(obterUsuarioAtualDB),
 ):
     service.deletarCategoria(empresaId, categoriaId, usuario.id)
+    return RespostaApi(conteudo=None, mensagem="Categoria deletada com sucesso.")
