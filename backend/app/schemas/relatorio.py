@@ -1,6 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
-from pydantic import BaseModel, ConfigDict
+from typing import Optional
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.enums.tipoTransacaoEnum import TipoTransacaoEnum
 
@@ -38,3 +39,54 @@ class ContasReceberResumoResposta(BaseModel):
     total_pendente:  Decimal
     total_recebido:  Decimal
     total_atrasado:  Decimal
+
+
+class StatusAgendamentoResposta(BaseModel):
+    inscrito: bool
+    email:    Optional[str] = None
+    diaMes:   Optional[int] = None
+    hora:     Optional[int] = None
+
+
+class InscricaoAgendamentoRequisicao(BaseModel):
+    email:   EmailStr
+    dia_mes: int = Field(..., ge=1, le=28)
+    hora:    int = Field(..., ge=0, le=23)
+
+
+class DisparadorRelatorioRequisicao(BaseModel):
+    email: EmailStr
+
+
+class EnviarEmailRelatorioRequisicao(BaseModel):
+    email: EmailStr
+
+
+class ItemConciliadoResposta(BaseModel):
+    dataExtrato:        str
+    descricaoExtrato:   str
+    valorExtrato:       float
+    idTransacao:        int
+    descricaoTransacao: str
+
+class ItemExtratoResposta(BaseModel):
+    data:      str
+    descricao: str
+    valor:     float
+
+class ItemTransacaoSistemaResposta(BaseModel):
+    id:        int
+    data:      str
+    descricao: str
+    tipo:      str
+    valor:     float
+
+class ResultadoConciliacaoResposta(BaseModel):
+    conciliadas:           int
+    totalSomenteExtrato:   int
+    totalSomenteNosistema: int
+    totalExtrato:          int
+    itensConciliados:      list[ItemConciliadoResposta]
+    somenteExtrato:        list[ItemExtratoResposta]
+    somenteNosistema:      list[ItemTransacaoSistemaResposta]
+    errosImportacao:       list[str]
