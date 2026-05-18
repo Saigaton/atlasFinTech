@@ -6,6 +6,9 @@ from app.entidades.tipoContas import TipoContas
 from app.entidades.contasReceber import ContasReceber
 from app.entidades.contasPagar import ContasPagar
 from app.entidades.contas import Contas
+from app.entidades.tipoCategorias import TipoCategorias
 from app.entidades.categorias import Categorias
 from app.entidades.atualizacaoTokens import AtualizacaoTokens
 from app.entidades.empresas import Empresas
+from app.entidades.metasOrcamentarias import MetasOrcamentarias
+from app.entidades.agendamentosRelatorio import AgendamentosRelatorio

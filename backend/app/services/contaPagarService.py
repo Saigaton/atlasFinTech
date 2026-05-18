@@ -1,53 +1,109 @@
+import calendar
 from datetime import datetime, timezone
+from typing import Optional
 
 from app.entidades.contasPagar import ContasPagar
+from app.entidades.transacoes import Transacoes
+from app.enums.situacaoTransacaoEnum import SituacaoTransacaoEnum
 from app.enums.tipoSituacaoContaEnum import TipoSituacaoContaEnum
+from app.enums.tipoTransacaoEnum import TipoTransacaoEnum
 from app.exceptions.businessException import BusinessException
 from app.repositories.contaPagarRepository import ContaPagarRepository
-from app.schemas.contaPagar import AtualizarContaPagar, ContaPagarResposta, CriarContaPagar
+from app.schemas.contaPagar import AtualizarContaPagar, ContaPagarResposta, CriarContaPagar, PagamentoContaPagar, ResumoContasPagarResposta
 
 
 class ContaPagarService:
     def __init__(self, repository: ContaPagarRepository):
         self.repository = repository
 
-    def criarContaPagar(self, empresa_id: int, usuario_id: int, dados: CriarContaPagar) -> ContaPagarResposta:
-        conta = ContasPagar(
-            descricao=dados.descricao,
-            valor=dados.valor,
-            data_vencimento=dados.data_vencimento,
-            data_pagamento=None,
-            situacao_id=TipoSituacaoContaEnum.PENDENTE,
-            empresa_id=empresa_id,
-        )
+    def criarContaPagar(self, empresa_id: int, usuario_id: int, dados: CriarContaPagar) -> list[ContaPagarResposta]:
+        parcelas: list[ContasPagar] = []
+        base_data = dados.data_vencimento
+        n = dados.total_parcelas
+
+        for i in range(n):
+            mes = base_data.month + i
+            ano = base_data.year + (mes - 1) // 12
+            mes = (mes - 1) % 12 + 1
+            dia = min(base_data.day, calendar.monthrange(ano, mes)[1])
+            data_parcela = base_data.replace(year=ano, month=mes, day=dia)
+
+            descricao = dados.descricao if n == 1 else f"{dados.descricao} ({i + 1}/{n})"
+            parcelas.append(ContasPagar(
+                descricao=descricao,
+                valor=dados.valor,
+                data_vencimento=data_parcela,
+                conta_id=dados.conta_id,
+                categoria_id=dados.categoria_id,
+                notas=dados.notas,
+                total_parcelas=n,
+                data_pagamento=None,
+                situacao_id=TipoSituacaoContaEnum.PENDENTE,
+                empresa_id=empresa_id,
+            ))
+
         try:
-            conta = self.repository.criarContaPagar(conta)
+            for p in parcelas:
+                self.repository.session.add(p)
             self.repository.session.commit()
-            self.repository.session.refresh(conta)
-            return ContaPagarResposta.model_validate(conta)
-        except Exception:
+            for p in parcelas:
+                self.repository.session.refresh(p)
+            return [ContaPagarResposta.model_validate(p) for p in parcelas]
+        except Exception as e:
+            print(e)
             self.repository.session.rollback()
             raise BusinessException("Erro ao criar conta a pagar.", status_code=400)
 
-    def listarContasPagar(self, empresa_id: int, usuario_id: int) -> list[ContaPagarResposta]:
+    def _atualizar_vencidas(self, empresa_id: int, usuario_id: int) -> None:
+        hoje = datetime.now(timezone.utc).date()
         contas = self.repository.listarPorEmpresa(empresa_id, usuario_id)
+        vencidas = [
+            c for c in contas
+            if c.situacao_id == TipoSituacaoContaEnum.PENDENTE
+            and c.data_vencimento.date() < hoje
+        ]
+        if vencidas:
+            for c in vencidas:
+                c.situacao_id = TipoSituacaoContaEnum.ATRASADO
+            self.repository.session.commit()
+
+    def listarContasPagar(self, empresa_id: int, usuario_id: int, situacao: Optional[int] = None, pesquisa: Optional[str] = None) -> list[ContaPagarResposta]:
+        self._atualizar_vencidas(empresa_id, usuario_id)
+        contas = self.repository.listarPorEmpresa(empresa_id, usuario_id)
+        if situacao is not None:
+            contas = [c for c in contas if c.situacao_id == situacao]
+        if pesquisa:
+            contas = [c for c in contas if pesquisa.lower() in (c.descricao or "").lower()]
         return [ContaPagarResposta.model_validate(c) for c in contas]
 
     def atualizarContaPagar(self, empresa_id: int, conta_id: int, usuario_id: int, dados: AtualizarContaPagar) -> ContaPagarResposta:
         conta = self.repository.buscarPorId(conta_id, empresa_id, usuario_id)
         if not conta:
             raise BusinessException("Conta a pagar não encontrada.", status_code=404)
+        if conta.situacao_id == TipoSituacaoContaEnum.PAGO:
+            raise BusinessException("Conta já paga não pode ser editada.", status_code=400)
 
         try:
-            self.repository.atualizarContaPagar(conta, dados.model_dump(exclude_none=True))
+            campos = dados.model_dump(exclude_none=True)
+            self.repository.atualizarContaPagar(conta, campos)
+
+            hoje = datetime.now(timezone.utc).date()
+            nova_data = conta.data_vencimento.date() if hasattr(conta.data_vencimento, 'date') else conta.data_vencimento
+            if nova_data < hoje:
+                conta.situacao_id = TipoSituacaoContaEnum.ATRASADO
+            else:
+                conta.situacao_id = TipoSituacaoContaEnum.PENDENTE
+
             self.repository.session.commit()
             self.repository.session.refresh(conta)
             return ContaPagarResposta.model_validate(conta)
+        except BusinessException:
+            raise
         except Exception:
             self.repository.session.rollback()
             raise BusinessException("Erro ao atualizar conta a pagar.", status_code=400)
 
-    def pagarConta(self, empresa_id: int, conta_id: int, usuario_id: int) -> ContaPagarResposta:
+    def pagarConta(self, empresa_id: int, conta_id: int, usuario_id: int, dados: PagamentoContaPagar) -> ContaPagarResposta:
         conta = self.repository.buscarPorId(conta_id, empresa_id, usuario_id)
         if not conta:
             raise BusinessException("Conta a pagar não encontrada.", status_code=404)
@@ -56,15 +112,35 @@ class ContaPagarService:
 
         try:
             self.repository.atualizarContaPagar(conta, {
-                "situacao_id": TipoSituacaoContaEnum.PAGO,
-                "data_pagamento": datetime.now(timezone.utc),
+                "situacao_id":    TipoSituacaoContaEnum.PAGO,
+                "data_pagamento": dados.data_pagamento,
             })
+
+            recorrencia = "mensal" if (conta.total_parcelas or 1) > 1 else "nenhuma"
+            transacao = Transacoes(
+                descricao=    conta.descricao,
+                valor=        dados.valor_pago or conta.valor,
+                data=         dados.data_pagamento,
+                conta_id=     dados.conta_id,
+                categoria_id= conta.categoria_id,
+                transacao_id= TipoTransacaoEnum.DESPESA,
+                situacao=     SituacaoTransacaoEnum.CONFIRMADO,
+                empresa_id=   empresa_id,
+                recorrencia=  recorrencia,
+            )
+            self.repository.session.add(transacao)
+
             self.repository.session.commit()
             self.repository.session.refresh(conta)
             return ContaPagarResposta.model_validate(conta)
         except Exception:
             self.repository.session.rollback()
             raise BusinessException("Erro ao registrar pagamento.", status_code=400)
+
+    def resumoContasPagar(self, empresa_id: int, usuario_id: int) -> ResumoContasPagarResposta:
+        self._atualizar_vencidas(empresa_id, usuario_id)
+        dados = self.repository.resumo(empresa_id, usuario_id)
+        return ResumoContasPagarResposta(**dados)
 
     def deletarContaPagar(self, empresa_id: int, conta_id: int, usuario_id: int) -> None:
         conta = self.repository.buscarPorId(conta_id, empresa_id, usuario_id)

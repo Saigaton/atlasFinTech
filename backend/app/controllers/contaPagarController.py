@@ -1,38 +1,59 @@
-from fastapi import APIRouter, Depends, status
+from typing import Optional
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from app.configuracoes.database import get_db
 from app.configuracoes.security import obterUsuarioAtualDB
 from app.entidades.usuarios import Usuarios
 from app.repositories.contaPagarRepository import ContaPagarRepository
-from app.schemas.contaPagar import AtualizarContaPagar, ContaPagarResposta, CriarContaPagar
+from app.schemas.contaPagar import AtualizarContaPagar, ContaPagarResposta, CriarContaPagar, PagamentoContaPagar, ResumoContasPagarResposta
+from app.schemas.respostaApi import RespostaApi, paginado
 from app.services.contaPagarService import ContaPagarService
 
 router = APIRouter()
+
 
 def obterContaPagarService(db: Session = Depends(get_db)):
     repo = ContaPagarRepository(db)
     return ContaPagarService(repo)
 
+
 @router.get(
-    "/empresas/{empresaId}/contas-pagar",
-    response_model=list[ContaPagarResposta],
+    "/empresas/{empresaId}/contas-pagar/resumo",
     status_code=status.HTTP_200_OK,
-    summary="Listar contas a pagar",
-    responses={
-        200: {"description": "Lista de contas a pagar da empresa"},
-    },
+    summary="Resumo de contas a pagar",
+    responses={200: {"description": "Totais e quantidades por situação"}},
 )
-async def listarContasPagar(
+async def resumoContasPagar(
     empresaId: int,
     service: ContaPagarService = Depends(obterContaPagarService),
     usuario: Usuarios = Depends(obterUsuarioAtualDB),
 ):
-    return service.listarContasPagar(empresaId, usuario.id)
+    dados = service.resumoContasPagar(empresaId, usuario.id)
+    return RespostaApi(conteudo=dados)
+
+
+@router.get(
+    "/empresas/{empresaId}/contas-pagar",
+    status_code=status.HTTP_200_OK,
+    summary="Listar contas a pagar",
+    responses={200: {"description": "Lista paginada de contas a pagar da empresa"}},
+)
+async def listarContasPagar(
+    empresaId: int,
+    page:     int            = Query(1,    ge=1),
+    per_page: int            = Query(50,   ge=1, le=200),
+    status:   Optional[int]  = Query(None),
+    pesquisa: Optional[str]  = Query(None),
+    service: ContaPagarService = Depends(obterContaPagarService),
+    usuario: Usuarios = Depends(obterUsuarioAtualDB),
+):
+    todos = service.listarContasPagar(empresaId, usuario.id, situacao=status, pesquisa=pesquisa)
+    return paginado(todos, page, per_page)
+
 
 @router.post(
     "/empresas/{empresaId}/contas-pagar",
-    response_model=ContaPagarResposta,
     status_code=status.HTTP_201_CREATED,
     summary="Criar conta a pagar",
     responses={
@@ -46,11 +67,14 @@ async def criarContaPagar(
     service: ContaPagarService = Depends(obterContaPagarService),
     usuario: Usuarios = Depends(obterUsuarioAtualDB),
 ):
-    return service.criarContaPagar(empresaId, usuario.id, body)
+    dados = service.criarContaPagar(empresaId, usuario.id, body)
+    n = len(dados)
+    msg = f"{n} parcela(s) criada(s) com sucesso." if n > 1 else "Conta a pagar criada com sucesso."
+    return RespostaApi(conteudo=dados, mensagem=msg)
+
 
 @router.put(
     "/empresas/{empresaId}/contas-pagar/{contaId}",
-    response_model=ContaPagarResposta,
     status_code=status.HTTP_200_OK,
     summary="Atualizar conta a pagar",
     responses={
@@ -65,11 +89,12 @@ async def atualizarContaPagar(
     service: ContaPagarService = Depends(obterContaPagarService),
     usuario: Usuarios = Depends(obterUsuarioAtualDB),
 ):
-    return service.atualizarContaPagar(empresaId, contaId, usuario.id, body)
+    dados = service.atualizarContaPagar(empresaId, contaId, usuario.id, body)
+    return RespostaApi(conteudo=dados, mensagem="Conta a pagar atualizada com sucesso.")
+
 
 @router.post(
     "/empresas/{empresaId}/contas-pagar/{contaId}/pagar",
-    response_model=ContaPagarResposta,
     status_code=status.HTTP_200_OK,
     summary="Registrar pagamento",
     responses={
@@ -81,17 +106,20 @@ async def atualizarContaPagar(
 async def pagarConta(
     empresaId: int,
     contaId: int,
+    body: PagamentoContaPagar,
     service: ContaPagarService = Depends(obterContaPagarService),
     usuario: Usuarios = Depends(obterUsuarioAtualDB),
 ):
-    return service.pagarConta(empresaId, contaId, usuario.id)
+    dados = service.pagarConta(empresaId, contaId, usuario.id, body)
+    return RespostaApi(conteudo=dados, mensagem="Pagamento registrado com sucesso.")
+
 
 @router.delete(
     "/empresas/{empresaId}/contas-pagar/{contaId}",
-    status_code=status.HTTP_204_NO_CONTENT,
+    status_code=status.HTTP_200_OK,
     summary="Deletar conta a pagar",
     responses={
-        204: {"description": "Conta a pagar deletada com sucesso"},
+        200: {"description": "Conta a pagar deletada com sucesso"},
         404: {"description": "Conta a pagar não encontrada"},
     },
 )
@@ -102,3 +130,4 @@ async def deletarContaPagar(
     usuario: Usuarios = Depends(obterUsuarioAtualDB),
 ):
     service.deletarContaPagar(empresaId, contaId, usuario.id)
+    return RespostaApi(conteudo=None, mensagem="Conta a pagar deletada com sucesso.")

@@ -14,6 +14,14 @@ class ContasPagar(Base):
     valor:            Mapped[Decimal]           = mapped_column(Numeric(precision=10, scale=2))
     data_vencimento:  Mapped[datetime]          = mapped_column(DateTime(timezone=True))
     data_pagamento:   Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    notas:            Mapped[Optional[str]]      = mapped_column(String(500), nullable=True)
+    total_parcelas:   Mapped[Optional[int]]      = mapped_column(Integer, nullable=True, default=1)
+
+    conta_id:     Mapped[Optional[int]] = mapped_column(ForeignKey("contas.id"), nullable=True)
+    conta:        Mapped[Optional["Contas"]] = relationship()
+
+    categoria_id: Mapped[Optional[int]] = mapped_column(ForeignKey("categorias.id"), nullable=True)
+    categoria:    Mapped[Optional["Categorias"]] = relationship()
 
     situacao_id: Mapped[TipoSituacaoContaEnum] = mapped_column(Integer, ForeignKey("tipo_situacao_conta.id"))
     situacao:    Mapped["TipoSituacaoConta"]   = relationship(back_populates="contas_pagar")
