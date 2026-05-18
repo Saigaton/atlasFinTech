@@ -7,52 +7,58 @@ import { StatusAgendamento, ResultadoConciliacao } from '../models/relatorio.mod
 
 @Injectable({ providedIn: 'root' })
 export class RelatorioService {
-  private readonly API = `${environment.apiUrl}/api/v1`;
+  private readonly API = environment.apiUrl;
 
   constructor(private http: HttpClient) {}
 
   private base(empresaId: number): string {
-    return `${this.API}/companies/${empresaId}/reports`;
+    return `${this.API}/empresas/${empresaId}/relatorios`;
   }
 
   obterStatusAgendamento(empresaId: number): Observable<RespostaApi<StatusAgendamento>> {
-    return this.http.get<RespostaApi<StatusAgendamento>>(`${this.base(empresaId)}/schedule/status`);
+    return this.http.get<RespostaApi<StatusAgendamento>>(`${this.base(empresaId)}/agendamento/status`);
   }
 
   inscreverEmailPeriodico(empresaId: number, email: string, diaMes: number, hora: number): Observable<RespostaApi<void>> {
     return this.http.post<RespostaApi<void>>(
-      `${this.base(empresaId)}/schedule/subscribe`,
+      `${this.base(empresaId)}/agendamento/inscrever`,
       { email, dia_mes: diaMes, hora },
     );
   }
 
   cancelarEmailPeriodico(empresaId: number): Observable<RespostaApi<void>> {
-    return this.http.delete<RespostaApi<void>>(`${this.base(empresaId)}/schedule/unsubscribe`);
+    return this.http.delete<RespostaApi<void>>(`${this.base(empresaId)}/agendamento/cancelar`);
   }
 
   dispararRelatorioAgora(empresaId: number, email: string): Observable<RespostaApi<void>> {
-    return this.http.post<RespostaApi<void>>(`${this.base(empresaId)}/schedule/trigger`, { email });
+    return this.http.post<RespostaApi<void>>(`${this.base(empresaId)}/agendamento/disparar`, { email });
   }
 
   baixarTransacoesCsv(empresaId: number, mes?: number, ano?: number): Observable<Blob> {
     let params = new HttpParams();
-    if (mes) params = params.set('month', mes);
-    if (ano) params = params.set('year', ano);
-    return this.http.get(`${this.base(empresaId)}/transactions/csv`, { params, responseType: 'blob' });
+    if (mes) params = params.set('mes', mes);
+    if (ano) params = params.set('ano', ano);
+    return this.http.get(`${this.base(empresaId)}/transacoes/csv`, { params, responseType: 'blob' });
   }
 
-  baixarContasPagarCsv(empresaId: number): Observable<Blob> {
-    return this.http.get(`${this.base(empresaId)}/payables/csv`, { responseType: 'blob' });
+  baixarContasPagarCsv(empresaId: number, mes?: number, ano?: number): Observable<Blob> {
+    let params = new HttpParams();
+    if (mes) params = params.set('mes', mes);
+    if (ano) params = params.set('ano', ano);
+    return this.http.get(`${this.base(empresaId)}/contas-pagar/csv`, { params, responseType: 'blob' });
   }
 
-  baixarContasReceberCsv(empresaId: number): Observable<Blob> {
-    return this.http.get(`${this.base(empresaId)}/receivables/csv`, { responseType: 'blob' });
+  baixarContasReceberCsv(empresaId: number, mes?: number, ano?: number): Observable<Blob> {
+    let params = new HttpParams();
+    if (mes) params = params.set('mes', mes);
+    if (ano) params = params.set('ano', ano);
+    return this.http.get(`${this.base(empresaId)}/contas-receber/csv`, { params, responseType: 'blob' });
   }
 
   baixarPdf(empresaId: number, mes?: number, ano?: number): Observable<Blob> {
     let params = new HttpParams();
-    if (mes) params = params.set('month', mes);
-    if (ano) params = params.set('year', ano);
+    if (mes) params = params.set('mes', mes);
+    if (ano) params = params.set('ano', ano);
     return this.http.get(`${this.base(empresaId)}/pdf`, { params, responseType: 'blob' });
   }
 
@@ -65,20 +71,22 @@ export class RelatorioService {
     const a   = document.createElement('a');
     a.href     = url;
     a.download = nomeArquivo;
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   enviarEmailRelatorio(empresaId: number, email: string, mes?: number, ano?: number): Observable<RespostaApi<void>> {
     let params = new HttpParams();
-    if (mes) params = params.set('month', mes);
-    if (ano) params = params.set('year', ano);
+    if (mes) params = params.set('mes', mes);
+    if (ano) params = params.set('ano', ano);
     return this.http.post<RespostaApi<void>>(`${this.base(empresaId)}/email`, { email }, { params });
   }
 
   importarExtrato(empresaId: number, arquivo: File): Observable<RespostaApi<ResultadoConciliacao>> {
     const form = new FormData();
-    form.append('file', arquivo);
-    return this.http.post<RespostaApi<ResultadoConciliacao>>(`${this.base(empresaId)}/conciliation`, form);
+    form.append('arquivo', arquivo);
+    return this.http.post<RespostaApi<ResultadoConciliacao>>(`${this.base(empresaId)}/conciliacao`, form);
   }
 }

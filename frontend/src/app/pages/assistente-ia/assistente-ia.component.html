@@ -65,20 +65,18 @@
         <div #fimMensagens></div>
       </div>
 
-      <!-- Sugestões — mostradas apenas no início -->
-      @if (mensagens.length <= 1) {
-        <div class="suggestions">
-          <p class="sug-label">Sugestões de perguntas:</p>
-          <div class="sug-grid">
-            @for (sugestao of sugestoes; track sugestao.texto) {
-              <button class="sug-btn" (click)="enviarMensagem(sugestao.texto)">
-                <svg viewBox="0 0 24 24"><path [attr.d]="sugestao.icone"/></svg>
-                <span>{{ sugestao.texto }}</span>
-              </button>
-            }
-          </div>
+      <!-- Sugestões -->
+      <div class="suggestions">
+        <p class="sug-label">Sugestões de perguntas:</p>
+        <div class="sug-grid">
+          @for (sugestao of sugestoes; track sugestao.texto) {
+            <button class="sug-btn" (click)="enviarMensagem(sugestao.texto)" [disabled]="pensando">
+              <svg viewBox="0 0 24 24"><path [attr.d]="sugestao.icone"/></svg>
+              <span>{{ sugestao.texto }}</span>
+            </button>
+          }
         </div>
-      }
+      </div>
     </div>
 
     <!-- Input -->

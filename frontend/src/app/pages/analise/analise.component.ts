@@ -7,10 +7,10 @@ import { EmpresaService } from '../../core/services/empresa.service';
 import { ShellComponent } from '../../shared/components/shell/shell.component';
 import {
   Alerta, AnaliseFinanceira, DadosCalendario, DadosFluxoCaixa,
-  EventoCalendario, PaginaAuditoria, TipoAlerta,
+  EventoCalendario, TipoAlerta,
 } from '../../core/models/analise.model';
 
-type AbaAtiva      = 'fluxoCaixa' | 'analise' | 'alertas' | 'auditoria' | 'assistente' | 'calendario';
+type AbaAtiva      = 'fluxoCaixa' | 'analise' | 'alertas' | 'assistente' | 'calendario';
 type PeriodoAnalise = '1m' | '3m' | '6m' | '1y';
 
 @Component({
@@ -49,11 +49,6 @@ export class AnaliseComponent implements OnInit {
   readonly TipoAlerta = TipoAlerta;
   carregandoAlertas = true;
   alertas: Alerta[] = [];
-
-  // ── Auditoria ─────────────────────────────────────────────────────────
-  carregandoAuditoria = true;
-  logAuditoria: PaginaAuditoria | null = null;
-  paginaAuditoria = 1;
 
   // ── Calendário ────────────────────────────────────────────────────────
   carregandoCalendario = true;
@@ -109,18 +104,8 @@ export class AnaliseComponent implements OnInit {
     const id = this.empresaId;
     if (!id) { this.carregandoAlertas = false; return; }
     this.analiseService.obterAlertas(id).subscribe({
-      next: r  => { this.alertas = r.conteudo; this.carregandoAlertas = false; },
+      next: r  => { this.alertas = r.conteudo ?? []; this.carregandoAlertas = false; },
       error: () => { this.carregandoAlertas = false; },
-    });
-  }
-
-  private _carregarAuditoria(): void {
-    const id = this.empresaId;
-    if (!id) { this.carregandoAuditoria = false; return; }
-    this.carregandoAuditoria = true;
-    this.analiseService.obterLogAuditoria(id, this.paginaAuditoria).subscribe({
-      next: r  => { this.logAuditoria = r.conteudo; this.carregandoAuditoria = false; },
-      error: () => { this.carregandoAuditoria = false; },
     });
   }
 
@@ -139,7 +124,6 @@ export class AnaliseComponent implements OnInit {
   selecionarAba(aba: AbaAtiva): void {
     this.abaSelecionada = aba;
     if (aba === 'analise'    && !this.analise)         this._carregarAnalise();
-    if (aba === 'auditoria'  && !this.logAuditoria)    this._carregarAuditoria();
     if (aba === 'alertas')                              this._carregarAlertas();
     if (aba === 'calendario' && !this.dadosCalendario) this._carregarCalendario();
   }
@@ -160,12 +144,6 @@ export class AnaliseComponent implements OnInit {
   alterarMesCalendario(): void {
     this.dadosCalendario = null;
     this._carregarCalendario();
-  }
-
-  auditoriaPagina(p: number): void {
-    if (!this.logAuditoria || p < 1 || p > this.logAuditoria.paginas) return;
-    this.paginaAuditoria = p;
-    this._carregarAuditoria();
   }
 
   // ── Chatbot ───────────────────────────────────────────────────────────
@@ -204,8 +182,8 @@ export class AnaliseComponent implements OnInit {
 
   // ── Helpers ───────────────────────────────────────────────────────────
 
-  formatarMoeda(v: number): string {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+  formatarMoeda(v: number | null | undefined): string {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v ?? 0);
   }
 
   formatarPorcentagem(v: number | null | undefined): string {
@@ -225,20 +203,15 @@ export class AnaliseComponent implements OnInit {
     } as Record<number, string>)[tipo] ?? '⚪';
   }
 
-  labelAcao(acao: string): string {
-    return ({
-      create: 'Criou', update: 'Editou', delete: 'Excluiu',
-      login: 'Login', logout: 'Logout', export: 'Exportou',
-    } as Record<string, string>)[acao] ?? acao;
-  }
 
   get maxBarraCaixa(): number {
     const d = this.fluxoCaixa?.projecao ?? [];
-    return Math.max(...d.map(m => Math.max(m.receitaProjetada, m.despesaProjetada)), 1);
+    return Math.max(...d.map(m => Math.max(Number(m.receitaProjetada), Number(m.despesaProjetada))), 1);
   }
 
   alturaBarraCaixa(val: number): string {
-    return Math.max((val / this.maxBarraCaixa) * 100, val > 0 ? 4 : 0).toFixed(1) + '%';
+    const n = Number(val) || 0;
+    return Math.max((n / this.maxBarraCaixa) * 100, n > 0 ? 4 : 0).toFixed(1) + '%';
   }
 
   // ── Helpers calendário ────────────────────────────────────────────────
@@ -255,7 +228,7 @@ export class AnaliseComponent implements OnInit {
     const { ano: a, mes: m } = this.dadosCalendario;
     const ms = String(m).padStart(2, '0');
     const ds = String(dia).padStart(2, '0');
-    return this.dadosCalendario.eventos.find(e => e.data === `${a}-${ms}-${ds}`);
+    return (this.dadosCalendario.eventos ?? []).find(e => e.data === `${a}-${ms}-${ds}`);
   }
 
   ehHoje(dia: number): boolean {
@@ -266,10 +239,4 @@ export class AnaliseComponent implements OnInit {
         && t.getDate()       === dia;
   }
 
-  get paginasAuditoria(): number[] {
-    if (!this.logAuditoria) return [];
-    const c = this.paginaAuditoria, t = this.logAuditoria.paginas, r: number[] = [];
-    for (let i = Math.max(1, c - 2); i <= Math.min(t, c + 2); i++) r.push(i);
-    return r;
-  }
 }
