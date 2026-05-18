@@ -9,3 +9,5 @@ python-multipart==0.0.20
 sqlalchemy==2.0.40
 psycopg2-binary==2.9.10
 resend>=2.4.0
+alembic==1.18.4
+apscheduler==3.10.4

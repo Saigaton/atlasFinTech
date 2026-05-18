@@ -1,11 +1,27 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.controllers import authController, categoriaController, contaBancariaController, contaPagarController, contaReceberController, dashboardController, empresaController, relatorioController, transacaoController
+from app.controllers import analiseController, authController, categoriaController, contaBancariaController, contaPagarController, contaReceberController, dashboardController, empresaController, relatorioController, transacaoController
 from app.configuracoes.database import Base, engine
 from app.exceptions.exceptionHandler import setupExceptionHandlers
 from app.entidades import *
+from app.utilitarios.seed import seed_tipo_categorias, seed_tipo_situacao_conta, seed_tipo_transacoes
+from app.utilitarios.scheduler import criar_scheduler
+from alembic.config import Config
+from alembic import command
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    scheduler = criar_scheduler()
+    scheduler.start()
+    yield
+    scheduler.shutdown(wait=False)
+
 
 app = FastAPI(
+    lifespan=lifespan,
     title="API Atlas FinTech",
     description="""
         ### API de Gestão Financeira Pessoal 💰
@@ -44,10 +60,22 @@ app.include_router(contaReceberController.router, prefix="/api/v1", tags=["Conta
 app.include_router(transacaoController.router, prefix="/api/v1", tags=["Transação"])
 app.include_router(dashboardController.router, prefix="/api/v1", tags=["Dashboard"])
 app.include_router(relatorioController.router, prefix="/api/v1", tags=["Relatório"])
+app.include_router(analiseController.router,   prefix="/api/v1", tags=["Análise"])
 setupExceptionHandlers(app)
 
-Base.metadata.drop_all(bind=engine)
+# Base.metadata.drop_all(bind=engine)
 Base.metadata.create_all(bind=engine)
+
+# TODO: remover em produção — migrations devem ser rodadas manualmente via "alembic upgrade head"
+_alembic_cfg = Config("alembic.ini")
+command.stamp(_alembic_cfg, "base")  # reseta o controle do alembic para re-executar os seeds
+command.upgrade(_alembic_cfg, "head")
+
+from app.configuracoes.database import SessionLocal as _SessionLocal
+with _SessionLocal() as _db:
+    seed_tipo_categorias(_db)
+    seed_tipo_transacoes(_db)
+    seed_tipo_situacao_conta(_db)
 
 
 @app.get("/", tags=["Root"])
