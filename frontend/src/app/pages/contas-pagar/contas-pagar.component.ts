@@ -2,20 +2,19 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ContaPagarService } from '../../core/services/conta-pagar.service';
-import { ContaPagar, RequisicaoPagamento, ResumoContasAPagar } from '../../core/models/conta-pagar.model';
-import { Conta } from '../../core/models/conta.model';
-import { Categoria, TipoCategoria } from '../../core/models/categoria.models';
-import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
+import { AtualizarContaPagarDto, ContaPagar, CriarContaPagarDto, RequisicaoPagamento, ResumoContasAPagar } from '../../core/models/conta-pagar.model';
 import { ShellComponent } from '../../shared/components/shell/shell.component';
 import { EmpresaService } from '../../core/services/empresa.service';
-import { ContaService } from '../../core/services/conta.service';
-import { CategoriaService } from '../../core/services/categoria.service';
 import { ToastService } from '../../core/services/toast.service';
+import { ContaService } from '../../core/services/conta.service';
+import { Conta } from '../../core/models/conta.model';
+import { CategoriaService } from '../../core/services/categoria.service';
+import { Categoria } from '../../core/models/categoria.models';
 
 @Component({
   selector: 'app-contas-pagar',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ShellComponent, LoadingSkeletonComponent],
+  imports: [CommonModule, ReactiveFormsModule, ShellComponent],
   templateUrl: './contas-pagar.component.html',
   styleUrls: ['./contas-pagar.component.scss', './contas-pagar.component.extra.scss']
 })
@@ -64,26 +63,28 @@ export class ContasPagarComponent implements OnInit {
 
     const id = this.empresaService.ativoId();
     if (!id) return;
+    this._carregar();
+    this._carregarSelects(id);
+  }
 
-    this.contaService.listarContas(id).subscribe({
+  private _carregarSelects(empresaId: number): void {
+    this.contaService.listarContas(empresaId).subscribe({
       next: r => { this.contas = r; },
     });
-    this.categoriaService.listarCategoria(id, TipoCategoria.Despesa).subscribe({
-      next: r => { this.categorias = r.conteudo; },
+    this.categoriaService.listarCategoria(empresaId).subscribe({
+      next: r => { this.categorias = r.conteudo ?? []; },
     });
-
-    this._carregar();
   }
 
   private criarFormularioContaPagar(): void {
     this.formContaPagar = this.formBuilder.group({
-      descricao:      ['', [Validators.required, Validators.maxLength(200)]],
-      valor:          [null as number | null, [Validators.required, Validators.min(0.01)]],
+      descricao:      ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+      valor:          [null as number | null, [Validators.required, Validators.min(0.01), Validators.max(99999999.99)]],
       dataVencimento: [new Date().toISOString().slice(0, 10), Validators.required],
       contaId:        [null as number | null],
       categoriaId:    [null as number | null],
-      notas:          [''],
-      totalParcelas:  [1, [Validators.min(1), Validators.max(360)]],
+      notas:          ['', Validators.maxLength(500)],
+      totalParcelas:  [1, [Validators.required, Validators.min(1), Validators.max(360)]],
     });
   }
 
@@ -91,7 +92,7 @@ export class ContasPagarComponent implements OnInit {
     this.formPagamento = this.formBuilder.group({
       contaId:       [null as number | null, Validators.required],
       dataPagamento: [new Date().toISOString().slice(0, 10), Validators.required],
-      valorPago:     [null as number | null],
+      valorPago:     [null as number | null, [Validators.min(0.01), Validators.max(99999999.99)]],
     });
   }
 
@@ -104,24 +105,31 @@ export class ContasPagarComponent implements OnInit {
 
     this.contaPagarService.listarContasPagar(id, {
       status:   this.filtroSituacao || undefined,
+      pesquisa: this.filtroPesquisa || undefined,
       page:     this.pagina,
       per_page: this.porPagina,
     }).subscribe({
       next: r => {
-        this.items      = r.conteudo;
-        this.total      = r.total;
+        this.items      = r.conteudo ?? [];
+        this.total      = r.total ?? 0;
         this.carregando = false;
       },
       error: () => { this.carregando = false; },
     });
 
     this.contaPagarService.obterResumoContaPagar(id).subscribe({
-      next: r => { this.resumo = r.conteudo; },
+      next: r => { this.resumo = r.conteudo ?? null; },
     });
   }
 
   definirFiltro(s: string): void {
     this.filtroSituacao = s;
+    this.pagina = 1;
+    this._carregar();
+  }
+
+  pesquisar(termo: string): void {
+    this.filtroPesquisa = termo;
     this.pagina = 1;
     this._carregar();
   }
@@ -136,7 +144,13 @@ export class ContasPagarComponent implements OnInit {
 
   abrirCriar(): void {
     this.editandoId = null;
-    this.formContaPagar.reset({ dataVencimento: new Date().toISOString().slice(0, 10), totalParcelas: 1 });
+    this.formContaPagar.reset({
+      dataVencimento: new Date().toISOString().slice(0, 10),
+      totalParcelas: 1,
+      notas: '',
+      contaId: null,
+      categoriaId: null,
+    });
     this.showModal = true;
   }
 
@@ -145,11 +159,10 @@ export class ContasPagarComponent implements OnInit {
     this.formContaPagar.patchValue({
       descricao:      item.descricao,
       valor:          item.valor,
-      dataVencimento: String(item.dataVencimento).slice(0, 10),
-      contaId:        null,
-      categoriaId:    null,
-      notas:          '',
-      totalParcelas:  1,
+      dataVencimento: String(item.data_vencimento).split('T')[0],
+      contaId:        item.conta?.id ?? null,
+      categoriaId:    item.categoria?.id ?? null,
+      notas:          item.notas ?? '',
     });
     this.showModal = true;
   }
@@ -164,18 +177,35 @@ export class ContasPagarComponent implements OnInit {
     const v = this.formContaPagar.value;
 
     if (this.editandoId) {
-      this.contaPagarService.atualizarContaPagar(id, this.editandoId, v as ContaPagar).subscribe({
+      const payload: AtualizarContaPagarDto = {
+        descricao:       v.descricao,
+        valor:           Number(v.valor),
+        data_vencimento: v.dataVencimento,
+        conta_id:        v.contaId ? Number(v.contaId) : null,
+        categoria_id:    v.categoriaId ? Number(v.categoriaId) : null,
+        notas:           v.notas || null,
+      };
+      this.contaPagarService.atualizarContaPagar(id, this.editandoId, payload).subscribe({
         next: ()          => { this.toast.success('Conta atualizada!'); this._concluir(); },
-        error: (err: any) => { this.toast.error(err.error?.message ?? 'Erro.'); this.enviando = false; },
+        error: (err: any) => { this.toast.error(err.error?.erro ?? 'Erro.'); this.enviando = false; },
       });
     } else {
-      this.contaPagarService.criarContaPagar(id, v as ContaPagar).subscribe({
+      const payload: CriarContaPagarDto = {
+        descricao:       v.descricao,
+        valor:           Number(v.valor),
+        data_vencimento: v.dataVencimento,
+        conta_id:        v.contaId ? Number(v.contaId) : null,
+        categoria_id:    v.categoriaId ? Number(v.categoriaId) : null,
+        notas:           v.notas || null,
+        total_parcelas:  Number(v.totalParcelas) || 1,
+      };
+      this.contaPagarService.criarContaPagar(id, payload).subscribe({
         next: r => {
           const n = r.conteudo?.length ?? 1;
           this.toast.success(n > 1 ? `${n} parcelas criadas!` : 'Conta a pagar criada!');
           this._concluir();
         },
-        error: (err: any) => { this.toast.error(err.error?.message ?? 'Erro.'); this.enviando = false; },
+        error: (err: any) => { this.toast.error(err.error?.erro ?? 'Erro.'); this.enviando = false; },
       });
     }
   }
@@ -253,9 +283,8 @@ export class ContasPagarComponent implements OnInit {
     return ({ 0: 'tag-pending', 1: 'tag-paid', 2: 'tag-overdue' } as Record<number, string>)[s] ?? '';
   }
 
-  diasAte(vencimento: Date | string): number {
-    const s = String(vencimento).slice(0, 10);
-    const d = new Date(s + 'T00:00:00');
+  diasAte(vencimento: string): number {
+    const d = new Date(vencimento.split('T')[0] + 'T00:00:00');
     return Math.ceil((d.getTime() - Date.now()) / 86_400_000);
   }
 
