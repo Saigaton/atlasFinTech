@@ -20,12 +20,12 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { RespostaApi } from '../models/resposta-api';
-import { Categoria, CriarCategoria, TipoCategoria } from '../models/categoria.models';
+import { AtualizarCategoria, Categoria, CriarCategoria, TipoCategoria } from '../models/categoria.models';
 
 /** Serviço de categorias — Atlas FinTech. */
 @Injectable({ providedIn: 'root' })
 export class CategoriaService {
-  private readonly API = `${environment.apiUrl}/api/v1`;
+  private readonly API = environment.apiUrl;
 
   constructor(private http: HttpClient) {}
 
@@ -42,8 +42,8 @@ export class CategoriaService {
     return this.http.post<RespostaApi<Categoria>>(this.base(empresaId), data);
   }
 
-  atualizarCategoria(empresaId: number, id: number, data: Categoria): Observable<RespostaApi<Categoria>> {
-    return this.http.patch<RespostaApi<Categoria>>(`${this.base(empresaId)}/${id}`, data);
+  atualizarCategoria(empresaId: number, id: number, data: AtualizarCategoria): Observable<RespostaApi<Categoria>> {
+    return this.http.put<RespostaApi<Categoria>>(`${this.base(empresaId)}/${id}`, data);
   }
 
   deletarCategoria(empresaId: number, id: number): Observable<RespostaApi<null>> {

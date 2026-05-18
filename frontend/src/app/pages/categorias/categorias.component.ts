@@ -5,7 +5,7 @@ import { EmpresaService } from '../../core/services/empresa.service';
 import { CategoriaService } from '../../core/services/categoria.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ShellComponent } from '../../shared/components/shell/shell.component';
-import { Categoria, TipoCategoria } from '../../core/models/categoria.models';
+import { AtualizarCategoria, Categoria, TipoCategoria } from '../../core/models/categoria.models';
 
 @Component({
   selector: 'app-categorias',
@@ -29,6 +29,9 @@ export class CategoriasComponent implements OnInit {
   exibirModal  = false;
   categorias:  Categoria[] = [];
 
+  modoEdicao       = false;
+  categoriaEditandoId: number | null = null;
+
   formulario!: FormGroup;
 
   constructor(
@@ -40,7 +43,7 @@ export class CategoriasComponent implements OnInit {
 
   ngOnInit(): void {
     this.formulario = this.formBuilder.group({
-      nome: ['', [Validators.required, Validators.minLength(1)]],
+      nome: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(80)]],
       tipo: [TipoCategoria.Despesa],
       cor:  ['#64748b'],
     });
@@ -49,32 +52,66 @@ export class CategoriasComponent implements OnInit {
     if (!id) { this.carregando = false; return; }
 
     this.categoriaService.listarCategoria(id).subscribe({
-      next:  res => { this.categorias = res.conteudo; this.carregando = false; },
+      next:  res => { this.categorias = res.conteudo ?? []; this.carregando = false; },
       error: ()  => { this.carregando = false; },
     });
   }
 
+  abrirCriar(): void {
+    this.modoEdicao = false;
+    this.categoriaEditandoId = null;
+    this.formulario.reset({ tipo: TipoCategoria.Despesa, cor: '#64748b' });
+    this.exibirModal = true;
+  }
+
+  abrirEditar(cat: Categoria): void {
+    this.modoEdicao = true;
+    this.categoriaEditandoId = cat.id;
+    this.formulario.reset({ nome: cat.nome, tipo: cat.tipo, cor: cat.cor ?? '#64748b' });
+    this.exibirModal = true;
+  }
+
+  fecharModal(): void {
+    this.exibirModal = false;
+    this.modoEdicao = false;
+    this.categoriaEditandoId = null;
+  }
+
   aoEnviar(): void {
     if (this.formulario.invalid) return;
-    const id = this.empresaService.ativoId();
-    if (!id) return;
+    const empresaId = this.empresaService.ativoId();
+    if (!empresaId) return;
     this.enviando = true;
     const v = this.formulario.value;
 
-    this.categoriaService.criarCategoria(id, {
-      nome: v.nome!,
-      tipo: v.tipo as TipoCategoria,
-      cor:  v.cor || null,
-    }).subscribe({
+    const operacao = this.modoEdicao && this.categoriaEditandoId != null
+      ? this.categoriaService.atualizarCategoria(empresaId, this.categoriaEditandoId, {
+          nome: v.nome!,
+          tipo: v.tipo as TipoCategoria,
+          cor:  v.cor || null,
+        } as AtualizarCategoria)
+      : this.categoriaService.criarCategoria(empresaId, {
+          nome: v.nome!,
+          tipo: v.tipo as TipoCategoria,
+          cor:  v.cor || null,
+        });
+
+    operacao.subscribe({
       next: res => {
-        this.toast.success('Categoria criada!');
-        this.categorias = [...this.categorias, res.conteudo];
-        this.enviando    = false;
-        this.exibirModal = false;
-        this.formulario.reset({ tipo: TipoCategoria.Despesa, cor: '#64748b' });
+        if (this.modoEdicao) {
+          this.categorias = this.categorias.map(c =>
+            c.id === this.categoriaEditandoId ? res.conteudo : c
+          );
+          this.toast.success('Categoria atualizada!');
+        } else {
+          this.categorias = [...this.categorias, res.conteudo];
+          this.toast.success('Categoria criada!');
+        }
+        this.enviando = false;
+        this.fecharModal();
       },
       error: err => {
-        this.toast.error(err.error?.mensagem ?? 'Erro ao criar.');
+        this.toast.error(err.error?.mensagem ?? (this.modoEdicao ? 'Erro ao atualizar.' : 'Erro ao criar.'));
         this.enviando = false;
       },
     });

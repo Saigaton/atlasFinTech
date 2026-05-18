@@ -5,7 +5,7 @@
       <h1 class="page-title">Categorias</h1>
       <p class="page-sub">Organize suas transações por categoria</p>
     </div>
-    <button class="btn-new" (click)="exibirModal = true">+ Nova categoria</button>
+    <button class="btn-new" (click)="abrirCriar()">+ Nova categoria</button>
   </div>
 
   @if (carregando) {
@@ -13,37 +13,53 @@
   } @else {
     <div class="cat-grid">
       @for (cat of categorias; track cat.id) {
-        <div class="cat-card">
+        <div class="cat-card" [style.border-left-color]="cat.cor || '#64748b'">
           <div class="cat-ico" [style.background]="(cat.cor || '#64748b') + '22'">
-            <span class="cat-letter" [style.color]="cat.cor || '#64748b'">{{ cat.nome[0].toUpperCase() }}</span>
+            <span class="cat-letter" [style.color]="cat.cor || '#64748b'">{{ (cat.nome.charAt(0) || '?').toUpperCase() }}</span>
           </div>
           <div class="cat-info">
             <span class="cat-name">{{ cat.nome }}</span>
-            <span class="cat-type">{{ rotuloPorTipo(cat.tipo) }}</span>
+            <div class="cat-meta">
+              <span class="tipo-badge" [class.tipo-receita]="cat.tipo === TipoCategoria.Receita"
+                                       [class.tipo-despesa]="cat.tipo === TipoCategoria.Despesa"
+                                       [class.tipo-ambos]="cat.tipo === TipoCategoria.Ambos">
+                {{ rotuloPorTipo(cat.tipo) }}
+              </span>
+              <span class="cor-chip" [style.background]="(cat.cor || '#64748b') + '22'" [style.color]="cat.cor || '#64748b'">
+                <span class="cor-dot" [style.background]="cat.cor || '#64748b'"></span>
+                {{ cat.cor || '#64748b' }}
+              </span>
+            </div>
           </div>
-          <div class="cat-dot" [style.background]="cat.cor || '#64748b'"></div>
-          <button class="cat-del" (click)="excluir(cat)" title="Excluir">
-            <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-          </button>
+          <div class="cat-actions">
+            <button class="cat-edit" (click)="abrirEditar(cat)" title="Editar">
+              <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+            </button>
+            <button class="cat-del" (click)="excluir(cat)" title="Excluir">
+              <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+            </button>
+          </div>
         </div>
       }
     </div>
   }
 
   @if (exibirModal) {
-    <div class="modal-backdrop" (click)="exibirModal = false">
+    <div class="modal-backdrop" (click)="fecharModal()">
       <div class="modal" (click)="$event.stopPropagation()">
 
         <div class="modal-header">
-          <h2>Nova categoria</h2>
-          <button class="modal-close" (click)="exibirModal = false">✕</button>
+          <h2>{{ modoEdicao ? 'Editar categoria' : 'Nova categoria' }}</h2>
+          <button class="modal-close" (click)="fecharModal()">✕</button>
         </div>
 
         <form [formGroup]="formulario" (ngSubmit)="aoEnviar()" class="modal-body">
 
           <div class="fld">
             <label class="fld-lbl">Nome *</label>
-            <input type="text" formControlName="nome" placeholder="Ex: Salário, Aluguel...">
+            <input type="text" formControlName="nome" maxlength="80" placeholder="Ex: Alimentação, Salário..."
+              [class.bad]="formulario.get('nome')?.invalid && formulario.get('nome')?.touched">
+            <span class="char-count">{{ (formulario.get('nome')?.value?.length || 0) }}/80</span>
           </div>
 
           <div class="fld">
@@ -68,9 +84,9 @@
           </div>
 
           <div class="modal-footer">
-            <button type="button" class="btn-cancel" (click)="exibirModal = false">Cancelar</button>
+            <button type="button" class="btn-cancel" (click)="fecharModal()">Cancelar</button>
             <button type="submit" class="btn-save" [disabled]="enviando">
-              @if (enviando) { <span class="spin"></span> } @else { Criar }
+              @if (enviando) { <span class="spin"></span> } @else { {{ modoEdicao ? 'Salvar' : 'Criar' }} }
             </button>
           </div>
 
