@@ -9,7 +9,7 @@
         </div>
         <h2>Bem-vindo ao Atlas FinTech!</h2>
         <p>Para começar, crie sua empresa e organize suas finanças em um só lugar.</p>
-        <a routerLink="/company/new" class="btn-primary-lg">
+        <a routerLink="/empresa/nova" class="btn-primary-lg">
           <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
           Criar minha empresa
         </a>
@@ -27,13 +27,13 @@
         <p class="page-sub">
           Visão geral das suas finanças ·
           @if (periodoSelecionado === 'mes') { Este mês }
-          @else if (periodoSelecionado === 'ultimos30') { Últimos 30 dias }
+          @else if (periodoSelecionado === 'ultimos30') { Mês anterior }
           @else { Ano {{ anoSelecionado }} }
         </p>
       </div>
       <div class="period-selector">
         <button class="period-btn" [class.active]="periodoSelecionado === 'mes'"       (click)="definirPeriodo('mes')">Este Mês</button>
-        <button class="period-btn" [class.active]="periodoSelecionado === 'ultimos30'" (click)="definirPeriodo('ultimos30')">Últimos 30 dias</button>
+        <button class="period-btn" [class.active]="periodoSelecionado === 'ultimos30'" (click)="definirPeriodo('ultimos30')">Mês Anterior</button>
         <button class="period-btn" [class.active]="periodoSelecionado === 'ano'"       (click)="definirPeriodo('ano')">Este Ano</button>
         <button class="period-refresh" (click)="recarregar()" title="Atualizar">
           <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
@@ -118,21 +118,21 @@
         <div class="ac-icon"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div>
         <div class="ac-body">
           <span class="ac-label">Contas Vencidas</span>
-          <a routerLink="/payables" class="ac-link">{{ contasVencidasCount }} — {{ formatarMoeda(contasVencidasTotal) }}</a>
+          <a routerLink="/contas-pagar" class="ac-link">{{ contasVencidasCount }} — {{ formatarMoeda(contasVencidasTotal) }}</a>
         </div>
       </div>
       <div class="alert-card yellow">
         <div class="ac-icon"><svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg></div>
         <div class="ac-body">
           <span class="ac-label">A Vencer (7 dias)</span>
-          <a routerLink="/payables" class="ac-link">{{ vencimentoBreveCount }} — {{ formatarMoeda(vencimentoBreveTotal) }}</a>
+          <a routerLink="/contas-pagar" class="ac-link">{{ vencimentoBreveCount }} — {{ formatarMoeda(vencimentoBreveTotal) }}</a>
         </div>
       </div>
       <div class="alert-card blue">
         <div class="ac-icon"><svg viewBox="0 0 24 24"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg></div>
         <div class="ac-body">
           <span class="ac-label">Recebimentos Atrasados</span>
-          <a routerLink="/receivables" class="ac-link">{{ recebimentosAtrasadosCount }} — {{ formatarMoeda(recebimentosAtrasadosTotal) }}</a>
+          <a routerLink="/contas-receber" class="ac-link">{{ recebimentosAtrasadosCount }} — {{ formatarMoeda(recebimentosAtrasadosTotal) }}</a>
         </div>
       </div>
     </div>
@@ -170,7 +170,7 @@
       <div class="cat-card">
         <div class="card-header">
           <span class="card-title">Receitas por categoria</span>
-          <a routerLink="/analytics" class="card-action">Ver análise completa →</a>
+          <a routerLink="/analise" class="card-action">Ver análise completa →</a>
         </div>
         <div class="cat-wrap">
           <div style="display:flex;align-items:center;justify-content:center">
@@ -212,7 +212,7 @@
       <div class="card budget-card">
         <div class="card-header">
           <span class="card-title">Metas orçamentárias</span>
-          <a routerLink="/categories" class="card-action">Configurar →</a>
+          <a routerLink="/categorias" class="card-action">Configurar →</a>
         </div>
         <div class="budget-list">
           @for (meta of metasOrcamentarias; track meta.id) {
@@ -253,7 +253,7 @@
       <div class="card account-dist-card">
         <div class="card-header">
           <span class="card-title">Distribuição por conta bancária</span>
-          <a routerLink="/accounts" class="card-action">Gerenciar →</a>
+          <a routerLink="/contas" class="card-action">Gerenciar →</a>
         </div>
         <div class="acc-dist-list">
           @for (acc of graficoPorConta; track acc.contaId) {
@@ -279,7 +279,7 @@
     <div class="card cat-expense-card">
       <div class="card-header">
         <span class="card-title">Despesas por categoria</span>
-        <a routerLink="/analytics" class="card-action">Ver análise completa →</a>
+        <a routerLink="/analise" class="card-action">Ver análise completa →</a>
       </div>
 
       @if (carregandoCategorias) {
@@ -296,7 +296,7 @@
         <div class="empty-state">
           <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
           <p>Sem despesas categorizadas no período</p>
-          <a routerLink="/categories" class="link-action">Configurar categorias</a>
+          <a routerLink="/categorias" class="link-action">Configurar categorias</a>
         </div>
       } @else {
         <div class="cat-chart-wrap">
@@ -329,7 +329,7 @@
                 </div>
               </div>
             }
-            <a routerLink="/reports" class="cat-report-link">
+            <a routerLink="/relatorios" class="cat-report-link">
               <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
               Exportar relatório de despesas
             </a>
@@ -368,10 +368,10 @@
           <div class="bar-chart">
             @for (m of dadosGrafico; track m.mes) {
               <div class="bar-group" [class.future]="!ehMesPassado(m.mes)"
-                   [title]="ROTULOS_MESES[m.mes-1] + ': Receita ' + formatarMoeda(m.receita) + ' / Despesa ' + formatarMoeda(m.despesa)">
+                   [title]="ROTULOS_MESES[m.mes-1] + ': Receita ' + formatarMoeda(+m.receitas) + ' / Despesa ' + formatarMoeda(+m.despesas)">
                 <div class="bars-wrap">
-                  <div class="bar bar-income"  [style.height]="alturaBarra(m.receita)"></div>
-                  <div class="bar bar-expense" [style.height]="alturaBarra(m.despesa)"></div>
+                  <div class="bar bar-income"  [style.height]="alturaBarra(+m.receitas)"></div>
+                  <div class="bar bar-expense" [style.height]="alturaBarra(+m.despesas)"></div>
                 </div>
                 <span class="bar-lbl">{{ ROTULOS_MESES[m.mes - 1] }}</span>
               </div>
@@ -384,7 +384,7 @@
       <div class="card">
         <div class="card-header">
           <span class="card-title">Transações recentes</span>
-          <a routerLink="/transactions" class="card-action">Ver todas →</a>
+          <a routerLink="/transacoes" class="card-action">Ver todas →</a>
         </div>
 
         @if (carregandoTransacoes) {
@@ -395,7 +395,7 @@
           <div class="empty-state">
             <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
             <p>Nenhuma transação ainda</p>
-            <a routerLink="/transactions" class="link-action">Registrar primeira transação</a>
+            <a routerLink="/transacoes" class="link-action">Registrar primeira transação</a>
           </div>
         } @else {
           <div class="tx-list">
@@ -437,7 +437,7 @@
       <div class="card">
         <div class="card-header">
           <span class="card-title">Contas bancárias</span>
-          <a routerLink="/accounts" class="card-action">Gerenciar →</a>
+          <a routerLink="/contas" class="card-action">Gerenciar →</a>
         </div>
         @if (carregandoContas) {
           <div class="skeleton-list">
@@ -446,7 +446,7 @@
         } @else if (contas.length === 0) {
           <div class="empty-state small">
             <p>Nenhuma conta cadastrada</p>
-            <a routerLink="/accounts" class="link-action">Adicionar conta</a>
+            <a routerLink="/contas" class="link-action">Adicionar conta</a>
           </div>
         } @else {
           <div class="acc-list">
@@ -470,19 +470,19 @@
       <div class="card">
         <div class="card-title" style="margin-bottom:14px">Acesso rápido</div>
         <div class="quick-actions">
-          <a routerLink="/transactions" class="qa-btn">
+          <a routerLink="/transacoes" class="qa-btn">
             <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
             Nova transação
           </a>
-          <a routerLink="/accounts" class="qa-btn">
+          <a routerLink="/contas" class="qa-btn">
             <svg viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14c1.1 0 2 .9 2 2v1h-9a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h9z"/></svg>
             Nova conta
           </a>
-          <a routerLink="/categories" class="qa-btn">
+          <a routerLink="/categorias" class="qa-btn">
             <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
             Categorias
           </a>
-          <a routerLink="/reports" class="qa-btn">
+          <a routerLink="/relatorios" class="qa-btn">
             <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
             Relatórios
           </a>

@@ -63,7 +63,7 @@
   &.future { opacity:.35; }
 }
 .bars-wrap {
-  flex:1; width:100%; display:flex; align-items:flex-end; gap:2px;
+  width:100%; display:flex; align-items:flex-end; gap:2px;
 }
 .bar {
   flex:1; border-radius:3px 3px 0 0; transition:height .4s ease, opacity .2s;

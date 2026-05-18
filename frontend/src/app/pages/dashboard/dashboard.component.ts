@@ -105,7 +105,7 @@ export class DashboardComponent implements OnInit {
     this._carregarKpis(id);
     this._carregarTransacoes(id);
     this._carregarContas(id);
-    this._carregarGrafico(id);
+    this._carregarGrafico(id); // aqui
     this._carregarAlertasCards(id);
     this._carregarCategorias(id);
     this._carregarPrevisaoMes(id);
@@ -125,7 +125,7 @@ export class DashboardComponent implements OnInit {
   private _carregarTransacoes(id: number): void {
     this.carregandoTransacoes = true;
     this.transacaoService.obterTransacoesRecente(id, 8).subscribe({
-      next: r => { this.transacoes = r.conteudo; this.carregandoTransacoes = false; },
+      next: r => { this.transacoes = r.conteudo ?? []; this.carregandoTransacoes = false; },
       error: ()  => { this.carregandoTransacoes = false; },
     });
   }
@@ -133,7 +133,7 @@ export class DashboardComponent implements OnInit {
   private _carregarContas(id: number): void {
     this.carregandoContas = true;
     this.contaService.listarContas(id).subscribe({
-      next: r => { this.contas = r; this.carregandoContas = false; },
+      next: r => { this.contas = r ?? []; this.carregandoContas = false; },
       error: ()  => { this.carregandoContas = false; },
     });
   }
@@ -141,7 +141,7 @@ export class DashboardComponent implements OnInit {
   private _carregarGrafico(id: number): void {
     this.carregandoGrafico = true;
     this.transacaoService.obterMesGrafico(id, this.anoSelecionado).subscribe({
-      next: r => { this.dadosGrafico = r.conteudo; this.carregandoGrafico = false; },
+      next: r => { this.dadosGrafico = r.conteudo ?? []; this.carregandoGrafico = false; },
       error: ()  => { this.carregandoGrafico = false; },
     });
   }
@@ -154,24 +154,27 @@ export class DashboardComponent implements OnInit {
 
     this.contaPagarService.listarContasPagar(id, { status: '2', per_page: 100 }).subscribe({
       next: r => {
-        this.contasVencidasCount = r.conteudo.length;
-        this.contasVencidasTotal = r.conteudo.reduce((s, i) => s + (i.valor || 0), 0);
+        const lista = r.conteudo ?? [];
+        this.contasVencidasCount = lista.length;
+        this.contasVencidasTotal = lista.reduce((s, i) => s + (Number(i.valor) || 0), 0);
       },
       error: () => {},
     });
 
     this.contaPagarService.listarContasPagar(id, { status: '0', date_to: fmtData(em7dias), per_page: 100 }).subscribe({
       next: r => {
-        this.vencimentoBreveCount = r.conteudo.length;
-        this.vencimentoBreveTotal = r.conteudo.reduce((s, i) => s + (i.valor || 0), 0);
+        const lista = r.conteudo ?? [];
+        this.vencimentoBreveCount = lista.length;
+        this.vencimentoBreveTotal = lista.reduce((s, i) => s + (Number(i.valor) || 0), 0);
       },
       error: () => {},
     });
 
     this.contaReceberService.listarContasReceber(id, { status: '2', per_page: 100 }).subscribe({
       next: r => {
-        this.recebimentosAtrasadosCount = r.conteudo.length;
-        this.recebimentosAtrasadosTotal = r.conteudo.reduce((s, i) => s + (i.valor || 0), 0);
+        const lista = r.conteudo ?? [];
+        this.recebimentosAtrasadosCount = lista.length;
+        this.recebimentosAtrasadosTotal = lista.reduce((s, i) => s + (Number(i.valor) || 0), 0);
       },
       error: () => {},
     });
@@ -335,11 +338,12 @@ export class DashboardComponent implements OnInit {
 
   get maxGrafico(): number {
     if (!this.dadosGrafico.length) return 1;
-    return Math.max(...this.dadosGrafico.map(m => Math.max(m.receita, m.despesa)), 1);
+    return Math.max(...this.dadosGrafico.map(m => Math.max(Number(m.receitas), Number(m.despesas))), 1);
   }
 
   alturaBarra(valor: number): string {
-    return Math.max((valor / this.maxGrafico) * 100, valor > 0 ? 4 : 0).toFixed(1) + '%';
+    const MAX_PX = 88;
+    return Math.max((valor / this.maxGrafico) * MAX_PX, valor > 0 ? 3 : 0).toFixed(0) + 'px';
   }
 
   // ── Distribuição por conta ────────────────────────────────────────────────
@@ -370,9 +374,10 @@ export class DashboardComponent implements OnInit {
 
   // ── Formatação ────────────────────────────────────────────────────────────
 
-  formatarMoeda(v: number | undefined | null): string {
-    if (v == null) return 'R$ —';
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+  formatarMoeda(v: number | string | undefined | null): string {
+    const n = Number(v);
+    if (v == null || isNaN(n)) return 'R$ —';
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(n);
   }
 
   formatarMoedaCurta(v: number): string {
@@ -389,7 +394,8 @@ export class DashboardComponent implements OnInit {
   ehVariacaoPositiva(v: number | null | undefined): boolean { return (v ?? 0) >= 0; }
 
   formatarDataTransacao(iso: string): string {
-    return new Date(iso + 'T00:00:00').toLocaleDateString('pt-BR',
+    const datePart = (iso ?? '').split('T')[0];
+    return new Date(datePart + 'T00:00:00').toLocaleDateString('pt-BR',
       { day: '2-digit', month: 'short' }).replace('.', '');
   }
 

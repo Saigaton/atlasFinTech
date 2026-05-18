@@ -12,9 +12,9 @@ export interface DashboardKPI {
 }
 
 export interface MesGrafico {
-  mes:     number;
-  receita: number;
-  despesa: number;
+  mes:      number;
+  receitas: number;
+  despesas: number;
 }
 
 export interface PontoCategoria {
