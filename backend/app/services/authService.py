@@ -1,11 +1,14 @@
 import bcrypt
+import secrets
 
-from app.configuracoes.security import criarRecuperarSenhaTokenPorUsuario, criarTokenAcesso, criarTokenVerificacaoEmail, decodificarTokenAtualizacao, decodificarTokenVerificacaoEmail
+import jwt as pyjwt
+
+from app.configuracoes.security import criarRecuperarSenhaTokenPorUsuario, criarTokenAcesso, criarTokenRefresh, criarTokenVerificacaoEmail, decodificarTokenAtualizacao, decodificarTokenVerificacaoEmail
 from app.configuracoes.config import settings
 from app.entidades.atualizacaoTokens import AtualizacaoTokens
 from app.entidades.tokenResetSenha import TokenResetSenha
-from app.schemas.auth import RespostaTokenUsuario, RespostaUsuario
-from app.schemas.respostaMensagem import RespostaMensagem
+from app.schemas.auth import RespostaLogin, RespostaTokenUsuario, RespostaUsuario
+from app.schemas.respostaApi import RespostaApi
 from app.exceptions.businessException import BusinessException
 from app.repositories.authRepository import AuthRepository
 from app.entidades.usuarios import Usuarios
@@ -83,7 +86,7 @@ class AuthService:
         except Exception:
             raise BusinessException("Erro ao processar recuperação de senha.", status_code=400)
 
-    def verificarEmail(self, token: str) -> RespostaMensagem:
+    def verificarEmail(self, token: str) -> RespostaApi:
         payload = decodificarTokenVerificacaoEmail(token)
         if not payload:
             raise BusinessException("Token de verificação inválido ou expirado.", status_code=400)
@@ -99,7 +102,7 @@ class AuthService:
         try:
             self.repository.marcarEmailVerificado(usuario_id)
             self.repository.session.commit()
-            return RespostaMensagem(mensagem="E-mail verificado com sucesso.")
+            return RespostaApi(conteudo=None, mensagem="E-mail verificado com sucesso.")
         except Exception:
             self.repository.session.rollback()
             raise BusinessException("Erro ao verificar e-mail.", status_code=400)
@@ -177,7 +180,7 @@ class AuthService:
             return None
         return criarTokenVerificacaoEmail(usuario.id)
     
-    def trocarSenha(self, usuarioId: int, senhaAtual: str, novaSenha: str) -> RespostaMensagem:
+    def trocarSenha(self, usuarioId: int, senhaAtual: str, novaSenha: str) -> RespostaApi:
         usuario = self.repository.buscarUsuarioPorId(usuarioId)
         if not self.validarSenha(senhaAtual, usuario.senha_hash):
             raise BusinessException("Senha atual incorreta.", status_code=400)
@@ -187,12 +190,58 @@ class AuthService:
             self.repository.atualizarSenhaUsuario(usuarioId, senhaHash)
             self.repository.revogarTodosTokensDoUsuario(usuarioId)
             self.repository.session.commit()
-            return RespostaMensagem(mensagem="Senha alterada com sucesso.")
+            return RespostaApi(conteudo=None, mensagem="Senha alterada com sucesso.")
         except Exception:
             self.repository.session.rollback()
             raise BusinessException("Erro ao alterar senha.", status_code=400)
 
-    def redefinirSenha(self, tokenStr: str, novaSenha: str) -> RespostaMensagem:
+    def atualizarPerfil(self, usuarioId: int, nome: str) -> RespostaUsuario:
+        try:
+            self.repository.atualizarNomeUsuario(usuarioId, nome)
+            self.repository.session.commit()
+            usuario = self.repository.buscarUsuarioPorId(usuarioId)
+            return RespostaUsuario.model_validate(usuario)
+        except Exception:
+            self.repository.session.rollback()
+            raise BusinessException("Erro ao atualizar perfil.", status_code=400)
+
+    def loginGoogle(self, idToken: str) -> RespostaLogin:
+        try:
+            payload = pyjwt.decode(idToken, options={"verify_signature": False})
+        except Exception:
+            raise BusinessException("Token do Google inválido.", status_code=401)
+
+        email = payload.get("email", "")
+        nome  = payload.get("name", email)
+
+        if not email:
+            raise BusinessException("Token do Google não contém e-mail.", status_code=400)
+
+        senhaHash = self.criarSenhaHash(secrets.token_hex(32))
+
+        try:
+            usuario = self.repository.buscarOuCriarUsuarioGoogle(email, nome, senhaHash)
+            tokenRefresh = criarTokenRefresh(str(usuario.id))
+            self.repository.salvarTokenAtualizacao(
+                AtualizacaoTokens(jti=tokenRefresh.jti, user_id=usuario.id, expira_em=tokenRefresh.expiracao)
+            )
+            self.repository.session.commit()
+            self.repository.session.refresh(usuario)
+        except Exception:
+            self.repository.session.rollback()
+            raise BusinessException("Erro ao processar login com Google.", status_code=400)
+
+        return RespostaLogin(
+            token=RespostaTokenUsuario(
+                access_token=criarTokenAcesso({"id": str(usuario.id), "nome": usuario.nome, "email": usuario.email}),
+                refresh_token=tokenRefresh.token,
+                token_type="bearer",
+                expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+            ),
+            usuario=RespostaUsuario.model_validate(usuario),
+        )
+
+    def redefinirSenha(self, tokenStr: str, novaSenha: str) -> RespostaApi:
         tokenReset = self.repository.buscarTokenResetPorToken(tokenStr)
         if not tokenReset or tokenReset.usado:
             raise BusinessException("Token inválido ou já utilizado.", status_code=400)
@@ -206,7 +255,7 @@ class AuthService:
             self.repository.invalidarRecuperarSenhaTokenPorUsuario(tokenReset.usuario)
             self.repository.revogarTodosTokensDoUsuario(tokenReset.usuario_id)
             self.repository.session.commit()
-            return RespostaMensagem(mensagem="Senha redefinida com sucesso.")
+            return RespostaApi(conteudo=None, mensagem="Senha redefinida com sucesso.")
         except Exception:
             self.repository.session.rollback()
             raise BusinessException("Erro ao redefinir senha.", status_code=400)

@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from app.entidades.atualizacaoTokens import AtualizacaoTokens
 from app.entidades.tokenResetSenha import TokenResetSenha
 from app.entidades.usuarios import Usuarios
@@ -55,3 +57,21 @@ class AuthRepository:
 
     def atualizarSenhaUsuario(self, usuarioId: int, senhaHash: str) -> None:
         self.session.query(Usuarios).filter(Usuarios.id == usuarioId).update({"senha_hash": senhaHash}, synchronize_session=False)
+
+    def atualizarNomeUsuario(self, usuarioId: int, nome: str) -> None:
+        self.session.query(Usuarios).filter(Usuarios.id == usuarioId).update({"nome": nome}, synchronize_session=False)
+
+    def buscarOuCriarUsuarioGoogle(self, email: str, nome: str, senhaHash: str) -> Usuarios:
+        usuario = self.buscarUsuarioPorEmail(email.lower())
+        if not usuario:
+            usuario = Usuarios(
+                nome=nome,
+                email=email.lower(),
+                senha_hash=senhaHash,
+                esta_ativo=True,
+                esta_verificado=True,
+                data_criacao=datetime.now(timezone.utc),
+            )
+            self.session.add(usuario)
+            self.session.flush()
+        return usuario

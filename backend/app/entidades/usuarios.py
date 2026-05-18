@@ -15,6 +15,6 @@ class Usuarios(Base):
     data_criacao: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
     conta: Mapped["Contas"] = relationship(back_populates="usuario")
-    empresas: Mapped[list["Empresas"]] = relationship(back_populates="usuario")
+    empresa: Mapped["Empresas"] = relationship(back_populates="usuario", uselist=False)
     tokens_reset: Mapped[list["TokenResetSenha"]] = relationship(back_populates="usuario")
     refresh_tokens: Mapped[list["AtualizacaoTokens"]] = relationship(back_populates="usuario")

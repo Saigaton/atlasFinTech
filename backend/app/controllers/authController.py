@@ -2,11 +2,11 @@ from fastapi import APIRouter, BackgroundTasks, Depends, Request, status
 from sqlalchemy.orm import Session
 from app.configuracoes.database import get_db
 
-from app.schemas.auth import RequisicaoEmail, RequisicaoRedefinirSenha, RequisicaoTokenAtualizacao, RequisicaoTrocarSenha, RequisicaoRegistroUsuario, RespostaLogin, RequisicaoLoginUsuario, RespostaTokenUsuario, RespostaUsuario
+from app.schemas.auth import RequisicaoAtualizarPerfil, RequisicaoEmail, RequisicaoLoginGoogle, RequisicaoRedefinirSenha, RequisicaoTokenAtualizacao, RequisicaoTrocarSenha, RequisicaoRegistroUsuario, RespostaAtualizarPerfil, RespostaLogin, RequisicaoLoginUsuario, RespostaTokenUsuario, RespostaUsuario
 from app.configuracoes.config import settings
 from app.configuracoes.security import criarTokenAcesso, criarTokenRefresh, obterUsuarioAtual, obterUsuarioAtualDB
 from app.repositories.authRepository import AuthRepository
-from app.schemas.respostaMensagem import RespostaMensagem
+from app.schemas.respostaApi import RespostaApi
 from app.services.authService import AuthService
 from app.utilitarios.emailUtilitario import corpoEmailParaRecuperarSenha, corpoEmailVerificacao, dispararEmailComTentativas
 
@@ -18,7 +18,7 @@ def obterUsuarioService(db: Session = Depends(get_db)):
 
 @router.post(
     "/auth/registro",
-    response_model=RespostaMensagem[None],
+    response_model=RespostaApi,
     status_code=status.HTTP_201_CREATED,
     summary="Registro do usuário",
     description=(
@@ -32,7 +32,7 @@ def obterUsuarioService(db: Session = Depends(get_db)):
 )
 async def registro(body: RequisicaoRegistroUsuario, service: AuthService = Depends(obterUsuarioService)):
     service.criarUsuario(body.model_dump())
-    return RespostaMensagem(mensagem="Usuário criado com sucesso.")
+    return RespostaApi(conteudo=None, mensagem="Usuário criado com sucesso.")
 
 @router.post(
     "/auth/login",
@@ -64,8 +64,8 @@ async def login(body: RequisicaoLoginUsuario, service: AuthService = Depends(obt
         usuario=usuario
     )
 
-@router.get("/auth/verificar-email",     
-    response_model=RespostaMensagem[None],    
+@router.get("/auth/verificar-email",
+    response_model=RespostaApi,
     status_code=200
 )
 async def verificarEmail(token: str, service: AuthService = Depends(obterUsuarioService)):
@@ -113,7 +113,7 @@ async def tokenAtualizacao(body: RequisicaoTokenAtualizacao, service: AuthServic
 
 @router.post(
     "/auth/reenviar-verificacao-email",
-    response_model=RespostaMensagem[None],
+    response_model=RespostaApi,
     status_code=status.HTTP_200_OK,
     summary="Reenviar e-mail de verificação",
     description="Reenvia o link de verificação de e-mail. Retorna sempre a mesma mensagem genérica por segurança.",
@@ -126,11 +126,11 @@ async def reenviarVerificacaoEmail(request: Request, backgroundTasks: Background
     if token:
         linkVerificacao = f"{str(settings.FRONTEND_URL)}verificar-email?token={token}"
         backgroundTasks.add_task(dispararEmailComTentativas, body.email, corpoEmailVerificacao(linkVerificacao), "Verificar E-mail")
-    return RespostaMensagem(mensagem="Se o e-mail existir e não estiver verificado, um novo link será enviado.")
+    return RespostaApi(conteudo=None, mensagem="Se o e-mail existir e não estiver verificado, um novo link será enviado.")
 
 @router.post(
     "/auth/esqueceu-senha",
-    response_model=RespostaMensagem[None],
+    response_model=RespostaApi,
     status_code=status.HTTP_200_OK,
     summary="Solicitar recuperação de senha",
     description="Envia um link de redefinição de senha por e-mail. Retorna sempre a mesma mensagem genérica por segurança.",
@@ -143,11 +143,11 @@ async def esqueceuSenha(request: Request, backgroundTasks: BackgroundTasks, body
     if token:
         linkRecuperacao = f"{str(settings.FRONTEND_URL)}redefinir-senha?token={token}"
         backgroundTasks.add_task(dispararEmailComTentativas, body.email, corpoEmailParaRecuperarSenha(linkRecuperacao), "Recuperar Senha")
-    return RespostaMensagem(mensagem="Se o e-mail existir, um link de recuperação será enviado.")
+    return RespostaApi(conteudo=None, mensagem="Se o e-mail existir, um link de recuperação será enviado.")
 
 @router.post(
     "/auth/redefinir-senha",
-    response_model=RespostaMensagem[None],
+    response_model=RespostaApi,
     status_code=status.HTTP_200_OK,
     summary="Redefinir senha",
     description="Redefine a senha usando o token de reset recebido por e-mail. O token é invalidado após o uso.",
@@ -160,9 +160,40 @@ async def redefinirSenha(body: RequisicaoRedefinirSenha, service: AuthService = 
     return service.redefinirSenha(body.token, body.novaSenha)
 
 
+@router.put(
+    "/auth/me",
+    response_model=RespostaAtualizarPerfil,
+    status_code=status.HTTP_200_OK,
+    summary="Atualizar perfil",
+    description="Atualiza o nome do usuário autenticado.",
+    responses={
+        200: {"description": "Perfil atualizado com sucesso"},
+        401: {"description": "Token inválido ou expirado"},
+    },
+)
+async def atualizarPerfil(body: RequisicaoAtualizarPerfil, service: AuthService = Depends(obterUsuarioService), usuarioAtual: dict = Depends(obterUsuarioAtual)):
+    usuario = service.atualizarPerfil(int(usuarioAtual["sub"]), body.nome)
+    return RespostaAtualizarPerfil(data=usuario)
+
+
+@router.post(
+    "/auth/google",
+    response_model=RespostaLogin,
+    status_code=status.HTTP_200_OK,
+    summary="Login com Google",
+    description="Autentica o usuário usando um ID Token do Google OAuth 2.0. Cria a conta automaticamente se não existir.",
+    responses={
+        200: {"description": "Login realizado com sucesso"},
+        401: {"description": "Token do Google inválido"},
+    },
+)
+async def loginGoogle(body: RequisicaoLoginGoogle, service: AuthService = Depends(obterUsuarioService)):
+    return service.loginGoogle(body.id_token)
+
+
 @router.post(
     "/auth/me/trocar-senha",
-    response_model=RespostaMensagem[None],
+    response_model=RespostaApi,
     status_code=status.HTTP_200_OK,
     summary="Trocar senha",
     description="Troca a senha do usuário autenticado, exigindo a senha atual.",

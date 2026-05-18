@@ -25,9 +25,9 @@ class RespostaUsuario(BaseModel):
     id: int
     nome: str
     email: EmailStr
-    estaAtivo: bool = Field(alias="esta_ativo")
-    estaVerificado: bool = Field(alias="esta_verificado")
-    dataCriacao:  datetime = Field(alias="data_criacao")
+    estaAtivo: bool = Field(validation_alias="esta_ativo")
+    estaVerificado: bool = Field(validation_alias="esta_verificado")
+    dataCriacao:  datetime = Field(validation_alias="data_criacao")
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -66,3 +66,15 @@ class RequisicaoTrocarSenha(BaseModel):
         if self.novaSenha != self.confirmarSenha:
             raise ValueError("As senhas não coincidem.")
         return self
+
+
+class RequisicaoAtualizarPerfil(BaseModel):
+    nome: str = Field(..., min_length=2, max_length=100)
+
+
+class RespostaAtualizarPerfil(BaseModel):
+    data: RespostaUsuario
+
+
+class RequisicaoLoginGoogle(BaseModel):
+    id_token: str
