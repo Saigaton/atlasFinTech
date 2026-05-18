@@ -18,7 +18,7 @@ export interface AnaliseFinanceira {
   crescimentoDespesa:  number | null;
   lucroLiquido:        number;
   crescimentoLucro:    number | null;
-  margemLucro:         number;
+  margemLucro:         number | null;
   totalTransacoes:     number;
   ticketMedioReceita:  number;
   transacoesReceita:   number;
@@ -83,7 +83,7 @@ export interface DadosCalendario {
   rotulo:            string;
   primeiroDiaSemana: number;
   diasNoMes:         number;
-  totalPagar:        number;
-  totalReceber:      number;
-  eventos:           EventoCalendario[];
+  totalPagar:        number | null;
+  totalReceber:      number | null;
+  eventos:           EventoCalendario[] | null;
 }

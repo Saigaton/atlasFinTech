@@ -15,15 +15,38 @@ export enum SituacaoTransacao {
 
 export interface Transacao {
   id: number;
-  conta: Conta;
+  conta?: Conta;
   situacao: SituacaoTransacao;
   tipo: TipoTransacao;
   descricao: string;
   valor: number;
   data: string;
   recorrencia: string;
-  notas: string;
+  notas?: string;
   categoria?: Categoria;
+}
+
+export interface CriarTransacaoDto {
+  descricao:     string;
+  valor:         number;
+  data:          string;
+  conta_id:      number;
+  categoria_id?: number | null;
+  tipo:          TipoTransacao;
+  situacao:      SituacaoTransacao;
+  notas?:        string | null;
+  recorrencia:   string;
+}
+
+export interface AtualizarTransacaoDto {
+  descricao?:    string;
+  valor?:        number;
+  data?:         string;
+  conta_id?:     number;
+  categoria_id?: number;
+  tipo?:         TipoTransacao;
+  situacao?:     SituacaoTransacao;
+  notas?:        string | null;
 }
 
 export interface FiltroTransacao {

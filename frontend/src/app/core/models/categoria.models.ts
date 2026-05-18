@@ -6,17 +6,21 @@ export enum TipoCategoria {
 
 export interface Categoria {
   id:          number;
-  empresaId:   number;
+  empresa_id:  number;
   nome:        string;
   tipo:        TipoCategoria;
   cor:         string | null;
-  icone:       string | null;
   estaAtivado: boolean;
-  dataCriacao: string;
 }
 
 export interface CriarCategoria {
   nome: string;
   tipo: TipoCategoria;
   cor?: string | null;
+}
+
+export interface AtualizarCategoria {
+  nome?: string;
+  tipo?: TipoCategoria;
+  cor?:  string | null;
 }
