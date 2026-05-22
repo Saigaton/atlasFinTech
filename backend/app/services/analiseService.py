@@ -104,6 +104,14 @@ class AnaliseService:
     def alertas(self, empresa_id: int, usuario_id: int) -> list[AlertaResposta]:
         resultado: list[AlertaResposta] = []
 
+        for cb in self.repository.contasBancariasNegativas(empresa_id, usuario_id):
+            resultado.append(AlertaResposta(
+                tipo=0,
+                titulo="Saldo negativo",
+                mensagem=f"{cb.nome} — saldo atual: R$ {cb.saldo_atual:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
+                rotaAcao="/contas",
+            ))
+
         for cp in self.repository.contasPagarVencidas(empresa_id, usuario_id):
             resultado.append(AlertaResposta(
                 tipo=0,
@@ -117,6 +125,38 @@ class AnaliseService:
                 tipo=0,
                 titulo="Conta a receber vencida",
                 mensagem=f"{cr.descricao} — venceu em {cr.data_vencimento.strftime('%d/%m/%Y')}",
+                rotaAcao="/contas-receber",
+            ))
+
+        for t in self.repository.transacoesVencidas(empresa_id, usuario_id):
+            if int(t.transacao_id) == TipoTransacaoEnum.DESPESA:
+                resultado.append(AlertaResposta(
+                    tipo=0,
+                    titulo="Transação de despesa inadimplente",
+                    mensagem=f"{t.descricao} — venceu em {t.data.strftime('%d/%m/%Y')}",
+                    rotaAcao="/transacoes",
+                ))
+            elif int(t.transacao_id) == TipoTransacaoEnum.RECEITA:
+                resultado.append(AlertaResposta(
+                    tipo=0,
+                    titulo="Transação de receita inadimplente",
+                    mensagem=f"{t.descricao} — venceu em {t.data.strftime('%d/%m/%Y')}",
+                    rotaAcao="/transacoes",
+                ))
+
+        for cp in self.repository.contasPagarProximasVencer(empresa_id, usuario_id):
+            resultado.append(AlertaResposta(
+                tipo=1,
+                titulo="Conta a pagar vence hoje",
+                mensagem=f"{cp.descricao} — vence em {cp.data_vencimento.strftime('%d/%m/%Y')}",
+                rotaAcao="/contas-pagar",
+            ))
+
+        for cr in self.repository.contasReceberProximasVencer(empresa_id, usuario_id):
+            resultado.append(AlertaResposta(
+                tipo=1,
+                titulo="Conta a receber vence hoje",
+                mensagem=f"{cr.descricao} — vence em {cr.data_vencimento.strftime('%d/%m/%Y')}",
                 rotaAcao="/contas-receber",
             ))
 

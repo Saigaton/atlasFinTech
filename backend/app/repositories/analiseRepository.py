@@ -1,9 +1,10 @@
 import calendar
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from sqlalchemy import extract, func
 from sqlalchemy.orm import joinedload
 
+from app.entidades.contas import Contas
 from app.entidades.contasPagar import ContasPagar
 from app.entidades.contasReceber import ContasReceber
 from app.entidades.empresas import Empresas
@@ -77,6 +78,18 @@ class AnaliseRepository:
             .all()
         )
 
+    def contasBancariasNegativas(self, empresa_id: int, usuario_id: int) -> list[Contas]:
+        return (
+            self.session.query(Contas)
+            .join(Empresas, Contas.empresa_id == Empresas.id)
+            .filter(
+                Contas.empresa_id == empresa_id,
+                Empresas.usuario_id == usuario_id,
+                Contas.saldo_atual < 0,
+            )
+            .all()
+        )
+
     def contasReceberVencidas(self, empresa_id: int, usuario_id: int) -> list[ContasReceber]:
         agora = datetime.now(timezone.utc)
         return (
@@ -87,6 +100,52 @@ class AnaliseRepository:
                 Empresas.usuario_id == usuario_id,
                 ContasReceber.situacao_id == TipoSituacaoContaEnum.PENDENTE,
                 ContasReceber.data_vencimento < agora,
+            )
+            .all()
+        )
+
+    def transacoesVencidas(self, empresa_id: int, usuario_id: int) -> list[Transacoes]:
+        agora = datetime.now(timezone.utc)
+        return (
+            self.session.query(Transacoes)
+            .join(Empresas, Transacoes.empresa_id == Empresas.id)
+            .filter(
+                Transacoes.empresa_id == empresa_id,
+                Empresas.usuario_id == usuario_id,
+                Transacoes.situacao == 0,
+                Transacoes.data < agora,
+            )
+            .all()
+        )
+
+    def contasPagarProximasVencer(self, empresa_id: int, usuario_id: int) -> list[ContasPagar]:
+        hoje = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        amanha = hoje + timedelta(days=1)
+        return (
+            self.session.query(ContasPagar)
+            .join(Empresas, ContasPagar.empresa_id == Empresas.id)
+            .filter(
+                ContasPagar.empresa_id == empresa_id,
+                Empresas.usuario_id == usuario_id,
+                ContasPagar.situacao_id == TipoSituacaoContaEnum.PENDENTE,
+                ContasPagar.data_vencimento >= hoje,
+                ContasPagar.data_vencimento < amanha,
+            )
+            .all()
+        )
+
+    def contasReceberProximasVencer(self, empresa_id: int, usuario_id: int) -> list[ContasReceber]:
+        hoje = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        amanha = hoje + timedelta(days=1)
+        return (
+            self.session.query(ContasReceber)
+            .join(Empresas, ContasReceber.empresa_id == Empresas.id)
+            .filter(
+                ContasReceber.empresa_id == empresa_id,
+                Empresas.usuario_id == usuario_id,
+                ContasReceber.situacao_id == TipoSituacaoContaEnum.PENDENTE,
+                ContasReceber.data_vencimento >= hoje,
+                ContasReceber.data_vencimento < amanha,
             )
             .all()
         )
