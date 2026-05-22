@@ -2,6 +2,8 @@ import bcrypt
 import secrets
 
 import jwt as pyjwt
+from google.oauth2 import id_token as google_id_token
+from google.auth.transport import requests as google_requests
 
 from app.configuracoes.security import criarRecuperarSenhaTokenPorUsuario, criarTokenAcesso, criarTokenRefresh, criarTokenVerificacaoEmail, decodificarTokenAtualizacao, decodificarTokenVerificacaoEmail
 from app.configuracoes.config import settings
@@ -51,10 +53,18 @@ class AuthService:
     def loginUsuario(self, dados: dict) -> RespostaUsuario:
         usuario = self.repository.buscarUsuarioPorEmail(dados["email"])
 
-        # Verificação de e-mail existente
-        if not usuario or not self.validarSenha(dados["senha"], usuario.senha_hash):
+        if not usuario:
             raise BusinessException("E-mail ou senha incorretos", status_code=401)
-                
+
+        if getattr(usuario, "criado_via_google", False):
+            raise BusinessException(
+                "Esta conta foi criada com o Google. Use o botão 'Continuar com Google' para entrar.",
+                status_code=401,
+            )
+
+        if not self.validarSenha(dados["senha"], usuario.senha_hash):
+            raise BusinessException("E-mail ou senha incorretos", status_code=401)
+
         return RespostaUsuario.model_validate(usuario)
 
     def validarSenha(self, senhaPura: str, senhaHash: str) -> bool:
@@ -180,6 +190,23 @@ class AuthService:
             return None
         return criarTokenVerificacaoEmail(usuario.id)
     
+    def definirSenha(self, usuarioId: int, novaSenha: str) -> RespostaApi:
+        usuario = self.repository.buscarUsuarioPorId(usuarioId)
+        if not usuario:
+            raise BusinessException("Usuário não encontrado.", status_code=404)
+        if not getattr(usuario, "criado_via_google", False):
+            raise BusinessException("Esta opção é exclusiva para contas criadas via Google sem senha cadastrada.", status_code=400)
+        senhaHash = self.criarSenhaHash(novaSenha)
+        try:
+            self.repository.atualizarSenhaUsuario(usuarioId, senhaHash)
+            self.repository.marcarSenhaDefinida(usuarioId)
+            self.repository.revogarTodosTokensDoUsuario(usuarioId)
+            self.repository.session.commit()
+            return RespostaApi(conteudo=None, mensagem="Senha definida com sucesso.")
+        except Exception:
+            self.repository.session.rollback()
+            raise BusinessException("Erro ao definir senha.", status_code=400)
+
     def trocarSenha(self, usuarioId: int, senhaAtual: str, novaSenha: str) -> RespostaApi:
         usuario = self.repository.buscarUsuarioPorId(usuarioId)
         if not self.validarSenha(senhaAtual, usuario.senha_hash):
@@ -207,12 +234,20 @@ class AuthService:
 
     def loginGoogle(self, idToken: str) -> RespostaLogin:
         try:
-            payload = pyjwt.decode(idToken, options={"verify_signature": False})
+            if settings.GOOGLE_CLIENT_ID:
+                payload = google_id_token.verify_oauth2_token(
+                    idToken,
+                    google_requests.Request(),
+                    settings.GOOGLE_CLIENT_ID,
+                )
+            else:
+                payload = pyjwt.decode(idToken, options={"verify_signature": False})
         except Exception:
             raise BusinessException("Token do Google inválido.", status_code=401)
 
-        email = payload.get("email", "")
-        nome  = payload.get("name", email)
+        email     = payload.get("email", "")
+        nome      = payload.get("name", email)
+        google_id = payload.get("sub", "")
 
         if not email:
             raise BusinessException("Token do Google não contém e-mail.", status_code=400)
@@ -220,7 +255,7 @@ class AuthService:
         senhaHash = self.criarSenhaHash(secrets.token_hex(32))
 
         try:
-            usuario = self.repository.buscarOuCriarUsuarioGoogle(email, nome, senhaHash)
+            usuario = self.repository.buscarOuCriarUsuarioGoogle(email, nome, senhaHash, google_id)
             tokenRefresh = criarTokenRefresh(str(usuario.id))
             self.repository.salvarTokenAtualizacao(
                 AtualizacaoTokens(jti=tokenRefresh.jti, user_id=usuario.id, expira_em=tokenRefresh.expiracao)

@@ -2,7 +2,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, Request, status
 from sqlalchemy.orm import Session
 from app.configuracoes.database import get_db
 
-from app.schemas.auth import RequisicaoAtualizarPerfil, RequisicaoEmail, RequisicaoLoginGoogle, RequisicaoRedefinirSenha, RequisicaoTokenAtualizacao, RequisicaoTrocarSenha, RequisicaoRegistroUsuario, RespostaAtualizarPerfil, RespostaLogin, RequisicaoLoginUsuario, RespostaTokenUsuario, RespostaUsuario
+from app.schemas.auth import RequisicaoAtualizarPerfil, RequisicaoDefinirSenha, RequisicaoEmail, RequisicaoLoginGoogle, RequisicaoRedefinirSenha, RequisicaoTokenAtualizacao, RequisicaoTrocarSenha, RequisicaoRegistroUsuario, RespostaAtualizarPerfil, RespostaLogin, RequisicaoLoginUsuario, RespostaTokenUsuario, RespostaUsuario
 from app.configuracoes.config import settings
 from app.configuracoes.security import criarTokenAcesso, criarTokenRefresh, obterUsuarioAtual, obterUsuarioAtualDB
 from app.repositories.authRepository import AuthRepository
@@ -189,6 +189,17 @@ async def atualizarPerfil(body: RequisicaoAtualizarPerfil, service: AuthService 
 )
 async def loginGoogle(body: RequisicaoLoginGoogle, service: AuthService = Depends(obterUsuarioService)):
     return service.loginGoogle(body.id_token)
+
+
+@router.post(
+    "/auth/me/definir-senha",
+    response_model=RespostaApi,
+    status_code=status.HTTP_200_OK,
+    summary="Definir senha (usuário Google)",
+    description="Define uma senha para usuários criados via Google que ainda não possuem senha própria.",
+)
+async def definirSenha(body: RequisicaoDefinirSenha, service: AuthService = Depends(obterUsuarioService), usuarioAtual: dict = Depends(obterUsuarioAtual)):
+    return service.definirSenha(int(usuarioAtual["sub"]), body.novaSenha)
 
 
 @router.post(

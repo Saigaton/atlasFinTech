@@ -13,6 +13,8 @@ class Usuarios(Base):
     esta_ativo: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     esta_verificado: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     data_criacao: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    google_id: Mapped[str | None] = mapped_column(String(255), nullable=True, default=None)
+    criado_via_google: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     conta: Mapped["Contas"] = relationship(back_populates="usuario")
     empresa: Mapped["Empresas"] = relationship(back_populates="usuario", uselist=False)

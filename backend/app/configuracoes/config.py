@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     RESEND_API_KEY: str
     FRONTEND_URL: str
     MAIL_FROM: str
+    GOOGLE_CLIENT_ID: str = ""
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 

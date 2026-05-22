@@ -58,10 +58,13 @@ class AuthRepository:
     def atualizarSenhaUsuario(self, usuarioId: int, senhaHash: str) -> None:
         self.session.query(Usuarios).filter(Usuarios.id == usuarioId).update({"senha_hash": senhaHash}, synchronize_session=False)
 
+    def marcarSenhaDefinida(self, usuarioId: int) -> None:
+        self.session.query(Usuarios).filter(Usuarios.id == usuarioId).update({"criado_via_google": False}, synchronize_session=False)
+
     def atualizarNomeUsuario(self, usuarioId: int, nome: str) -> None:
         self.session.query(Usuarios).filter(Usuarios.id == usuarioId).update({"nome": nome}, synchronize_session=False)
 
-    def buscarOuCriarUsuarioGoogle(self, email: str, nome: str, senhaHash: str) -> Usuarios:
+    def buscarOuCriarUsuarioGoogle(self, email: str, nome: str, senhaHash: str, googleId: str) -> Usuarios:
         usuario = self.buscarUsuarioPorEmail(email.lower())
         if not usuario:
             usuario = Usuarios(
@@ -70,8 +73,15 @@ class AuthRepository:
                 senha_hash=senhaHash,
                 esta_ativo=True,
                 esta_verificado=True,
+                criado_via_google=True,
                 data_criacao=datetime.now(timezone.utc),
+                google_id=googleId,
             )
             self.session.add(usuario)
+            self.session.flush()
+        elif not usuario.google_id:
+            usuario.google_id = googleId
+            if not usuario.esta_verificado:
+                usuario.esta_verificado = True
             self.session.flush()
         return usuario

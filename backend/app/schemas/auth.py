@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel, EmailStr, ConfigDict, Field, model_validator
 from datetime import datetime
 
@@ -27,9 +28,11 @@ class RespostaUsuario(BaseModel):
     email: EmailStr
     estaAtivo: bool = Field(validation_alias="esta_ativo")
     estaVerificado: bool = Field(validation_alias="esta_verificado")
-    dataCriacao:  datetime = Field(validation_alias="data_criacao")
+    dataCriacao: datetime = Field(validation_alias="data_criacao")
+    googleId: Optional[str] = Field(None, validation_alias="google_id")
+    criadoViaGoogle: bool = Field(False, validation_alias="criado_via_google")
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 class RespostaLogin(BaseModel):
     token: RespostaTokenUsuario
@@ -63,6 +66,17 @@ class RequisicaoTrocarSenha(BaseModel):
 
     @model_validator(mode="after")
     def senhasConferem(self) -> "RequisicaoTrocarSenha":
+        if self.novaSenha != self.confirmarSenha:
+            raise ValueError("As senhas não coincidem.")
+        return self
+
+
+class RequisicaoDefinirSenha(BaseModel):
+    novaSenha: str = Field(..., min_length=8, max_length=128)
+    confirmarSenha: str
+
+    @model_validator(mode="after")
+    def senhasConferem(self) -> "RequisicaoDefinirSenha":
         if self.novaSenha != self.confirmarSenha:
             raise ValueError("As senhas não coincidem.")
         return self
