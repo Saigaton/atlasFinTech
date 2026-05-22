@@ -110,9 +110,10 @@ export class ConfiguracoesComponent implements OnInit {
     this.definindoSenha = true;
     this.auth.definirSenha(this.formDefinirSenha.value).subscribe({
       next: () => {
-        this.toast.success('Senha definida com sucesso! Agora você pode entrar com e-mail e senha.');
+        this.toast.success('Senha definida! Agora você pode entrar com e-mail e senha.');
         this.formDefinirSenha.reset();
         this.definindoSenha = false;
+        this._carregarPerfil();
       },
       error: (err: any) => {
         this.toast.error(err.error?.erro ?? 'Erro ao definir senha.');
