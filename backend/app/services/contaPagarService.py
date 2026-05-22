@@ -2,6 +2,7 @@ import calendar
 from datetime import datetime, timezone
 from typing import Optional
 
+from app.entidades.contas import Contas
 from app.entidades.contasPagar import ContasPagar
 from app.entidades.transacoes import Transacoes
 from app.enums.situacaoTransacaoEnum import SituacaoTransacaoEnum
@@ -45,6 +46,24 @@ class ContaPagarService:
         try:
             for p in parcelas:
                 self.repository.session.add(p)
+            self.repository.session.flush()
+
+            for p in parcelas:
+                transacao = Transacoes(
+                    descricao=    p.descricao,
+                    valor=        p.valor,
+                    data=         p.data_vencimento,
+                    conta_id=     p.conta_id,
+                    categoria_id= p.categoria_id,
+                    transacao_id= TipoTransacaoEnum.DESPESA,
+                    situacao=     SituacaoTransacaoEnum.PENDENTE,
+                    recorrencia=  "mensal" if n > 1 else "nenhuma",
+                    empresa_id=   empresa_id,
+                )
+                self.repository.session.add(transacao)
+                self.repository.session.flush()
+                p.transacao_id = transacao.id
+
             self.repository.session.commit()
             for p in parcelas:
                 self.repository.session.refresh(p)
@@ -94,6 +113,16 @@ class ContaPagarService:
             else:
                 conta.situacao_id = TipoSituacaoContaEnum.PENDENTE
 
+            if conta.transacao_id:
+                transacao = self.repository.session.get(Transacoes, conta.transacao_id)
+                if transacao:
+                    if "descricao"       in campos: transacao.descricao    = conta.descricao
+                    if "valor"           in campos: transacao.valor         = conta.valor
+                    if "data_vencimento" in campos: transacao.data          = conta.data_vencimento
+                    if "conta_id"        in campos: transacao.conta_id      = conta.conta_id
+                    if "categoria_id"    in campos: transacao.categoria_id  = conta.categoria_id
+                    if "notas"           in campos: transacao.notas         = conta.notas
+
             self.repository.session.commit()
             self.repository.session.refresh(conta)
             return ContaPagarResposta.model_validate(conta)
@@ -116,19 +145,34 @@ class ContaPagarService:
                 "data_pagamento": dados.data_pagamento,
             })
 
+            valor_pago  = dados.valor_pago or conta.valor
             recorrencia = "mensal" if (conta.total_parcelas or 1) > 1 else "nenhuma"
-            transacao = Transacoes(
-                descricao=    conta.descricao,
-                valor=        dados.valor_pago or conta.valor,
-                data=         dados.data_pagamento,
-                conta_id=     dados.conta_id,
-                categoria_id= conta.categoria_id,
-                transacao_id= TipoTransacaoEnum.DESPESA,
-                situacao=     SituacaoTransacaoEnum.CONFIRMADO,
-                empresa_id=   empresa_id,
-                recorrencia=  recorrencia,
-            )
-            self.repository.session.add(transacao)
+
+            if conta.transacao_id:
+                transacao = self.repository.session.get(Transacoes, conta.transacao_id)
+                if transacao:
+                    transacao.situacao  = SituacaoTransacaoEnum.CONFIRMADO
+                    transacao.data      = dados.data_pagamento
+                    transacao.valor     = valor_pago
+                    transacao.conta_id  = dados.conta_id
+            else:
+                transacao = Transacoes(
+                    descricao=    conta.descricao,
+                    valor=        valor_pago,
+                    data=         dados.data_pagamento,
+                    conta_id=     dados.conta_id,
+                    categoria_id= conta.categoria_id,
+                    transacao_id= TipoTransacaoEnum.DESPESA,
+                    situacao=     SituacaoTransacaoEnum.CONFIRMADO,
+                    empresa_id=   empresa_id,
+                    recorrencia=  recorrencia,
+                )
+                self.repository.session.add(transacao)
+
+            if dados.conta_id:
+                cb = self.repository.session.get(Contas, dados.conta_id)
+                if cb:
+                    cb.saldo_atual -= valor_pago
 
             self.repository.session.commit()
             self.repository.session.refresh(conta)
@@ -148,6 +192,19 @@ class ContaPagarService:
             raise BusinessException("Conta a pagar não encontrada.", status_code=404)
 
         try:
+            if conta.transacao_id:
+                transacao = self.repository.session.get(Transacoes, conta.transacao_id)
+                if transacao:
+                    if conta.situacao_id == TipoSituacaoContaEnum.PAGO and transacao.conta_id:
+                        cb = self.repository.session.get(Contas, transacao.conta_id)
+                        if cb:
+                            cb.saldo_atual += transacao.valor
+                    self.repository.session.delete(transacao)
+            elif conta.situacao_id == TipoSituacaoContaEnum.PAGO and conta.conta_id:
+                cb = self.repository.session.get(Contas, conta.conta_id)
+                if cb:
+                    cb.saldo_atual += conta.valor
+
             self.repository.deletarContaPagar(conta)
             self.repository.session.commit()
         except Exception:

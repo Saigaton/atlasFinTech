@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from typing import Optional
 
+from app.entidades.contas import Contas
 from app.entidades.contasReceber import ContasReceber
 from app.entidades.transacoes import Transacoes
 from app.enums.situacaoTransacaoEnum import SituacaoTransacaoEnum
@@ -43,6 +44,23 @@ class ContaReceberService:
         )
         try:
             self.repository.session.add(conta)
+            self.repository.session.flush()
+
+            transacao = Transacoes(
+                descricao=    conta.descricao,
+                valor=        conta.valor,
+                data=         conta.data_vencimento,
+                conta_id=     conta.conta_id,
+                categoria_id= conta.categoria_id,
+                transacao_id= TipoTransacaoEnum.RECEITA,
+                situacao=     SituacaoTransacaoEnum.PENDENTE,
+                recorrencia=  "nenhuma",
+                empresa_id=   empresa_id,
+            )
+            self.repository.session.add(transacao)
+            self.repository.session.flush()
+            conta.transacao_id = transacao.id
+
             self.repository.session.commit()
             self.repository.session.refresh(conta)
             return ContaReceberResposta.model_validate(conta)
@@ -78,6 +96,16 @@ class ContaReceberService:
             else:
                 conta.situacao_id = TipoSituacaoContaEnum.PENDENTE
 
+            if conta.transacao_id:
+                transacao = self.repository.session.get(Transacoes, conta.transacao_id)
+                if transacao:
+                    if "descricao"       in campos: transacao.descricao    = conta.descricao
+                    if "valor"           in campos: transacao.valor         = conta.valor
+                    if "data_vencimento" in campos: transacao.data          = conta.data_vencimento
+                    if "conta_id"        in campos: transacao.conta_id      = conta.conta_id
+                    if "categoria_id"    in campos: transacao.categoria_id  = conta.categoria_id
+                    if "notas"           in campos: transacao.notas         = conta.notas
+
             self.repository.session.commit()
             self.repository.session.refresh(conta)
             return ContaReceberResposta.model_validate(conta)
@@ -96,22 +124,37 @@ class ContaReceberService:
 
         try:
             self.repository.atualizarContaReceber(conta, {
-                "situacao_id":     TipoSituacaoContaEnum.PAGO,
+                "situacao_id":      TipoSituacaoContaEnum.PAGO,
                 "data_recebimento": dados.data_recebimento,
             })
 
-            transacao = Transacoes(
-                descricao=    conta.descricao,
-                valor=        dados.valor_recebido or conta.valor,
-                data=         dados.data_recebimento,
-                conta_id=     dados.conta_id,
-                categoria_id= conta.categoria_id,
-                transacao_id= TipoTransacaoEnum.RECEITA,
-                situacao=     SituacaoTransacaoEnum.CONFIRMADO,
-                empresa_id=   empresa_id,
-                recorrencia=  "nenhuma",
-            )
-            self.repository.session.add(transacao)
+            valor_recebido = dados.valor_recebido or conta.valor
+
+            if conta.transacao_id:
+                transacao = self.repository.session.get(Transacoes, conta.transacao_id)
+                if transacao:
+                    transacao.situacao  = SituacaoTransacaoEnum.CONFIRMADO
+                    transacao.data      = dados.data_recebimento
+                    transacao.valor     = valor_recebido
+                    transacao.conta_id  = dados.conta_id
+            else:
+                transacao = Transacoes(
+                    descricao=    conta.descricao,
+                    valor=        valor_recebido,
+                    data=         dados.data_recebimento,
+                    conta_id=     dados.conta_id,
+                    categoria_id= conta.categoria_id,
+                    transacao_id= TipoTransacaoEnum.RECEITA,
+                    situacao=     SituacaoTransacaoEnum.CONFIRMADO,
+                    empresa_id=   empresa_id,
+                    recorrencia=  "nenhuma",
+                )
+                self.repository.session.add(transacao)
+
+            if dados.conta_id:
+                cb = self.repository.session.get(Contas, dados.conta_id)
+                if cb:
+                    cb.saldo_atual += valor_recebido
 
             self.repository.session.commit()
             self.repository.session.refresh(conta)
@@ -131,6 +174,19 @@ class ContaReceberService:
             raise BusinessException("Conta a receber não encontrada.", status_code=404)
 
         try:
+            if conta.transacao_id:
+                transacao = self.repository.session.get(Transacoes, conta.transacao_id)
+                if transacao:
+                    if conta.situacao_id == TipoSituacaoContaEnum.PAGO and transacao.conta_id:
+                        cb = self.repository.session.get(Contas, transacao.conta_id)
+                        if cb:
+                            cb.saldo_atual -= transacao.valor
+                    self.repository.session.delete(transacao)
+            elif conta.situacao_id == TipoSituacaoContaEnum.PAGO and conta.conta_id:
+                cb = self.repository.session.get(Contas, conta.conta_id)
+                if cb:
+                    cb.saldo_atual -= conta.valor
+
             self.repository.deletarContaReceber(conta)
             self.repository.session.commit()
         except Exception:

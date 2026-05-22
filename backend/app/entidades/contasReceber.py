@@ -25,5 +25,7 @@ class ContasReceber(Base):
     situacao_id: Mapped[TipoSituacaoContaEnum] = mapped_column(Integer, ForeignKey("tipo_situacao_conta.id"))
     situacao:    Mapped["TipoSituacaoConta"]   = relationship(back_populates="contas_receber")
 
-    empresa_id:  Mapped[int]        = mapped_column(ForeignKey("empresas.id"), nullable=False)
-    empresa:     Mapped["Empresas"] = relationship(back_populates="contas_receber")
+    empresa_id:   Mapped[int]        = mapped_column(ForeignKey("empresas.id"), nullable=False)
+    empresa:      Mapped["Empresas"] = relationship(back_populates="contas_receber")
+
+    transacao_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, default=None)
