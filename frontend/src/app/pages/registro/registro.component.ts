@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, NgZone, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -10,6 +10,16 @@ import { RequisicaoRegistroUsuario } from '../../core/models/auth.models';
 import { HttpErrorResponse } from '@angular/common/http';
 import { PasswordChecklistComponent } from '../../shared/components/password-checklist/password-checklist.component';
 import { UnsubscriberComponent } from '../../core/unsubscriber.component';
+import { environment } from '../../../environments/environment';
+
+declare const google: {
+  accounts: {
+    id: {
+      initialize: (config: object) => void;
+      prompt:     (callback?: (notification: { isNotDisplayed: () => boolean; isSkippedMoment: () => boolean }) => void) => void;
+    };
+  };
+};
 
 @Component({
   selector: 'app-registro',
@@ -20,18 +30,25 @@ import { UnsubscriberComponent } from '../../core/unsubscriber.component';
   styleUrl: './registro.component.scss'
 })
 export class RegistroComponent extends UnsubscriberComponent implements OnInit {
-  carregando = false;
-  mostrarSenha = false;
+  carregando       = false;
+  mostrarSenha     = false;
   mostrarConfirmarSenha = false;
+  googleCarregando = false;
   formRegistro!: FormGroup;
 
-  constructor(private authService: AuthService, private router: Router, 
-    private formBuilder: FormBuilder, private toast: ToastService) {
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    private formBuilder: FormBuilder,
+    private toast: ToastService,
+    private ngZone: NgZone,
+  ) {
     super();
   }
 
   ngOnInit(): void {
     this.criarFormulario();
+    this._initGoogle();
   }
 
   criarFormulario(){
@@ -71,7 +88,50 @@ export class RegistroComponent extends UnsubscriberComponent implements OnInit {
   }
 
   onGoogleClick(): void {
-    this.toast.info('Configure o Google Client ID para usar este recurso.');
+    if (this.googleCarregando || this.carregando) return;
+    google.accounts.id.prompt((notification) => {
+      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+        this.ngZone.run(() =>
+          this.toast.error('Não foi possível abrir o popup do Google. Verifique se popups estão permitidos.')
+        );
+      }
+    });
+  }
+
+  private _initGoogle(): void {
+    const tentarInit = () => {
+      if (typeof google !== 'undefined') {
+        google.accounts.id.initialize({
+          client_id: environment.googleClientId,
+          callback:  (response: { credential: string }) => {
+            this.ngZone.run(() => this._handleGoogleCredential(response.credential));
+          },
+          auto_select: false,
+          cancel_on_tap_outside: true,
+        });
+      }
+    };
+
+    if (typeof google !== 'undefined') {
+      tentarInit();
+    } else {
+      const script = document.querySelector('script[src*="accounts.google.com/gsi/client"]');
+      script?.addEventListener('load', tentarInit);
+    }
+  }
+
+  private _handleGoogleCredential(idToken: string): void {
+    this.googleCarregando = true;
+    this.authService.googleLogin(idToken).subscribe({
+      next: (res) => {
+        this.toast.success(`Conta criada com sucesso! Bem-vindo, ${res.usuario.nome.split(' ')[0]}! 🎉`);
+        this.authService.navigateAfterLogin();
+      },
+      error: () => {
+        this.googleCarregando = false;
+        this.toast.error('Erro ao cadastrar com Google. Tente novamente.');
+      },
+    });
   }
 
   validadorSenhasIguais(control: AbstractControl): ValidationErrors | null {

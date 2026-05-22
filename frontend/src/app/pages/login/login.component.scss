@@ -1,5 +1,16 @@
 /* Estilos de auth compartilhados estão em src/styles.scss */
 
+/* Spinner do botão Google */
+.spin-g {
+  width: 18px; height: 18px;
+  border: 2px solid #d1d5db;
+  border-top-color: #4285F4;
+  border-radius: 50%;
+  animation: spin-g 0.7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin-g { to { transform: rotate(360deg); } }
+
 /* Link de recuperação de senha — substitui o "Lembrar-me" */
 .forgot-link {
   display: block;

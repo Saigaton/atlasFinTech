@@ -5,13 +5,15 @@
 
 /** Dados do usuário retornados pela API */
 export interface Usuario {
-  id:          number;
-  nome:        string;
-  email:       string;
-  nomeEmpresa:     string | null;
-  estaAtivo:   boolean;
+  id:             number;
+  nome:           string;
+  email:          string;
+  nomeEmpresa:    string | null;
+  estaAtivo:      boolean;
   estaVerificado: boolean;
-  dataCriacao:  Date;
+  dataCriacao:    Date;
+  googleId?:       string | null;
+  criadoViaGoogle?: boolean;
 }
 
 /** Resposta completa de autenticação (login e cadastro) */

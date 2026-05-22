@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ShellComponent } from '../../shared/components/shell/shell.component';
@@ -9,24 +10,27 @@ import { Usuario } from '../../core/models/auth.models';
 @Component({
   selector: 'app-configuracoes',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ShellComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, ShellComponent],
   templateUrl: './configuracoes.component.html',
   styleUrl: './configuracoes.component.scss'
 })
 export class ConfiguracoesComponent implements OnInit {
 
   perfil: Usuario | null = null;
-  salvandoPerfil = false;
-  alterandoSenha = false;
-  mostrarAtual = false;
-  mostrarNova  = false;
+  salvandoPerfil  = false;
+  alterandoSenha  = false;
+  definindoSenha  = false;
+  mostrarAtual    = false;
+  mostrarNova     = false;
+  mostrarNovaDef  = false;
 
   ativarCampoSenha(event: FocusEvent): void {
     (event.target as HTMLInputElement).removeAttribute('readonly');
   }
 
-  formPerfil: FormGroup;
-  formSenha: FormGroup;
+  formPerfil:       FormGroup;
+  formSenha:        FormGroup;
+  formDefinirSenha!: FormGroup;
 
   constructor(
     private auth: AuthService,
@@ -38,8 +42,13 @@ export class ConfiguracoesComponent implements OnInit {
     });
 
     this.formSenha = this.formBuilder.group({
-      senhaAtual:          ['', Validators.required],
-      novaSenha:           ['', [Validators.required, Validators.minLength(8)]],
+      senhaAtual:     ['', Validators.required],
+      novaSenha:      ['', [Validators.required, Validators.minLength(8)]],
+      confirmarSenha: ['', Validators.required],
+    }, { validators: this._senhasConferem });
+
+    this.formDefinirSenha = this.formBuilder.group({
+      novaSenha:      ['', [Validators.required, Validators.minLength(8)]],
       confirmarSenha: ['', Validators.required],
     }, { validators: this._senhasConferem });
   }
@@ -49,6 +58,10 @@ export class ConfiguracoesComponent implements OnInit {
   iniciais(): string {
     const nome = this.perfil?.nome ?? '';
     return nome.split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase() || '?';
+  }
+
+  get isGoogleUser(): boolean {
+    return !!this.perfil?.criadoViaGoogle;
   }
 
   private _carregarPerfil(): void {
@@ -88,6 +101,22 @@ export class ConfiguracoesComponent implements OnInit {
       error: (err: any) => {
         this.toast.error(err.error?.erro ?? 'Erro ao alterar senha.');
         this.alterandoSenha = false;
+      },
+    });
+  }
+
+  definirSenha(): void {
+    if (this.formDefinirSenha.invalid) { this.formDefinirSenha.markAllAsTouched(); return; }
+    this.definindoSenha = true;
+    this.auth.definirSenha(this.formDefinirSenha.value).subscribe({
+      next: () => {
+        this.toast.success('Senha definida com sucesso! Agora você pode entrar com e-mail e senha.');
+        this.formDefinirSenha.reset();
+        this.definindoSenha = false;
+      },
+      error: (err: any) => {
+        this.toast.error(err.error?.erro ?? 'Erro ao definir senha.');
+        this.definindoSenha = false;
       },
     });
   }

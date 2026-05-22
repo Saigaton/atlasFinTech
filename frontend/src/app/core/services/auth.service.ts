@@ -128,6 +128,10 @@ export class AuthService extends UnsubscriberComponent {
     return this.http.post<MensagemResposta>(`${this.API}/auth/me/trocar-senha`, dados);
   }
 
+  definirSenha(dados: { novaSenha: string; confirmarSenha: string }): Observable<MensagemResposta> {
+    return this.http.post<MensagemResposta>(`${this.API}/auth/me/definir-senha`, dados);
+  }
+
   // ── Recuperação de senha ───────────────────────────────────────────────────
 
   solicitarRecuperacaoSenha(email: string): Observable<MensagemResposta> {

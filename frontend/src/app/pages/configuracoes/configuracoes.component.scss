@@ -26,3 +26,5 @@
     .input-icon-wrap .input{padding-right:40px}
     .icon-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);display:flex;padding:4px}
     .icon-btn svg{width:17px;height:17px;fill:currentColor}
+    .google-auth-notice{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:var(--bg-page);border:1px solid var(--border);border-radius:10px;margin-bottom:16px}
+    .google-auth-desc{font-size:13px;color:var(--text-muted);line-height:1.55;margin:0}
