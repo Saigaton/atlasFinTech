@@ -21,6 +21,7 @@ class ContaPagarService:
         parcelas: list[ContasPagar] = []
         base_data = dados.data_vencimento
         n = dados.total_parcelas
+        valor_parcela = round(dados.valor / n, 2)
 
         for i in range(n):
             mes = base_data.month + i
@@ -32,7 +33,7 @@ class ContaPagarService:
             descricao = dados.descricao if n == 1 else f"{dados.descricao} ({i + 1}/{n})"
             parcelas.append(ContasPagar(
                 descricao=descricao,
-                valor=dados.valor,
+                valor=valor_parcela,
                 data_vencimento=data_parcela,
                 conta_id=dados.conta_id,
                 categoria_id=dados.categoria_id,
