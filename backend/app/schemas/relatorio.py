@@ -3,7 +3,7 @@ from decimal import Decimal
 from typing import Optional
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
-from app.enums.tipoTransacaoEnum import TipoTransacaoEnum
+from app.enums.tipo_transacao_enum import TipoTransacaoEnum
 
 
 class ItemFluxoCaixaResposta(BaseModel):

@@ -6,6 +6,7 @@ import { CategoriaService } from '../../core/services/categoria.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ShellComponent } from '../../shared/components/shell/shell.component';
 import { AtualizarCategoria, Categoria, TipoCategoria } from '../../core/models/categoria.models';
+import { handleApiError } from '../../core/handlers/handle-api-error';
 
 @Component({
   selector: 'app-categorias',
@@ -51,9 +52,11 @@ export class CategoriasComponent implements OnInit {
     const id = this.empresaService.ativoId();
     if (!id) { this.carregando = false; return; }
 
-    this.categoriaService.listarCategoria(id).subscribe({
-      next:  res => { this.categorias = res.conteudo ?? []; this.carregando = false; },
-      error: ()  => { this.carregando = false; },
+    this.categoriaService.listarCategoria(id).pipe(
+      handleApiError(this.toast, 'Erro ao carregar categorias.')
+    ).subscribe({
+      next:  res => { this.categorias = res ?? []; this.carregando = false; },
+      error: ()   => { this.carregando = false; },
     });
   }
 
@@ -96,24 +99,23 @@ export class CategoriasComponent implements OnInit {
           cor:  v.cor || null,
         });
 
-    operacao.subscribe({
+    operacao.pipe(
+      handleApiError(this.toast, this.modoEdicao ? 'Erro ao atualizar.' : 'Erro ao criar.')
+    ).subscribe({
       next: res => {
         if (this.modoEdicao) {
           this.categorias = this.categorias.map(c =>
-            c.id === this.categoriaEditandoId ? res.conteudo : c
+            c.id === this.categoriaEditandoId ? res : c
           );
           this.toast.success('Categoria atualizada!');
         } else {
-          this.categorias = [...this.categorias, res.conteudo];
+          this.categorias = [...this.categorias, res];
           this.toast.success('Categoria criada!');
         }
         this.enviando = false;
         this.fecharModal();
       },
-      error: err => {
-        this.toast.error(err.error?.mensagem ?? (this.modoEdicao ? 'Erro ao atualizar.' : 'Erro ao criar.'));
-        this.enviando = false;
-      },
+      error: () => { this.enviando = false; },
     });
   }
 
@@ -122,12 +124,13 @@ export class CategoriasComponent implements OnInit {
     const id = this.empresaService.ativoId();
     if (!id) return;
 
-    this.categoriaService.deletarCategoria(id, Number(categoria.id)).subscribe({
-      next:  () => {
+    this.categoriaService.deletarCategoria(id, Number(categoria.id)).pipe(
+      handleApiError(this.toast, 'Erro ao excluir.')
+    ).subscribe({
+      next: () => {
         this.toast.success('Categoria excluída.');
         this.categorias = this.categorias.filter(c => c.id !== categoria.id);
       },
-      error: () => this.toast.error('Erro ao excluir.'),
     });
   }
 

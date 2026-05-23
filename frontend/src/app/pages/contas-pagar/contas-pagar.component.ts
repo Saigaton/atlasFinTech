@@ -10,6 +10,7 @@ import { ContaService } from '../../core/services/conta.service';
 import { Conta } from '../../core/models/conta.model';
 import { CategoriaService } from '../../core/services/categoria.service';
 import { Categoria } from '../../core/models/categoria.models';
+import { handleApiError } from '../../core/handlers/handle-api-error';
 
 @Component({
   selector: 'app-contas-pagar',
@@ -68,11 +69,15 @@ export class ContasPagarComponent implements OnInit {
   }
 
   private _carregarSelects(empresaId: number): void {
-    this.contaService.listarContas(empresaId).subscribe({
+    this.contaService.listarContas(empresaId).pipe(
+      handleApiError(this.toast, 'Erro ao carregar contas.')
+    ).subscribe({
       next: r => { this.contas = r; },
     });
-    this.categoriaService.listarCategoria(empresaId).subscribe({
-      next: r => { this.categorias = r.conteudo ?? []; },
+    this.categoriaService.listarCategoria(empresaId).pipe(
+      handleApiError(this.toast, 'Erro ao carregar categorias.')
+    ).subscribe({
+      next: r => { this.categorias = r ?? []; },
     });
   }
 
@@ -108,7 +113,9 @@ export class ContasPagarComponent implements OnInit {
       pesquisa: this.filtroPesquisa || undefined,
       page:     this.pagina,
       per_page: this.porPagina,
-    }).subscribe({
+    }).pipe(
+      handleApiError(this.toast, 'Erro ao carregar contas a pagar.')
+    ).subscribe({
       next: r => {
         this.items      = r.conteudo ?? [];
         this.total      = r.total ?? 0;
@@ -117,8 +124,10 @@ export class ContasPagarComponent implements OnInit {
       error: () => { this.carregando = false; },
     });
 
-    this.contaPagarService.obterResumoContaPagar(id).subscribe({
-      next: r => { this.resumo = r.conteudo ?? null; },
+    this.contaPagarService.obterResumoContaPagar(id).pipe(
+      handleApiError(this.toast, 'Erro ao carregar resumo.')
+    ).subscribe({
+      next: r => { this.resumo = r ?? null; },
     });
   }
 
@@ -185,9 +194,11 @@ export class ContasPagarComponent implements OnInit {
         categoria_id:    v.categoriaId ? Number(v.categoriaId) : null,
         notas:           v.notas || null,
       };
-      this.contaPagarService.atualizarContaPagar(id, this.editandoId, payload).subscribe({
-        next: ()          => { this.toast.success('Conta atualizada!'); this._concluir(); },
-        error: (err: any) => { this.toast.error(err.error?.erro ?? 'Erro.'); this.enviando = false; },
+      this.contaPagarService.atualizarContaPagar(id, this.editandoId, payload).pipe(
+        handleApiError(this.toast, 'Erro ao atualizar conta.')
+      ).subscribe({
+        next: () => { this.toast.success('Conta atualizada!'); this._concluir(); },
+        error: () => { this.enviando = false; },
       });
     } else {
       const payload: CriarContaPagarDto = {
@@ -199,13 +210,15 @@ export class ContasPagarComponent implements OnInit {
         notas:           v.notas || null,
         total_parcelas:  Number(v.totalParcelas) || 1,
       };
-      this.contaPagarService.criarContaPagar(id, payload).subscribe({
+      this.contaPagarService.criarContaPagar(id, payload).pipe(
+        handleApiError(this.toast, 'Erro ao criar conta a pagar.')
+      ).subscribe({
         next: r => {
-          const n = r.conteudo?.length ?? 1;
+          const n = r?.length ?? 1;
           this.toast.success(n > 1 ? `${n} parcelas criadas!` : 'Conta a pagar criada!');
           this._concluir();
         },
-        error: (err: any) => { this.toast.error(err.error?.erro ?? 'Erro.'); this.enviando = false; },
+        error: () => { this.enviando = false; },
       });
     }
   }
@@ -242,14 +255,16 @@ export class ContasPagarComponent implements OnInit {
       valorPago:     v.valorPago ?? undefined,
     };
 
-    this.contaPagarService.pagarContaPagar(id, Number(this.pagandoItem.id), req).subscribe({
+    this.contaPagarService.pagarContaPagar(id, Number(this.pagandoItem.id), req).pipe(
+      handleApiError(this.toast, 'Erro ao registrar pagamento.')
+    ).subscribe({
       next: () => {
         this.toast.success('Pagamento registrado! Transação gerada automaticamente.');
         this.pagando      = false;
         this.showPayModal = false;
         this._carregar();
       },
-      error: (err: any) => { this.toast.error(err.error?.message ?? 'Erro.'); this.pagando = false; },
+      error: () => { this.pagando = false; },
     });
   }
 
@@ -258,9 +273,10 @@ export class ContasPagarComponent implements OnInit {
     const id = this.empresaService.ativoId();
     if (!id) return;
 
-    this.contaPagarService.deletarContaPagar(id, Number(item.id)).subscribe({
-      next: ()  => { this.toast.success('Conta cancelada.'); this._carregar(); },
-      error: ()  => this.toast.error('Erro ao cancelar.'),
+    this.contaPagarService.deletarContaPagar(id, Number(item.id)).pipe(
+      handleApiError(this.toast, 'Erro ao cancelar.')
+    ).subscribe({
+      next: () => { this.toast.success('Conta cancelada.'); this._carregar(); },
     });
   }
 

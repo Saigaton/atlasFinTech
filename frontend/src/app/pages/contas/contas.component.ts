@@ -21,7 +21,8 @@ import { ContaService } from '../../core/services/conta.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ShellComponent } from '../../shared/components/shell/shell.component';
 import { Conta, TipoConta } from '../../core/models/conta.model';
-import { UnsubscriberComponent } from '../../core/unsubscriber.component';
+import { UnsubscriberBase } from '../../core/unsubscriber';
+import { handleApiError } from '../../core/handlers/handle-api-error';
 
 @Component({
   selector: 'app-contas',
@@ -30,7 +31,7 @@ import { UnsubscriberComponent } from '../../core/unsubscriber.component';
   templateUrl: './contas.component.html',
   styleUrl: './contas.component.scss',
 })
-export class ContasComponent extends UnsubscriberComponent implements OnInit {
+export class ContasComponent extends UnsubscriberBase implements OnInit {
 
   // ── Estado de carregamento ───────────────────────────────────────────────
   carregando      = true;
@@ -97,9 +98,11 @@ export class ContasComponent extends UnsubscriberComponent implements OnInit {
     if (!id) { this.carregando = false; return; }
 
     this._subscriptions.push(
-      this.contaService.listarContas(id).subscribe({
+      this.contaService.listarContas(id).pipe(
+        handleApiError(this.toast, 'Erro ao carregar contas.')
+      ).subscribe({
         next:  res => { this.contas = res; this.carregando = false; },
-        error: ()  => { this.carregando = false; },
+        error: ()   => { this.carregando = false; },
       })
     );
   }
@@ -153,17 +156,16 @@ export class ContasComponent extends UnsubscriberComponent implements OnInit {
     const mensagem = this.modoEdicao ? 'Conta atualizada com sucesso!' : 'Conta criada com sucesso!';
 
     this._subscriptions.push(
-      operacao.subscribe({
+      operacao.pipe(
+        handleApiError(this.toast, this.modoEdicao ? 'Erro ao atualizar conta.' : 'Erro ao criar conta.')
+      ).subscribe({
         next: () => {
           this.toast.success(mensagem);
           this.enviando = false;
           this.fecharModal();
           this._load();
         },
-        error: err => {
-          this.toast.error(err.error?.erro ?? (this.modoEdicao ? 'Erro ao atualizar conta.' : 'Erro ao criar conta.'));
-          this.enviando = false;
-        },
+        error: () => { this.enviando = false; },
       })
     );
   }
@@ -198,17 +200,16 @@ export class ContasComponent extends UnsubscriberComponent implements OnInit {
         valor:       Number(v.valor),
         descricao:   v.descricao ?? null,
         data:        v.data!,
-      }).subscribe({
+      }).pipe(
+        handleApiError(this.toast, 'Erro ao realizar transferência.')
+      ).subscribe({
         next: () => {
           this.toast.success('Transferência realizada com sucesso!');
           this.transferindo = false;
           this.fecharTransferencia();
           this._load();
         },
-        error: err => {
-          this.toast.error(err.error?.erro ?? 'Erro ao realizar transferência.');
-          this.transferindo = false;
-        },
+        error: () => { this.transferindo = false; },
       })
     );
   }
@@ -219,9 +220,10 @@ export class ContasComponent extends UnsubscriberComponent implements OnInit {
     if (!id) return;
 
     this._subscriptions.push(
-      this.contaService.deletarConta(id, conta.id).subscribe({
+      this.contaService.deletarConta(id, conta.id).pipe(
+        handleApiError(this.toast, 'Erro ao desativar conta.')
+      ).subscribe({
         next: () => { this.toast.success('Conta desativada.'); this._load(); },
-        error: err => this.toast.error(err.error?.erro ?? 'Erro ao desativar conta.'),
       })
     );
   }

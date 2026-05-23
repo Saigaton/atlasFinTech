@@ -6,6 +6,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ShellComponent } from '../../shared/components/shell/shell.component';
 import { Usuario } from '../../core/models/auth.models';
+import { handleApiError } from '../../core/handlers/handle-api-error';
 
 @Component({
   selector: 'app-configuracoes',
@@ -76,49 +77,46 @@ export class ConfiguracoesComponent implements OnInit {
   salvarPerfil(): void {
     if (this.formPerfil.invalid) { this.formPerfil.markAllAsTouched(); return; }
     this.salvandoPerfil = true;
-    this.auth.atualizarPerfil(this.formPerfil.value).subscribe({
+    this.auth.atualizarPerfil(this.formPerfil.value).pipe(
+      handleApiError(this.toast, 'Erro ao atualizar perfil.')
+    ).subscribe({
       next: res => {
         this.perfil = res.data;
         this.toast.success('Perfil atualizado com sucesso!');
         this.salvandoPerfil = false;
       },
-      error: (err: any) => {
-        this.toast.error(err.error?.message ?? 'Erro ao atualizar perfil.');
-        this.salvandoPerfil = false;
-      },
+      error: () => { this.salvandoPerfil = false; },
     });
   }
 
   alterarSenha(): void {
     if (this.formSenha.invalid) { this.formSenha.markAllAsTouched(); return; }
     this.alterandoSenha = true;
-    this.auth.alterarSenha(this.formSenha.value).subscribe({
+    this.auth.alterarSenha(this.formSenha.value).pipe(
+      handleApiError(this.toast, 'Erro ao alterar senha.')
+    ).subscribe({
       next: () => {
         this.toast.success('Senha alterada com sucesso!');
         this.formSenha.reset();
         this.alterandoSenha = false;
       },
-      error: (err: any) => {
-        this.toast.error(err.error?.erro ?? 'Erro ao alterar senha.');
-        this.alterandoSenha = false;
-      },
+      error: () => { this.alterandoSenha = false; },
     });
   }
 
   definirSenha(): void {
     if (this.formDefinirSenha.invalid) { this.formDefinirSenha.markAllAsTouched(); return; }
     this.definindoSenha = true;
-    this.auth.definirSenha(this.formDefinirSenha.value).subscribe({
+    this.auth.definirSenha(this.formDefinirSenha.value).pipe(
+      handleApiError(this.toast, 'Erro ao definir senha.')
+    ).subscribe({
       next: () => {
         this.toast.success('Senha definida! Agora você pode entrar com e-mail e senha.');
         this.formDefinirSenha.reset();
         this.definindoSenha = false;
         this._carregarPerfil();
       },
-      error: (err: any) => {
-        this.toast.error(err.error?.erro ?? 'Erro ao definir senha.');
-        this.definindoSenha = false;
-      },
+      error: () => { this.definindoSenha = false; },
     });
   }
 

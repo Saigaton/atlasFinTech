@@ -5,6 +5,7 @@ import { EmpresaService } from '../../core/services/empresa.service';
 import { RelatorioService } from '../../core/services/relatorio.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ResultadoConciliacao, StatusAgendamento } from '../../core/models/relatorio.model';
+import { handleApiError } from '../../core/handlers/handle-api-error';
 import { ShellComponent } from '../../shared/components/shell/shell.component';
 
 @Component({
@@ -76,15 +77,17 @@ export class RelatoriosComponent implements OnInit {
     const id = this.empresaId;
     if (!id) return;
     this.carregandoAgendamento = true;
-    this.relatorioService.obterStatusAgendamento(id).subscribe({
+    this.relatorioService.obterStatusAgendamento(id).pipe(
+      handleApiError(this.toast, 'Erro ao carregar agendamento.')
+    ).subscribe({
       next: r => {
-        this.statusAgendamento = r.conteudo;
+        this.statusAgendamento = r;
         this.carregandoAgendamento = false;
-        if (r.conteudo?.inscrito) {
+        if (r?.inscrito) {
           this.formularioAgendamento.patchValue({
-            email:  r.conteudo.email  ?? '',
-            diaMes: r.conteudo.diaMes ?? 1,
-            hora:   r.conteudo.hora   ?? 8,
+            email:  r.email  ?? '',
+            diaMes: r.diaMes ?? 1,
+            hora:   r.hora   ?? 8,
           });
         }
       },
@@ -98,22 +101,25 @@ export class RelatoriosComponent implements OnInit {
     if (!id) return;
     const v = this.formularioAgendamento.value;
     this.salvandoAgendamento = true;
-    this.relatorioService.inscreverEmailPeriodico(id, v.email!, v.diaMes!, v.hora!).subscribe({
-      next:  res => {
-        this.toast.success(res.mensagem || 'Relatório agendado com sucesso!');
+    this.relatorioService.inscreverEmailPeriodico(id, v.email!, v.diaMes!, v.hora!).pipe(
+      handleApiError(this.toast, 'Erro ao salvar agendamento.')
+    ).subscribe({
+      next: () => {
+        this.toast.success('Relatório agendado com sucesso!');
         this.salvandoAgendamento = false;
         this._carregarStatusAgendamento();
       },
-      error: err => { this.toast.error(err.error?.mensagem ?? 'Erro ao salvar.'); this.salvandoAgendamento = false; },
+      error: () => { this.salvandoAgendamento = false; },
     });
   }
 
   cancelarAgendamento(): void {
     const id = this.empresaId;
     if (!id) return;
-    this.relatorioService.cancelarEmailPeriodico(id).subscribe({
-      next:  () => { this.toast.success('Envio periódico cancelado.'); this._carregarStatusAgendamento(); },
-      error: () => this.toast.error('Erro ao cancelar.'),
+    this.relatorioService.cancelarEmailPeriodico(id).pipe(
+      handleApiError(this.toast, 'Erro ao cancelar.')
+    ).subscribe({
+      next: () => { this.toast.success('Envio periódico cancelado.'); this._carregarStatusAgendamento(); },
     });
   }
 
@@ -121,9 +127,10 @@ export class RelatoriosComponent implements OnInit {
     const id     = this.empresaId;
     const status = this.statusAgendamento;
     if (!id || !status?.email) return;
-    this.relatorioService.dispararRelatorioAgora(id, status.email).subscribe({
-      next:  res => this.toast.success(res.mensagem || 'Relatório enviado!'),
-      error: err => this.toast.error(err.error?.mensagem ?? 'Erro ao enviar.'),
+    this.relatorioService.dispararRelatorioAgora(id, status.email).pipe(
+      handleApiError(this.toast, 'Erro ao enviar.')
+    ).subscribe({
+      next: () => this.toast.success('Relatório enviado!'),
     });
   }
 
@@ -162,13 +169,15 @@ export class RelatoriosComponent implements OnInit {
                       : tipo === 'receber-csv' ? 'contas_a_receber.csv'
                       :                          'relatorio.txt';
 
-    req$.subscribe({
-      next:  blob => {
+    req$.pipe(
+      handleApiError(this.toast, 'Erro ao gerar o arquivo.')
+    ).subscribe({
+      next: blob => {
         this.relatorioService.dispararDownload(blob, nomeArquivo);
         this.toast.success(`${nomeArquivo} baixado com sucesso!`);
         this.baixando = '';
       },
-      error: () => { this.toast.error('Erro ao gerar o arquivo.'); this.baixando = ''; },
+      error: () => { this.baixando = ''; },
     });
   }
 
@@ -176,13 +185,15 @@ export class RelatoriosComponent implements OnInit {
     const id = this.empresaId;
     if (!id) return;
     this.baixando = 'backup';
-    this.relatorioService.baixarBackup(id).subscribe({
-      next:  blob => {
+    this.relatorioService.baixarBackup(id).pipe(
+      handleApiError(this.toast, 'Erro ao gerar backup.')
+    ).subscribe({
+      next: blob => {
         this.relatorioService.dispararDownload(blob, 'atlas_backup.zip');
         this.toast.success('Backup gerado com sucesso!');
         this.baixando = '';
       },
-      error: () => { this.toast.error('Erro ao gerar backup.'); this.baixando = ''; },
+      error: () => { this.baixando = ''; },
     });
   }
 
@@ -195,13 +206,15 @@ export class RelatoriosComponent implements OnInit {
     const m = this.formularioFiltro.value.mes ?? undefined;
     const a = this.formularioFiltro.value.ano ?? undefined;
     this.enviandoEmail = true;
-    this.relatorioService.enviarEmailRelatorio(id, this.formularioEmail.value.email!, m, a).subscribe({
-      next:  res => {
-        this.toast.success(res.mensagem || 'Relatório enviado!');
+    this.relatorioService.enviarEmailRelatorio(id, this.formularioEmail.value.email!, m, a).pipe(
+      handleApiError(this.toast, 'Erro ao enviar e-mail.')
+    ).subscribe({
+      next: () => {
+        this.toast.success('Relatório enviado!');
         this.enviandoEmail = false;
         this.formularioEmail.reset();
       },
-      error: err => { this.toast.error(err.error?.mensagem ?? 'Erro ao enviar e-mail.'); this.enviandoEmail = false; },
+      error: () => { this.enviandoEmail = false; },
     });
   }
 
@@ -215,15 +228,16 @@ export class RelatoriosComponent implements OnInit {
     if (!id) return;
     this.importando  = true;
     this.conciliacao = null;
-    this.relatorioService.importarExtrato(id, arquivo).subscribe({
+    this.relatorioService.importarExtrato(id, arquivo).pipe(
+      handleApiError(this.toast, 'Erro ao importar extrato.')
+    ).subscribe({
       next: res => {
-        this.conciliacao = res.conteudo;
+        this.conciliacao = res;
         this.importando  = false;
         input.value = '';
-        this.toast.success(`Conciliação concluída: ${res.conteudo.conciliadas} transações conciliadas.`);
+        this.toast.success(`Conciliação concluída: ${res.conciliadas} transações conciliadas.`);
       },
-      error: err => {
-        this.toast.error(err.error?.mensagem ?? 'Erro ao importar extrato.');
+      error: () => {
         this.importando = false;
         input.value = '';
       },

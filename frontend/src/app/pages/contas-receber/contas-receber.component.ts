@@ -10,6 +10,7 @@ import { EmpresaService } from '../../core/services/empresa.service';
 import { ContaService } from '../../core/services/conta.service';
 import { CategoriaService } from '../../core/services/categoria.service';
 import { ToastService } from '../../core/services/toast.service';
+import { handleApiError } from '../../core/handlers/handle-api-error';
 
 @Component({
   selector: 'app-contas-receber',
@@ -64,11 +65,15 @@ export class ContasReceberComponent implements OnInit {
     const id = this.empresaService.ativoId();
     if (!id) return;
 
-    this.contaService.listarContas(id).subscribe({
+    this.contaService.listarContas(id).pipe(
+      handleApiError(this.toast, 'Erro ao carregar contas.')
+    ).subscribe({
       next: r => { this.contas = r; },
     });
-    this.categoriaService.listarCategoria(id, TipoCategoria.Receita).subscribe({
-      next: r => { this.categorias = r.conteudo ?? []; },
+    this.categoriaService.listarCategoria(id, TipoCategoria.Receita).pipe(
+      handleApiError(this.toast, 'Erro ao carregar categorias.')
+    ).subscribe({
+      next: r => { this.categorias = r ?? []; },
     });
 
     this._carregar();
@@ -106,7 +111,9 @@ export class ContasReceberComponent implements OnInit {
       status:   this.filtroSituacao || undefined,
       page:     this.pagina,
       per_page: this.porPagina,
-    }).subscribe({
+    }).pipe(
+      handleApiError(this.toast, 'Erro ao carregar contas a receber.')
+    ).subscribe({
       next: r => {
         this.items      = r.conteudo ?? [];
         this.total      = r.total ?? 0;
@@ -115,8 +122,10 @@ export class ContasReceberComponent implements OnInit {
       error: () => { this.carregando = false; },
     });
 
-    this.contaReceberService.obterResumoContaReceber(id).subscribe({
-      next: r => { this.resumo = r.conteudo ?? null; },
+    this.contaReceberService.obterResumoContaReceber(id).pipe(
+      handleApiError(this.toast, 'Erro ao carregar resumo.')
+    ).subscribe({
+      next: r => { this.resumo = r ?? null; },
     });
   }
 
@@ -185,9 +194,11 @@ export class ContasReceberComponent implements OnInit {
         cliente:         v.cliente || null,
         notas:           v.notas || null,
       };
-      this.contaReceberService.atualizarContaReceber(id, this.editandoId, payload).subscribe({
-        next: ()          => { this.toast.success('Conta atualizada!'); this._concluir(); },
-        error: (err: any) => { this.toast.error(err.error?.erro ?? 'Erro.'); this.enviando = false; },
+      this.contaReceberService.atualizarContaReceber(id, this.editandoId, payload).pipe(
+        handleApiError(this.toast, 'Erro ao atualizar conta.')
+      ).subscribe({
+        next: () => { this.toast.success('Conta atualizada!'); this._concluir(); },
+        error: () => { this.enviando = false; },
       });
     } else {
       const payload: CriarContaReceberDto = {
@@ -199,9 +210,11 @@ export class ContasReceberComponent implements OnInit {
         cliente:         v.cliente || null,
         notas:           v.notas || null,
       };
-      this.contaReceberService.criarContaReceber(id, payload).subscribe({
+      this.contaReceberService.criarContaReceber(id, payload).pipe(
+        handleApiError(this.toast, 'Erro ao criar conta a receber.')
+      ).subscribe({
         next: () => { this.toast.success('Conta a receber criada!'); this._concluir(); },
-        error: (err: any) => { this.toast.error(err.error?.erro ?? 'Erro.'); this.enviando = false; },
+        error: () => { this.enviando = false; },
       });
     }
   }
@@ -238,14 +251,16 @@ export class ContasReceberComponent implements OnInit {
       valor:           v.valor ?? undefined,
     };
 
-    this.contaReceberService.receberContaReceber(id, Number(this.recebendoItem.id), req).subscribe({
+    this.contaReceberService.receberContaReceber(id, Number(this.recebendoItem.id), req).pipe(
+      handleApiError(this.toast, 'Erro ao confirmar recebimento.')
+    ).subscribe({
       next: () => {
         this.toast.success('Recebimento confirmado! Transação gerada automaticamente.');
         this.recebendo    = false;
         this.showRecModal = false;
         this._carregar();
       },
-      error: (err: any) => { this.toast.error(err.error?.erro ?? 'Erro.'); this.recebendo = false; },
+      error: () => { this.recebendo = false; },
     });
   }
 
@@ -254,9 +269,10 @@ export class ContasReceberComponent implements OnInit {
     const id = this.empresaService.ativoId();
     if (!id) return;
 
-    this.contaReceberService.deletarContaReceber(id, Number(item.id)).subscribe({
-      next: ()  => { this.toast.success('Conta cancelada.'); this._carregar(); },
-      error: ()  => this.toast.error('Erro ao cancelar.'),
+    this.contaReceberService.deletarContaReceber(id, Number(item.id)).pipe(
+      handleApiError(this.toast, 'Erro ao cancelar.')
+    ).subscribe({
+      next: () => { this.toast.success('Conta cancelada.'); this._carregar(); },
     });
   }
 

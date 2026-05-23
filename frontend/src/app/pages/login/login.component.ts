@@ -8,7 +8,7 @@ import { RequisicaoLoginUsuario } from '../../core/models/auth.models';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme-toggle.component';
 import { AuthPanelComponent } from '../../shared/components/auth-panel/auth-panel.component';
-import { UnsubscriberComponent } from '../../core/unsubscriber.component';
+import { UnsubscriberBase } from '../../core/unsubscriber';
 import { environment } from '../../../environments/environment';
 
 declare const google: {
@@ -28,7 +28,7 @@ declare const google: {
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
-export class LoginComponent extends UnsubscriberComponent implements OnInit {
+export class LoginComponent extends UnsubscriberBase implements OnInit {
   carregando       = false;
   mostrarSenha     = false;
   googleCarregando = false;

@@ -9,7 +9,7 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
-from app.enums.tipoTransacaoEnum import TipoTransacaoEnum
+from app.enums.tipo_transacao_enum import TipoTransacaoEnum
 
 revision: str = '003'
 down_revision: Union[str, Sequence[str], None] = '002'

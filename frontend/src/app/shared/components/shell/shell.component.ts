@@ -22,7 +22,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { ThemeToggleComponent } from '../theme-toggle/theme-toggle.component';
-import { UnsubscriberComponent } from '../../../core/unsubscriber.component';
+import { UnsubscriberBase } from '../../../core/unsubscriber';
 import { EmpresaService } from '../../../core/services/empresa.service';
 
 /**
@@ -40,7 +40,7 @@ import { EmpresaService } from '../../../core/services/empresa.service';
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.scss',
 })
-export class ShellComponent extends UnsubscriberComponent implements OnInit {
+export class ShellComponent extends UnsubscriberBase implements OnInit {
 
   // ── Estado ───────────────────────────────────────────────────────────────
   collapsed  = false;

@@ -137,140 +137,14 @@
 
   <!-- ── Modal de criar/editar ──────────────────────────────────────────── -->
   @if (showModal) {
-    <div class="modal-backdrop" (click)="closeModal()">
-      <div class="modal" (click)="$event.stopPropagation()">
-
-        <div class="modal-header">
-          <h2>{{ editandoTransacao ? 'Editar transação' : 'Nova transação' }}</h2>
-          <button class="modal-close" (click)="closeModal()">
-            <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-          </button>
-        </div>
-
-        <form [formGroup]="formTransacao" (ngSubmit)="onSubmit()" novalidate class="modal-body">
-
-          <!-- Tipo -->
-          @if (!editandoTransacao) {
-            <div class="type-tabs">
-              <button type="button"
-                [class.active]="formTransacao.get('tipo')?.value == TipoTransacao.Despesa"
-                class="tab-expense"
-                (click)="formTransacao.get('tipo')?.setValue(TipoTransacao.Despesa)">Despesa</button>
-              <button type="button"
-                [class.active]="formTransacao.get('tipo')?.value == TipoTransacao.Receita"
-                class="tab-income"
-                (click)="formTransacao.get('tipo')?.setValue(TipoTransacao.Receita)">Receita</button>
-              <button type="button"
-                [class.active]="formTransacao.get('tipo')?.value == TipoTransacao.Transferencia"
-                class="tab-transfer"
-                (click)="formTransacao.get('tipo')?.setValue(TipoTransacao.Transferencia)">Transferência</button>
-            </div>
-          }
-
-          <!-- Descrição -->
-          <div class="fld">
-            <label class="fld-lbl">Descrição *</label>
-            <input type="text" formControlName="descricao" maxlength="100" placeholder="Ex: Salário, Aluguel..."
-              [class.bad]="formTransacao.get('descricao')?.invalid && formTransacao.get('descricao')?.touched">
-            <span class="char-count">{{ (formTransacao.get('descricao')?.value?.length || 0) }}/100</span>
-          </div>
-
-          <!-- Valor + Data -->
-          <div class="duo">
-            <div class="fld">
-              <label class="fld-lbl">Valor (R$) *</label>
-              <input type="number" formControlName="valor" placeholder="0,00" min="0.01" max="99999999.99" step="0.01"
-                [class.bad]="formTransacao.get('valor')?.invalid && formTransacao.get('valor')?.touched">
-            </div>
-            <div class="fld">
-              <label class="fld-lbl">Data *</label>
-              <input type="date" formControlName="data"
-                [class.bad]="formTransacao.get('data')?.invalid && formTransacao.get('data')?.touched">
-            </div>
-          </div>
-
-          <!-- Conta + Status -->
-          <div class="duo">
-            <div class="fld">
-              <label class="fld-lbl">Conta *</label>
-              <select formControlName="contaId" [class.bad]="formTransacao.get('contaId')?.invalid && formTransacao.get('contaId')?.touched">
-                <option [value]="null">Selecione...</option>
-                @for (acc of contas; track acc.id) {
-                  <option [value]="acc.id">{{ acc.nome }}</option>
-                }
-              </select>
-            </div>
-            <div class="fld">
-              <label class="fld-lbl">Status</label>
-              <select formControlName="situacao">
-                <option [value]="SituacaoTransacao.Confirmado">Confirmado</option>
-                <option [value]="SituacaoTransacao.Pendente">Pendente</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Conta destino (transferências) -->
-          @if (isTransferencia) {
-            <div class="fld">
-              <label class="fld-lbl">Conta de destino *</label>
-              <select formControlName="transferenciaParaContaId"
-                [class.bad]="formTransacao.hasError('contasIguais') || (formTransacao.get('transferenciaParaContaId')?.invalid && formTransacao.get('transferenciaParaContaId')?.touched)">
-                <option [value]="null">Selecione...</option>
-                @for (acc of contas; track acc.id) {
-                  <option [value]="acc.id">{{ acc.nome }}</option>
-                }
-              </select>
-              @if (formTransacao.hasError('contasIguais')) {
-                <span class="fld-err">A conta de destino deve ser diferente da conta de origem.</span>
-              }
-            </div>
-          }
-
-          <!-- Categoria -->
-          @if (!isTransferencia) {
-            <div class="fld">
-              <label class="fld-lbl">Categoria *</label>
-              <select formControlName="categoriaId"
-                      [class.bad]="formTransacao.get('categoriaId')?.invalid && formTransacao.get('categoriaId')?.touched">
-                <option [value]="null">Selecione...</option>
-                @for (cat of categoriasFiltradas; track cat.id) {
-                  <option [value]="cat.id">{{ cat.nome }}</option>
-                }
-              </select>
-            </div>
-          }
-
-          <!-- Recorrência -->
-          @if (!editandoTransacao && !isTransferencia) {
-            <div class="fld">
-              <label class="fld-lbl">Recorrência</label>
-              <select formControlName="recorrencia">
-                <option value="nenhuma">Sem recorrência</option>
-                <option value="mensal">Mensal</option>
-                <option value="semanal">Semanal</option>
-                <option value="anual">Anual</option>
-              </select>
-            </div>
-          }
-
-          <!-- Observação -->
-          <div class="fld">
-            <label class="fld-lbl">Observação</label>
-            <textarea formControlName="notas" maxlength="500" rows="2" placeholder="Opcional..."></textarea>
-            <span class="char-count">{{ (formTransacao.get('notas')?.value?.length || 0) }}/500</span>
-          </div>
-
-          <div class="modal-footer">
-            <button type="button" class="btn-cancel" (click)="closeModal()">Cancelar</button>
-            <button type="submit" class="btn-save" [disabled]="enviando">
-              @if (enviando) { <span class="spin"></span> }
-              @else { {{ editandoTransacao ? 'Salvar' : 'Registrar' }} }
-            </button>
-          </div>
-
-        </form>
-      </div>
-    </div>
+    <app-transacao-modal
+      [transacao]="editandoTransacao"
+      [contas]="contas"
+      [categorias]="categorias"
+      [enviando]="enviando"
+      (fechar)="onFechar()"
+      (salvar)="onSalvar($event)">
+    </app-transacao-modal>
   }
 
 </app-shell>

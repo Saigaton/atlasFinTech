@@ -2,9 +2,9 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.controllers import analiseController, authController, categoriaController, contaBancariaController, contaPagarController, contaReceberController, dashboardController, empresaController, relatorioController, transacaoController
+from app.controllers import analise_controller, auth_controller, categoria_controller, conta_bancaria_controller, conta_pagar_controller, conta_receber_controller, dashboard_controller, empresa_controller, relatorio_controller, transacao_controller
 from app.configuracoes.database import Base, engine
-from app.exceptions.exceptionHandler import setupExceptionHandlers
+from app.exceptions.exception_handler import setupExceptionHandlers
 from app.configuracoes.database import SessionLocal as _SessionLocal
 from app.entidades import *
 from app.utilitarios.seed import seed_tipo_categorias, seed_tipo_situacao_conta, seed_tipo_transacoes
@@ -52,16 +52,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(authController.router, prefix="/api/v1", tags=["Autenticação"])
-app.include_router(empresaController.router, prefix="/api/v1", tags=["Empresa"])
-app.include_router(categoriaController.router, prefix="/api/v1", tags=["Categoria"])
-app.include_router(contaBancariaController.router, prefix="/api/v1", tags=["Conta Bancária"])
-app.include_router(contaPagarController.router, prefix="/api/v1", tags=["Conta Pagar"])
-app.include_router(contaReceberController.router, prefix="/api/v1", tags=["Conta Pagar"])
-app.include_router(transacaoController.router, prefix="/api/v1", tags=["Transação"])
-app.include_router(dashboardController.router, prefix="/api/v1", tags=["Dashboard"])
-app.include_router(relatorioController.router, prefix="/api/v1", tags=["Relatório"])
-app.include_router(analiseController.router,   prefix="/api/v1", tags=["Análise"])
+app.include_router(auth_controller.router, prefix="/api/v1", tags=["Autenticação"])
+app.include_router(empresa_controller.router, prefix="/api/v1", tags=["Empresa"])
+app.include_router(categoria_controller.router, prefix="/api/v1", tags=["Categoria"])
+app.include_router(conta_bancaria_controller.router, prefix="/api/v1", tags=["Conta Bancária"])
+app.include_router(conta_pagar_controller.router, prefix="/api/v1", tags=["Conta Pagar"])
+app.include_router(conta_receber_controller.router, prefix="/api/v1", tags=["Conta Pagar"])
+app.include_router(transacao_controller.router, prefix="/api/v1", tags=["Transação"])
+app.include_router(dashboard_controller.router, prefix="/api/v1", tags=["Dashboard"])
+app.include_router(relatorio_controller.router, prefix="/api/v1", tags=["Relatório"])
+app.include_router(analise_controller.router,   prefix="/api/v1", tags=["Análise"])
 setupExceptionHandlers(app)
 
 # Base.metadata.drop_all(bind=engine)

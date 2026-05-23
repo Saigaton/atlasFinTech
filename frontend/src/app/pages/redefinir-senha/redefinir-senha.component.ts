@@ -8,7 +8,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme-toggle.component';
 import { AuthPanelComponent } from '../../shared/components/auth-panel/auth-panel.component';
 import { PasswordChecklistComponent } from '../../shared/components/password-checklist/password-checklist.component';
-import { UnsubscriberComponent } from '../../core/unsubscriber.component';
+import { UnsubscriberBase } from '../../core/unsubscriber';
 
 @Component({
   selector: 'app-redefinir-senha',
@@ -17,7 +17,7 @@ import { UnsubscriberComponent } from '../../core/unsubscriber.component';
   templateUrl: './redefinir-senha.component.html',
   styleUrl: './redefinir-senha.component.scss',
 })
-export class RedefinirSenhaComponent extends UnsubscriberComponent implements OnInit {
+export class RedefinirSenhaComponent extends UnsubscriberBase implements OnInit {
   carregando = false;
   concluido = false;
   mostrarNovaSenha = false;

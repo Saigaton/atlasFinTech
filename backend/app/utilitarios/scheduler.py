@@ -6,11 +6,11 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 from app.configuracoes.database import SessionLocal
-from app.entidades.agendamentosRelatorio import AgendamentosRelatorio
+from app.entidades.agendamentos_relatorio import AgendamentosRelatorio
 from app.entidades.empresas import Empresas
-from app.repositories.relatorioRepository import RelatorioRepository
-from app.services.relatorioService import RelatorioService
-from app.utilitarios.emailUtilitario import corpoEmailRelatorio, dispararEmailComTentativas
+from app.repositories.relatorio_repository import RelatorioRepository
+from app.services.relatorio_service import RelatorioService
+from app.utilitarios.email_utilitario import corpoEmailRelatorio, dispararEmailComTentativas
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger(__name__)

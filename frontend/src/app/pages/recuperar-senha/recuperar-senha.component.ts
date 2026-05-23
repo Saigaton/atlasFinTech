@@ -7,7 +7,8 @@ import { AuthPanelComponent } from '../../shared/components/auth-panel/auth-pane
 import { ToastService } from '../../core/services/toast.service';
 import { AuthService } from '../../core/services/auth.service';
 import { HttpErrorResponse } from '@angular/common/http';
-import { UnsubscriberComponent } from '../../core/unsubscriber.component';
+import { UnsubscriberBase } from '../../core/unsubscriber';
+import { handleApiError } from '../../core/handlers/handle-api-error';
 
 /**
  * Tela de recuperação de senha.
@@ -21,7 +22,7 @@ import { UnsubscriberComponent } from '../../core/unsubscriber.component';
   templateUrl: './recuperar-senha.component.html',
   styleUrl: './recuperar-senha.component.scss',
 })
-export class RecuperarSenhaComponent extends UnsubscriberComponent{
+export class RecuperarSenhaComponent extends UnsubscriberBase{
   carregando = false;
   enviado = false;
   formRecuperarSenha!: FormGroup;
@@ -43,16 +44,15 @@ export class RecuperarSenhaComponent extends UnsubscriberComponent{
 
   onSubmit(): void {
     this.carregando = true;
-    this.authService.solicitarRecuperacaoSenha(this.formRecuperarSenha.get('email')?.value).subscribe({
+    this.authService.solicitarRecuperacaoSenha(this.formRecuperarSenha.get('email')?.value).pipe(
+      handleApiError(this.toast, 'Erro ao enviar. Tente novamente.')
+    ).subscribe({
       next: () => {
         this.carregando = false;
         this.enviado = true;
         this.toast.success('Instruções enviadas! Verifique seu e-mail.');
       },
-      error: (err: HttpErrorResponse) => {
-        this.carregando = false;
-        this.toast.error('Erro ao enviar. Tente novamente.');
-      },
+      error: () => { this.carregando = false; },
     });
   }
 }

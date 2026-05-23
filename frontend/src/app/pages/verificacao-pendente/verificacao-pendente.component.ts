@@ -4,7 +4,8 @@ import { Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme-toggle.component';
 import { AuthPanelComponent } from '../../shared/components/auth-panel/auth-panel.component';
-import { UnsubscriberComponent } from '../../core/unsubscriber.component';
+import { UnsubscriberBase } from '../../core/unsubscriber';
+import { handleApiError } from '../../core/handlers/handle-api-error';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 
@@ -15,7 +16,7 @@ import { ToastService } from '../../core/services/toast.service';
   templateUrl: './verificacao-pendente.component.html',
   styleUrl: './verificacao-pendente.component.scss',
 })
-export class VerificacaoPendenteComponent extends UnsubscriberComponent implements OnInit {
+export class VerificacaoPendenteComponent extends UnsubscriberBase implements OnInit {
   carregando = false;
   enviado    = false;
   contagem   = 0;
@@ -51,17 +52,16 @@ export class VerificacaoPendenteComponent extends UnsubscriberComponent implemen
     if (this.formulario.invalid || this.contagem > 0) return;
     this.carregando = true;
 
-    this.authService.enviarEmailVerificacao(this.email).subscribe({
+    this.authService.enviarEmailVerificacao(this.email).pipe(
+      handleApiError(this.toast, 'Erro ao enviar. Tente novamente.')
+    ).subscribe({
       next: () => {
         this.carregando = false;
         this.enviado    = true;
         this.toast.success('E-mail de verificação enviado!');
         this._iniciarContagem();
       },
-      error: () => {
-        this.carregando = false;
-        this.toast.error('Erro ao enviar. Tente novamente.');
-      },
+      error: () => { this.carregando = false; },
     });
   }
 

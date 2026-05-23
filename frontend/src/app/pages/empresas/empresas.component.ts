@@ -6,10 +6,11 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { EmpresaService } from '../../core/services/empresa.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme-toggle.component';
-import { UnsubscriberComponent } from '../../core/unsubscriber.component';
+import { UnsubscriberBase } from '../../core/unsubscriber';
+import { handleApiError } from '../../core/handlers/handle-api-error';
 import { Empresa } from '../../core/models/usuario.model';
-import { CpfCnpjValidator } from '../../shared/validadores/cpf-cnpj.validator';
-import { CpfCnpjMaskDirective } from '../../shared/diretivas/cpf-cnpj-mask.directive';
+import { CpfCnpjValidator } from '../../shared/validators/cpf-cnpj.validator';
+import { CpfCnpjMaskDirective } from '../../shared/directives/cpf-cnpj-mask.directive';
 
 @Component({
   selector: 'app-empresas',
@@ -18,7 +19,7 @@ import { CpfCnpjMaskDirective } from '../../shared/diretivas/cpf-cnpj-mask.direc
   templateUrl: './empresas.component.html',
   styleUrl: './empresas.component.scss',
 })
-export class EmpresasComponent extends UnsubscriberComponent implements OnInit {
+export class EmpresasComponent extends UnsubscriberBase implements OnInit {
   carregando = false;
   form!: FormGroup;
 
@@ -50,16 +51,14 @@ export class EmpresasComponent extends UnsubscriberComponent implements OnInit {
     this.carregando = true;
 
     const documento = (this.form.value.documento as string)?.replace(/\D/g, '') || undefined;
-    this.empresaService.criarEmpresa({ nome: this.form.value.nome, documento } as Empresa).subscribe({
+    this.empresaService.criarEmpresa({ nome: this.form.value.nome, documento } as Empresa).pipe(
+      handleApiError(this.toast, 'Erro ao criar empresa.')
+    ).subscribe({
       next: () => {
         this.toast.success('Empresa criada! Bem-vindo ao Atlas FinTech.');
         this.router.navigate(['/dashboard']);
       },
-      error: (err: HttpErrorResponse) => {
-        this.carregando = false;
-        const msg = err.error?.erro ?? 'Erro ao criar empresa.';
-        this.toast.error(msg);
-      },
+      error: () => { this.carregando = false; },
     });
   }
 }

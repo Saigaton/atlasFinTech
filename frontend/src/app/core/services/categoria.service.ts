@@ -1,28 +1,10 @@
-/**
- * Serviço de Categorias — Atlas FinTech.
- *
- * CRUD de categorias de transações por empresa.
- * Ao criar uma empresa, 11 categorias padrão são geradas automaticamente.
- *
- * Tipos de categoria:
- *   'income'  → apenas para receitas
- *   'expense' → apenas para despesas
- *   'both'    → aparece em ambos os tipos
- *
- * Endpoints:
- *   GET    /companies/{id}/categories        → list()
- *   POST   /companies/{id}/categories        → create()
- *   PATCH  /companies/{id}/categories/{id}   → update()
- *   DELETE /companies/{id}/categories/{id}   → delete()
- */
-import { Injectable, inject } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { RespostaApi } from '../models/resposta-api';
 import { AtualizarCategoria, Categoria, CriarCategoria, TipoCategoria } from '../models/categoria.models';
 
-/** Serviço de categorias — Atlas FinTech. */
 @Injectable({ providedIn: 'root' })
 export class CategoriaService {
   private readonly API = environment.apiUrl;
@@ -33,20 +15,28 @@ export class CategoriaService {
     return `${this.API}/empresas/${empresaId}/categorias`;
   }
 
-  listarCategoria(empresaId: number, tipo?: TipoCategoria): Observable<RespostaApi<Categoria[]>> {
+  listarCategoria(empresaId: number, tipo?: TipoCategoria): Observable<Categoria[]> {
     const params = tipo ? `?tipo=${tipo}` : '';
-    return this.http.get<RespostaApi<Categoria[]>>(`${this.base(empresaId)}${params}`);
+    return this.http.get<RespostaApi<Categoria[]>>(`${this.base(empresaId)}${params}`).pipe(
+      map(r => r.conteudo),
+    );
   }
 
-  criarCategoria(empresaId: number, data: CriarCategoria): Observable<RespostaApi<Categoria>> {
-    return this.http.post<RespostaApi<Categoria>>(this.base(empresaId), data);
+  criarCategoria(empresaId: number, data: CriarCategoria): Observable<Categoria> {
+    return this.http.post<RespostaApi<Categoria>>(this.base(empresaId), data).pipe(
+      map(r => r.conteudo),
+    );
   }
 
-  atualizarCategoria(empresaId: number, id: number, data: AtualizarCategoria): Observable<RespostaApi<Categoria>> {
-    return this.http.put<RespostaApi<Categoria>>(`${this.base(empresaId)}/${id}`, data);
+  atualizarCategoria(empresaId: number, id: number, data: AtualizarCategoria): Observable<Categoria> {
+    return this.http.put<RespostaApi<Categoria>>(`${this.base(empresaId)}/${id}`, data).pipe(
+      map(r => r.conteudo),
+    );
   }
 
-  deletarCategoria(empresaId: number, id: number): Observable<RespostaApi<null>> {
-    return this.http.delete<RespostaApi<null>>(`${this.base(empresaId)}/${id}`);
+  deletarCategoria(empresaId: number, id: number): Observable<null> {
+    return this.http.delete<RespostaApi<null>>(`${this.base(empresaId)}/${id}`).pipe(
+      map(r => r.conteudo),
+    );
   }
 }

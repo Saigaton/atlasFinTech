@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TransacaoService } from '../../core/services/transacao.service';
 import { EmpresaService } from '../../core/services/empresa.service';
+import { ToastService } from '../../core/services/toast.service';
+import { handleApiError } from '../../core/handlers/handle-api-error';
 import { MesGrafico } from '../../core/models/dashboard.models';
 import { ShellComponent } from '../../shared/components/shell/shell.component';
 
@@ -53,6 +55,7 @@ export class FluxoCaixaComponent implements OnInit {
   constructor(
     private empresaService:   EmpresaService,
     private transacaoService: TransacaoService,
+    private toast:            ToastService,
   ) {}
 
   ngOnInit(): void { this._carregar(); }
@@ -61,9 +64,11 @@ export class FluxoCaixaComponent implements OnInit {
     const id = this.empresaService.ativoId();
     if (!id) { this.carregando = false; return; }
     this.carregando = true;
-    this.transacaoService.obterMesGrafico(id, this.anoSelecionado).subscribe({
-      next:  r  => { this.rawData = r?.conteudo ?? []; this.carregando = false; },
-      error: () => { this.rawData = [];                this.carregando = false; },
+    this.transacaoService.obterMesGrafico(id, this.anoSelecionado).pipe(
+      handleApiError(this.toast, 'Erro ao carregar fluxo de caixa.')
+    ).subscribe({
+      next:  r  => { this.rawData = r ?? []; this.carregando = false; },
+      error: ()  => { this.rawData = []; this.carregando = false; },
     });
   }
 

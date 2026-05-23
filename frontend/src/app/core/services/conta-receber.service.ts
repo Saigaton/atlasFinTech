@@ -1,13 +1,11 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { AtualizarContaReceberDto, ContaReceber, CriarContaReceberDto, RequisicaoRecebimento, ResumoContasAReceber } from '../models/conta-receber.model';
 import { environment } from '../../../environments/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { RespostaApi, RespostaPaginada } from '../models/resposta-api';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class ContaReceberService {
   private readonly API = environment.apiUrl;
 
@@ -28,23 +26,33 @@ export class ContaReceberService {
     return this.http.get<RespostaPaginada<ContaReceber>>(this.base(empresaId), { params: p });
   }
 
-  criarContaReceber(empresaId: number, data: CriarContaReceberDto): Observable<RespostaApi<ContaReceber>> {
-    return this.http.post<RespostaApi<ContaReceber>>(this.base(empresaId), data);
+  criarContaReceber(empresaId: number, data: CriarContaReceberDto): Observable<ContaReceber> {
+    return this.http.post<RespostaApi<ContaReceber>>(this.base(empresaId), data).pipe(
+      map(r => r.conteudo),
+    );
   }
 
-  atualizarContaReceber(empresaId: number, id: number, data: AtualizarContaReceberDto): Observable<RespostaApi<ContaReceber>> {
-    return this.http.put<RespostaApi<ContaReceber>>(`${this.base(empresaId)}/${id}`, data);
+  atualizarContaReceber(empresaId: number, id: number, data: AtualizarContaReceberDto): Observable<ContaReceber> {
+    return this.http.put<RespostaApi<ContaReceber>>(`${this.base(empresaId)}/${id}`, data).pipe(
+      map(r => r.conteudo),
+    );
   }
 
-  receberContaReceber(empresaId: number, id: number, data: RequisicaoRecebimento): Observable<RespostaApi<ContaReceber>> {
-    return this.http.post<RespostaApi<ContaReceber>>(`${this.base(empresaId)}/${id}/receber`, data);
+  receberContaReceber(empresaId: number, id: number, data: RequisicaoRecebimento): Observable<ContaReceber> {
+    return this.http.post<RespostaApi<ContaReceber>>(`${this.base(empresaId)}/${id}/receber`, data).pipe(
+      map(r => r.conteudo),
+    );
   }
 
-  deletarContaReceber(empresaId: number, id: number): Observable<RespostaApi<null>> {
-    return this.http.delete<RespostaApi<null>>(`${this.base(empresaId)}/${id}`);
+  deletarContaReceber(empresaId: number, id: number): Observable<null> {
+    return this.http.delete<RespostaApi<null>>(`${this.base(empresaId)}/${id}`).pipe(
+      map(r => r.conteudo),
+    );
   }
 
-  obterResumoContaReceber(empresaId: number): Observable<RespostaApi<ResumoContasAReceber>> {
-    return this.http.get<RespostaApi<ResumoContasAReceber>>(`${this.base(empresaId)}/resumo`);
+  obterResumoContaReceber(empresaId: number): Observable<ResumoContasAReceber> {
+    return this.http.get<RespostaApi<ResumoContasAReceber>>(`${this.base(empresaId)}/resumo`).pipe(
+      map(r => r.conteudo),
+    );
   }
 }

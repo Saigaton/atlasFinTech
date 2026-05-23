@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
-from app.entidades.tipoCategorias import TipoCategorias
-from app.entidades.tipoTransacoes import TipoTransacoes
-from app.entidades.tipoSituacaoConta import TipoSituacaoConta
+from app.entidades.tipo_categorias import TipoCategorias
+from app.entidades.tipo_transacoes import TipoTransacoes
+from app.entidades.tipo_situacao_conta import TipoSituacaoConta
 
 _TIPOS_CATEGORIA = [
     (0, "Receita"),

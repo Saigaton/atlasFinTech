@@ -4,7 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { AnaliseService } from '../../core/services/analise.service';
 import { EmpresaService } from '../../core/services/empresa.service';
+import { ToastService } from '../../core/services/toast.service';
 import { ShellComponent } from '../../shared/components/shell/shell.component';
+import { handleApiError } from '../../core/handlers/handle-api-error';
 import {
   Alerta, AnaliseFinanceira, DadosCalendario, DadosFluxoCaixa,
   EventoCalendario, TipoAlerta,
@@ -66,6 +68,7 @@ export class AnaliseComponent implements OnInit {
   constructor(
     private empresaService: EmpresaService,
     private analiseService: AnaliseService,
+    private toast:          ToastService,
   ) {}
 
   private get empresaId(): number | null {
@@ -83,8 +86,10 @@ export class AnaliseComponent implements OnInit {
     const id = this.empresaId;
     if (!id) { this.carregandoFluxoCaixa = false; return; }
     this.carregandoFluxoCaixa = true;
-    this.analiseService.obterFluxoCaixa(id, 4).subscribe({
-      next: r  => { this.fluxoCaixa = r.conteudo; this.carregandoFluxoCaixa = false; },
+    this.analiseService.obterFluxoCaixa(id, 4).pipe(
+      handleApiError(this.toast, 'Erro ao carregar fluxo de caixa.')
+    ).subscribe({
+      next: r  => { this.fluxoCaixa = r; this.carregandoFluxoCaixa = false; },
       error: () => { this.carregandoFluxoCaixa = false; },
     });
   }
@@ -94,8 +99,10 @@ export class AnaliseComponent implements OnInit {
     if (!id) { this.carregandoAnalise = false; return; }
     this.carregandoAnalise = true;
     const m = this.mesSelecionado > 0 ? this.mesSelecionado : undefined;
-    this.analiseService.obterAnaliseFinanceira(id, m, this.anoSelecionado).subscribe({
-      next: r  => { this.analise = r.conteudo; this.carregandoAnalise = false; },
+    this.analiseService.obterAnaliseFinanceira(id, m, this.anoSelecionado).pipe(
+      handleApiError(this.toast, 'Erro ao carregar análise financeira.')
+    ).subscribe({
+      next: r  => { this.analise = r; this.carregandoAnalise = false; },
       error: () => { this.carregandoAnalise = false; },
     });
   }
@@ -103,8 +110,10 @@ export class AnaliseComponent implements OnInit {
   private _carregarAlertas(): void {
     const id = this.empresaId;
     if (!id) { this.carregandoAlertas = false; return; }
-    this.analiseService.obterAlertas(id).subscribe({
-      next: r  => { this.alertas = r.conteudo ?? []; this.carregandoAlertas = false; },
+    this.analiseService.obterAlertas(id).pipe(
+      handleApiError(this.toast, 'Erro ao carregar alertas.')
+    ).subscribe({
+      next: r  => { this.alertas = r ?? []; this.carregandoAlertas = false; },
       error: () => { this.carregandoAlertas = false; },
     });
   }
@@ -113,8 +122,10 @@ export class AnaliseComponent implements OnInit {
     const id = this.empresaId;
     if (!id) { this.carregandoCalendario = false; return; }
     this.carregandoCalendario = true;
-    this.analiseService.obterCalendario(id, this.mesSelecionadoCal, this.anoSelecionadoCal).subscribe({
-      next: r  => { this.dadosCalendario = r.conteudo; this.carregandoCalendario = false; },
+    this.analiseService.obterCalendario(id, this.mesSelecionadoCal, this.anoSelecionadoCal).pipe(
+      handleApiError(this.toast, 'Erro ao carregar calendário.')
+    ).subscribe({
+      next: r  => { this.dadosCalendario = r; this.carregandoCalendario = false; },
       error: () => { this.carregandoCalendario = false; },
     });
   }
@@ -160,7 +171,7 @@ export class AnaliseComponent implements OnInit {
 
     this.analiseService.enviarMensagemChat(id, msg).subscribe({
       next: r => {
-        this.historicoChat = [...this.historicoChat, { tipo: 'bot', texto: r.conteudo.resposta }];
+        this.historicoChat = [...this.historicoChat, { tipo: 'bot', texto: r.resposta }];
         this.enviandoChat  = false;
       },
       error: () => {

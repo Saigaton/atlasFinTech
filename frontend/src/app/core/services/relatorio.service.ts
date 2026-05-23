@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { RespostaApi } from '../models/resposta-api';
 import { StatusAgendamento, ResultadoConciliacao } from '../models/relatorio.model';
@@ -15,23 +15,29 @@ export class RelatorioService {
     return `${this.API}/empresas/${empresaId}/relatorios`;
   }
 
-  obterStatusAgendamento(empresaId: number): Observable<RespostaApi<StatusAgendamento>> {
-    return this.http.get<RespostaApi<StatusAgendamento>>(`${this.base(empresaId)}/agendamento/status`);
-  }
-
-  inscreverEmailPeriodico(empresaId: number, email: string, diaMes: number, hora: number): Observable<RespostaApi<void>> {
-    return this.http.post<RespostaApi<void>>(
-      `${this.base(empresaId)}/agendamento/inscrever`,
-      { email, dia_mes: diaMes, hora },
+  obterStatusAgendamento(empresaId: number): Observable<StatusAgendamento> {
+    return this.http.get<RespostaApi<StatusAgendamento>>(`${this.base(empresaId)}/agendamento/status`).pipe(
+      map(r => r.conteudo),
     );
   }
 
-  cancelarEmailPeriodico(empresaId: number): Observable<RespostaApi<void>> {
-    return this.http.delete<RespostaApi<void>>(`${this.base(empresaId)}/agendamento/cancelar`);
+  inscreverEmailPeriodico(empresaId: number, email: string, diaMes: number, hora: number): Observable<void> {
+    return this.http.post<RespostaApi<void>>(
+      `${this.base(empresaId)}/agendamento/inscrever`,
+      { email, dia_mes: diaMes, hora },
+    ).pipe(map(() => undefined as void));
   }
 
-  dispararRelatorioAgora(empresaId: number, email: string): Observable<RespostaApi<void>> {
-    return this.http.post<RespostaApi<void>>(`${this.base(empresaId)}/agendamento/disparar`, { email });
+  cancelarEmailPeriodico(empresaId: number): Observable<void> {
+    return this.http.delete<RespostaApi<void>>(`${this.base(empresaId)}/agendamento/cancelar`).pipe(
+      map(() => undefined as void),
+    );
+  }
+
+  dispararRelatorioAgora(empresaId: number, email: string): Observable<void> {
+    return this.http.post<RespostaApi<void>>(`${this.base(empresaId)}/agendamento/disparar`, { email }).pipe(
+      map(() => undefined as void),
+    );
   }
 
   baixarTransacoesCsv(empresaId: number, mes?: number, ano?: number): Observable<Blob> {
@@ -77,16 +83,20 @@ export class RelatorioService {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
-  enviarEmailRelatorio(empresaId: number, email: string, mes?: number, ano?: number): Observable<RespostaApi<void>> {
+  enviarEmailRelatorio(empresaId: number, email: string, mes?: number, ano?: number): Observable<void> {
     let params = new HttpParams();
     if (mes) params = params.set('mes', mes);
     if (ano) params = params.set('ano', ano);
-    return this.http.post<RespostaApi<void>>(`${this.base(empresaId)}/email`, { email }, { params });
+    return this.http.post<RespostaApi<void>>(`${this.base(empresaId)}/email`, { email }, { params }).pipe(
+      map(() => undefined as void),
+    );
   }
 
-  importarExtrato(empresaId: number, arquivo: File): Observable<RespostaApi<ResultadoConciliacao>> {
+  importarExtrato(empresaId: number, arquivo: File): Observable<ResultadoConciliacao> {
     const form = new FormData();
     form.append('arquivo', arquivo);
-    return this.http.post<RespostaApi<ResultadoConciliacao>>(`${this.base(empresaId)}/conciliacao`, form);
+    return this.http.post<RespostaApi<ResultadoConciliacao>>(`${this.base(empresaId)}/conciliacao`, form).pipe(
+      map(r => r.conteudo),
+    );
   }
 }

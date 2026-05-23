@@ -7,7 +7,7 @@ import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
-from app.entidades.tokenResetSenha import TokenResetSenha
+from app.entidades.token_reset_senha import TokenResetSenha
 from app.entidades.usuarios import Usuarios
 
 from app.configuracoes.config import settings

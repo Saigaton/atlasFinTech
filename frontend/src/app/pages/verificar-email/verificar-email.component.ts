@@ -4,7 +4,7 @@ import { RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme-toggle.component';
 import { AuthPanelComponent } from '../../shared/components/auth-panel/auth-panel.component';
-import { UnsubscriberComponent } from '../../core/unsubscriber.component';
+import { UnsubscriberBase } from '../../core/unsubscriber';
 
 type EstadoVerificacao = 'carregando' | 'sucesso' | 'erro' | 'jaVerificado';
 
@@ -15,7 +15,7 @@ type EstadoVerificacao = 'carregando' | 'sucesso' | 'erro' | 'jaVerificado';
   templateUrl: './verificar-email.component.html',
   styleUrl: './verificar-email.component.scss',
 })
-export class VerificarEmailComponent extends UnsubscriberComponent implements OnInit {
+export class VerificarEmailComponent extends UnsubscriberBase implements OnInit {
   estado: EstadoVerificacao = 'carregando';
   mensagem = '';
 

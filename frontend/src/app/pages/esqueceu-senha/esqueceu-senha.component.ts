@@ -7,7 +7,8 @@ import { ToastService } from '../../core/services/toast.service';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme-toggle.component';
 import { AuthPanelComponent } from '../../shared/components/auth-panel/auth-panel.component';
-import { UnsubscriberComponent } from '../../core/unsubscriber.component';
+import { UnsubscriberBase } from '../../core/unsubscriber';
+import { handleApiError } from '../../core/handlers/handle-api-error';
 
 @Component({
   selector: 'app-esqueceu-senha',
@@ -16,7 +17,7 @@ import { UnsubscriberComponent } from '../../core/unsubscriber.component';
   templateUrl: './esqueceu-senha.component.html',
   styleUrl: './esqueceu-senha.component.scss',
 })
-export class EsqueceuSenhaComponent extends UnsubscriberComponent implements OnInit {
+export class EsqueceuSenhaComponent extends UnsubscriberBase implements OnInit {
   carregando = false;
   enviado = false;
   formEsqueceuSenha!: FormGroup;
@@ -44,16 +45,15 @@ export class EsqueceuSenhaComponent extends UnsubscriberComponent implements OnI
     if (this.formEsqueceuSenha.invalid) { this.formEsqueceuSenha.markAllAsTouched(); return; }
     this.carregando = true;
 
-    this.authService.solicitarRecuperacaoSenha(this.formEsqueceuSenha.get('email')?.value).subscribe({
+    this.authService.solicitarRecuperacaoSenha(this.formEsqueceuSenha.get('email')?.value).pipe(
+      handleApiError(this.toast, 'Erro ao enviar. Tente novamente.')
+    ).subscribe({
       next: () => {
         this.carregando = false;
         this.enviado = true;
         this.toast.success('Instruções enviadas! Verifique seu e-mail.');
       },
-      error: (err: HttpErrorResponse) => {
-        this.carregando = false;
-        this.toast.error('Erro ao enviar. Tente novamente.');
-      },
+      error: () => { this.carregando = false; },
     });
   }
 }

@@ -3,8 +3,8 @@ from decimal import Decimal
 from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.enums.tipoTransacaoEnum import TipoTransacaoEnum
-from app.enums.situacaoTransacaoEnum import SituacaoTransacaoEnum
+from app.enums.tipo_transacao_enum import TipoTransacaoEnum
+from app.enums.situacao_transacao_enum import SituacaoTransacaoEnum
 
 
 class _ContaSimples(BaseModel):

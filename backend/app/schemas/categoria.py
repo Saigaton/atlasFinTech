@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional
-from app.enums.tipoCategoriaEnum import TipoCategoriaEnum
+from app.enums.tipo_categoria_enum import TipoCategoriaEnum
 
 
 class CriarCategoria(BaseModel):

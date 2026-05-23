@@ -8,10 +8,10 @@ import {
   RequisicaoRegistroUsuario, Usuario, MensagemResposta,
   RequisicaoLoginUsuario,
 } from '../../core/models/auth.models';
-import { UnsubscriberComponent } from '../unsubscriber.component';
+import { UnsubscriberBase } from '../unsubscriber';
 
 @Injectable({ providedIn: 'root' })
-export class AuthService extends UnsubscriberComponent {
+export class AuthService extends UnsubscriberBase {
   private readonly API = environment.apiUrl;
 
   private emailParaConfirmacao: string = '';

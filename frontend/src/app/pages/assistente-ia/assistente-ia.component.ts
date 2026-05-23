@@ -74,7 +74,7 @@ export class AssistenteIaComponent implements OnInit {
 
     try {
       const resposta = await firstValueFrom(this.analiseService.enviarMensagemChat(id, mensagem));
-      this._adicionarRespostaBot(resposta.conteudo?.resposta ?? 'Não obtive resposta. Tente novamente.');
+      this._adicionarRespostaBot(resposta?.resposta ?? 'Não obtive resposta. Tente novamente.');
     } catch {
       this._adicionarRespostaBot('Ocorreu um erro ao consultar seus dados. Por favor, tente novamente.');
     }

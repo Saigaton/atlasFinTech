@@ -9,7 +9,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { RequisicaoRegistroUsuario } from '../../core/models/auth.models';
 import { HttpErrorResponse } from '@angular/common/http';
 import { PasswordChecklistComponent } from '../../shared/components/password-checklist/password-checklist.component';
-import { UnsubscriberComponent } from '../../core/unsubscriber.component';
+import { UnsubscriberBase } from '../../core/unsubscriber';
 import { environment } from '../../../environments/environment';
 
 declare const google: {
@@ -29,7 +29,7 @@ declare const google: {
   templateUrl: './registro.component.html',
   styleUrl: './registro.component.scss'
 })
-export class RegistroComponent extends UnsubscriberComponent implements OnInit {
+export class RegistroComponent extends UnsubscriberBase implements OnInit {
   carregando       = false;
   mostrarSenha     = false;
   mostrarConfirmarSenha = false;

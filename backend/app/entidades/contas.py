@@ -4,7 +4,7 @@ from typing import Optional
 from sqlalchemy import Integer, String, DateTime, Numeric, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.configuracoes.database import Base
-from app.enums.tipoContaEnum import TipoContaEnum
+from app.enums.tipo_conta_enum import TipoContaEnum
 
 class Contas(Base):
     __tablename__ = "contas"

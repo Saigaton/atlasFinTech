@@ -18,6 +18,7 @@ import {
 import { Transacao, TipoTransacao, SituacaoTransacao } from '../../core/models/transacao.model';
 import { Conta } from '../../core/models/conta.model';
 import { Categoria } from '../../core/models/categoria.models';
+import { handleApiError } from '../../core/handlers/handle-api-error';
 
 @Component({
   selector: 'app-dashboard',
@@ -76,7 +77,9 @@ export class DashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.empresaService.listarEmpresas().subscribe({
+    this.empresaService.listarEmpresas().pipe(
+      handleApiError(this.toast, 'Erro ao carregar dados da empresa.')
+    ).subscribe({
       next: empresas => {
         if (empresas.length > 0) {
           this.temEmpresa = true;
@@ -114,23 +117,29 @@ export class DashboardComponent implements OnInit {
   private _carregarKpis(id: number): void {
     this.carregandoKpis = true;
     const mes = this.periodoSelecionado === 'ano' ? undefined : this.mesSelecionado;
-    this.transacaoService.obterKpis(id, mes, this.anoSelecionado).subscribe({
-      next: r => { this.kpis = r.conteudo; this.carregandoKpis = false; },
+    this.transacaoService.obterKpis(id, mes, this.anoSelecionado).pipe(
+      handleApiError(this.toast, 'Erro ao carregar KPIs.')
+    ).subscribe({
+      next: r => { this.kpis = r; this.carregandoKpis = false; },
       error: ()  => { this.carregandoKpis = false; },
     });
   }
 
   private _carregarTransacoes(id: number): void {
     this.carregandoTransacoes = true;
-    this.transacaoService.obterTransacoesRecente(id, 8).subscribe({
-      next: r => { this.transacoes = r.conteudo ?? []; this.carregandoTransacoes = false; },
+    this.transacaoService.obterTransacoesRecente(id, 8).pipe(
+      handleApiError(this.toast, 'Erro ao carregar transações recentes.')
+    ).subscribe({
+      next: r => { this.transacoes = r ?? []; this.carregandoTransacoes = false; },
       error: ()  => { this.carregandoTransacoes = false; },
     });
   }
 
   private _carregarContas(id: number): void {
     this.carregandoContas = true;
-    this.contaService.listarContas(id).subscribe({
+    this.contaService.listarContas(id).pipe(
+      handleApiError(this.toast, 'Erro ao carregar contas.')
+    ).subscribe({
       next: r => { this.contas = r ?? []; this.carregandoContas = false; },
       error: ()  => { this.carregandoContas = false; },
     });
@@ -138,8 +147,10 @@ export class DashboardComponent implements OnInit {
 
   private _carregarGrafico(id: number): void {
     this.carregandoGrafico = true;
-    this.transacaoService.obterMesGrafico(id, this.anoSelecionado).subscribe({
-      next: r => { this.dadosGrafico = r.conteudo ?? []; this.carregandoGrafico = false; },
+    this.transacaoService.obterMesGrafico(id, this.anoSelecionado).pipe(
+      handleApiError(this.toast, 'Erro ao carregar gráfico.')
+    ).subscribe({
+      next: r => { this.dadosGrafico = r ?? []; this.carregandoGrafico = false; },
       error: ()  => { this.carregandoGrafico = false; },
     });
   }
@@ -150,31 +161,34 @@ export class DashboardComponent implements OnInit {
     em7dias.setDate(hoje.getDate() + 7);
     const fmtData = (d: Date) => d.toISOString().split('T')[0];
 
-    this.contaPagarService.listarContasPagar(id, { status: '2', per_page: 100 }).subscribe({
+    this.contaPagarService.listarContasPagar(id, { status: '2', per_page: 100 }).pipe(
+      handleApiError(this.toast, 'Erro ao carregar contas vencidas.')
+    ).subscribe({
       next: r => {
         const lista = r.conteudo ?? [];
         this.contasVencidasCount = lista.length;
         this.contasVencidasTotal = lista.reduce((s, i) => s + (Number(i.valor) || 0), 0);
       },
-      error: () => {},
     });
 
-    this.contaPagarService.listarContasPagar(id, { status: '0', date_to: fmtData(em7dias), per_page: 100 }).subscribe({
+    this.contaPagarService.listarContasPagar(id, { status: '0', date_to: fmtData(em7dias), per_page: 100 }).pipe(
+      handleApiError(this.toast, 'Erro ao carregar vencimentos próximos.')
+    ).subscribe({
       next: r => {
         const lista = r.conteudo ?? [];
         this.vencimentoBreveCount = lista.length;
         this.vencimentoBreveTotal = lista.reduce((s, i) => s + (Number(i.valor) || 0), 0);
       },
-      error: () => {},
     });
 
-    this.contaReceberService.listarContasReceber(id, { status: '2', per_page: 100 }).subscribe({
+    this.contaReceberService.listarContasReceber(id, { status: '2', per_page: 100 }).pipe(
+      handleApiError(this.toast, 'Erro ao carregar recebimentos atrasados.')
+    ).subscribe({
       next: r => {
         const lista = r.conteudo ?? [];
         this.recebimentosAtrasadosCount = lista.length;
         this.recebimentosAtrasadosTotal = lista.reduce((s, i) => s + (Number(i.valor) || 0), 0);
       },
-      error: () => {},
     });
   }
 
@@ -190,9 +204,9 @@ export class DashboardComponent implements OnInit {
       ]);
 
       const mapa = new Map<number, Categoria>();
-      (catResp?.conteudo ?? []).forEach((c: Categoria) => mapa.set(c.id, c));
+      (catResp ?? []).forEach((c: Categoria) => mapa.set(c.id, c));
 
-      const dados = analiseResp?.conteudo as any;
+      const dados = analiseResp as any;
       const principaisDespesas: any[] = dados?.principaisDespesasCategorias ?? dados?.top_expense_categories ?? [];
       const totalDespesa: number      = dados?.totalDespesa ?? dados?.total_expense ?? 0;
       const principaisReceitas: any[] = dados?.principaisReceitasCategorias ?? dados?.top_income_categories ?? [];
@@ -264,7 +278,7 @@ export class DashboardComponent implements OnInit {
   private async _carregarPrevisaoMes(id: number): Promise<void> {
     try {
       const res  = await firstValueFrom(this.analiseService.obterPrevisaoMes(id));
-      const dado = res?.conteudo as any;
+      const dado = res as any;
       if (!dado) { this.previsaoMes = null; return; }
       this.previsaoMes = {
         ePositivo:        dado.is_positive      ?? dado.ePositivo        ?? true,
@@ -279,7 +293,7 @@ export class DashboardComponent implements OnInit {
   private async _carregarGraficoPorConta(id: number): Promise<void> {
     try {
       const res  = await firstValueFrom(this.transacaoService.obterGraficoPorConta(id, this.anoSelecionado));
-      const lista: any[] = res?.conteudo ?? [];
+      const lista: any[] = res ?? [];
       this.graficoPorConta = lista.map((a: any): GraficoPorConta => ({
         contaId:   a.account_id   ?? a.contaId   ?? 0,
         nomeConta: a.account_name ?? a.nomeConta  ?? '',
