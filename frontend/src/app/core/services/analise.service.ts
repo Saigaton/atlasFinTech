@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { RespostaApi } from '../models/resposta-api';
 import {
-  Alerta, PaginaAuditoria, DadosCalendario,
+  Alerta, DadosCalendario,
   DadosFluxoCaixa, AnaliseFinanceira,
 } from '../models/analise.model';
 
@@ -34,11 +34,6 @@ export class AnaliseService {
     return this.http.get<RespostaApi<Alerta[]>>(`${this.base(empresaId)}/alertas`);
   }
 
-  obterLogAuditoria(empresaId: number, pagina = 1, porPagina = 50): Observable<RespostaApi<PaginaAuditoria>> {
-    const params = new HttpParams().set('pagina', pagina).set('por_pagina', porPagina);
-    return this.http.get<RespostaApi<PaginaAuditoria>>(`${this.base(empresaId)}/log-auditoria`, { params });
-  }
-
   enviarMensagemChat(empresaId: number, mensagem: string): Observable<RespostaApi<{ resposta: string }>> {
     return this.http.post<RespostaApi<{ resposta: string }>>(
       `${this.base(empresaId)}/chatbot`, { message: mensagem }
@@ -56,20 +51,4 @@ export class AnaliseService {
     return this.http.get<RespostaApi<any>>(`${this.base(empresaId)}/previsao`);
   }
 
-  obterMetasOrcamentarias(empresaId: number, mes?: number, ano?: number): Observable<RespostaApi<any>> {
-    let params = new HttpParams();
-    if (mes) params = params.set('mes', mes);
-    if (ano) params = params.set('ano', ano);
-    return this.http.get<RespostaApi<any>>(`${this.base(empresaId)}/metas-orcamentarias`, { params });
-  }
-
-  salvarMetaOrcamentaria(empresaId: number, dados: {
-    category_id: number; amount: number; month?: number; year?: number;
-  }): Observable<RespostaApi<any>> {
-    return this.http.post<RespostaApi<any>>(`${this.base(empresaId)}/metas-orcamentarias`, dados);
-  }
-
-  excluirMetaOrcamentaria(empresaId: number, metaId: number): Observable<RespostaApi<any>> {
-    return this.http.delete<RespostaApi<any>>(`${this.base(empresaId)}/metas-orcamentarias/${metaId}`);
-  }
 }

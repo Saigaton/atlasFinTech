@@ -41,16 +41,6 @@ export interface PrevisaoMes {
   diasRestantes:    number;
 }
 
-export interface MetaOrcamentaria {
-  id:            number;
-  corCategoria:  string;
-  nomeCategoria: string;
-  excedido:      boolean;
-  gasto:         number;
-  valorMeta:     number;
-  percentual:    number;
-}
-
 export interface GraficoPorConta {
   contaId:   number;
   nomeConta: string;

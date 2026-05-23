@@ -13,7 +13,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { ShellComponent } from '../../shared/components/shell/shell.component';
 import {
   DashboardKPI, GraficoPorConta, MesGrafico,
-  MetaOrcamentaria, PontoCategoria, PrevisaoMes, SegmentoDonut,
+  PontoCategoria, PrevisaoMes, SegmentoDonut,
 } from '../../core/models/dashboard.models';
 import { Transacao, TipoTransacao, SituacaoTransacao } from '../../core/models/transacao.model';
 import { Conta } from '../../core/models/conta.model';
@@ -43,7 +43,6 @@ export class DashboardComponent implements OnInit {
   dadosGrafico:          MesGrafico[]         = [];
   despesasCategorias:    PontoCategoria[]     = [];
   receitasCategorias:    PontoCategoria[]     = [];
-  metasOrcamentarias:    MetaOrcamentaria[]   = [];
   previsaoMes:           PrevisaoMes | null   = null;
   graficoPorConta:       GraficoPorConta[]    = [];
   segmentosDonut:        SegmentoDonut[]      = [];
@@ -109,7 +108,6 @@ export class DashboardComponent implements OnInit {
     this._carregarAlertasCards(id);
     this._carregarCategorias(id);
     this._carregarPrevisaoMes(id);
-    this._carregarMetasOrcamentarias(id);
     this._carregarGraficoPorConta(id);
   }
 
@@ -276,23 +274,6 @@ export class DashboardComponent implements OnInit {
         diasRestantes:    dado.days_remaining    ?? dado.diasRestantes    ?? 0,
       };
     } catch { this.previsaoMes = null; }
-  }
-
-  private async _carregarMetasOrcamentarias(id: number): Promise<void> {
-    try {
-      const mes  = this.periodoSelecionado === 'ano' ? undefined : this.mesSelecionado;
-      const res  = await firstValueFrom(this.analiseService.obterMetasOrcamentarias(id, mes, this.anoSelecionado));
-      const lista: any[] = res?.conteudo ?? [];
-      this.metasOrcamentarias = lista.map((g: any): MetaOrcamentaria => ({
-        id:            g.id,
-        corCategoria:  g.category_color  ?? g.corCategoria  ?? '#64748b',
-        nomeCategoria: g.category_name   ?? g.nomeCategoria ?? 'Categoria',
-        excedido:      g.exceeded        ?? g.excedido      ?? false,
-        gasto:         g.spent           ?? g.gasto         ?? 0,
-        valorMeta:     g.goal_amount     ?? g.valorMeta     ?? 0,
-        percentual:    g.pct             ?? g.percentual    ?? 0,
-      }));
-    } catch { this.metasOrcamentarias = []; }
   }
 
   private async _carregarGraficoPorConta(id: number): Promise<void> {

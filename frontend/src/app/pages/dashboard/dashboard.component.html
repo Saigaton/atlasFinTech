@@ -207,47 +207,6 @@
       </div>
     }
 
-    <!-- ── Metas orçamentárias ──────────────────────────────────────────────── -->
-    @if (metasOrcamentarias.length > 0) {
-      <div class="card budget-card">
-        <div class="card-header">
-          <span class="card-title">Metas orçamentárias</span>
-          <a routerLink="/categorias" class="card-action">Configurar →</a>
-        </div>
-        <div class="budget-list">
-          @for (meta of metasOrcamentarias; track meta.id) {
-            <div class="budget-row">
-              <div class="budget-top">
-                <div class="budget-left">
-                  <div class="budget-dot" [style.background]="meta.corCategoria"></div>
-                  <span class="budget-name">{{ meta.nomeCategoria }}</span>
-                </div>
-                <div class="budget-right">
-                  <span class="budget-spent" [class.over]="meta.excedido">{{ formatarMoeda(meta.gasto) }}</span>
-                  <span class="budget-sep">/</span>
-                  <span class="budget-goal">{{ formatarMoeda(meta.valorMeta) }}</span>
-                </div>
-              </div>
-              <div class="budget-track">
-                <div class="budget-fill"
-                  [style.width.%]="meta.percentual"
-                  [class.fill-ok]="meta.percentual < 80"
-                  [class.fill-warn]="meta.percentual >= 80 && !meta.excedido"
-                  [class.fill-over]="meta.excedido"></div>
-              </div>
-              <div class="budget-footer">
-                @if (meta.excedido) {
-                  <span class="budget-status over">Limite excedido em {{ formatarMoeda(meta.gasto - meta.valorMeta) }}</span>
-                } @else {
-                  <span class="budget-status ok">{{ formatarMoeda(meta.valorMeta - meta.gasto) }} disponível · {{ meta.percentual.toFixed(0) }}% usado</span>
-                }
-              </div>
-            </div>
-          }
-        </div>
-      </div>
-    }
-
     <!-- ── Distribuição por conta bancária ──────────────────────────────────── -->
     @if (graficoPorConta.length > 1) {
       <div class="card account-dist-card">

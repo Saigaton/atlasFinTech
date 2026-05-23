@@ -39,21 +39,6 @@ export interface Alerta {
   rotaAcao: string;
 }
 
-export interface ItemAuditoria {
-  id:         number;
-  criadoEm:   string;
-  acao:       string;
-  entidade:   string;
-  entidadeId: number | null;
-  ip:         string | null;
-}
-
-export interface PaginaAuditoria {
-  total:   number;
-  paginas: number;
-  itens:   ItemAuditoria[];
-}
-
 export interface PagavelCalendario {
   id:       number;
   descricao: string;
