@@ -6,7 +6,6 @@ from app.configuracoes.security import obterUsuarioAtualDB
 from app.entidades.usuarios import Usuarios
 from app.repositories.analiseRepository import AnaliseRepository
 from app.schemas.analise import (
-    CriarMetaOrcamentaria,
     RequisicaoChatbot,
 )
 from app.schemas.respostaApi import RespostaApi
@@ -65,22 +64,6 @@ async def alertas(
     return RespostaApi(conteudo=dados)
 
 
-@router.get(
-    "/empresas/{empresaId}/analises/log-auditoria",
-    status_code=status.HTTP_200_OK,
-    summary="Log de auditoria",
-)
-async def logAuditoria(
-    empresaId: int,
-    pagina:     int = Query(1,   ge=1),
-    por_pagina: int = Query(50,  ge=1, le=100),
-    service: AnaliseService = Depends(obterAnaliseService),
-    usuario: Usuarios = Depends(obterUsuarioAtualDB),
-):
-    dados = service.logAuditoria(empresaId, usuario.id, pagina, por_pagina)
-    return RespostaApi(conteudo=dados)
-
-
 @router.post(
     "/empresas/{empresaId}/analises/chatbot",
     status_code=status.HTTP_200_OK,
@@ -126,47 +109,3 @@ async def previsaoMes(
     return RespostaApi(conteudo=dados)
 
 
-@router.get(
-    "/empresas/{empresaId}/analises/metas-orcamentarias",
-    status_code=status.HTTP_200_OK,
-    summary="Listar metas orçamentárias",
-)
-async def listarMetas(
-    empresaId: int,
-    mes: int | None = Query(None, ge=1, le=12),
-    ano: int | None = Query(None, ge=2000, le=2100),
-    service: AnaliseService = Depends(obterAnaliseService),
-    usuario: Usuarios = Depends(obterUsuarioAtualDB),
-):
-    dados = service.listarMetas(empresaId, usuario.id, mes, ano)
-    return RespostaApi(conteudo=dados)
-
-
-@router.post(
-    "/empresas/{empresaId}/analises/metas-orcamentarias",
-    status_code=status.HTTP_201_CREATED,
-    summary="Criar meta orçamentária",
-)
-async def criarMeta(
-    empresaId: int,
-    body: CriarMetaOrcamentaria,
-    service: AnaliseService = Depends(obterAnaliseService),
-    usuario: Usuarios = Depends(obterUsuarioAtualDB),
-):
-    dados = service.criarMeta(empresaId, usuario.id, body)
-    return RespostaApi(conteudo=dados, mensagem="Meta criada com sucesso.")
-
-
-@router.delete(
-    "/empresas/{empresaId}/analises/metas-orcamentarias/{metaId}",
-    status_code=status.HTTP_200_OK,
-    summary="Excluir meta orçamentária",
-)
-async def excluirMeta(
-    empresaId: int,
-    metaId: int,
-    service: AnaliseService = Depends(obterAnaliseService),
-    usuario: Usuarios = Depends(obterUsuarioAtualDB),
-):
-    service.excluirMeta(empresaId, usuario.id, metaId)
-    return RespostaApi(conteudo=None, mensagem="Meta excluída com sucesso.")

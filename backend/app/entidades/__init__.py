@@ -10,5 +10,4 @@ from app.entidades.tipoCategorias import TipoCategorias
 from app.entidades.categorias import Categorias
 from app.entidades.atualizacaoTokens import AtualizacaoTokens
 from app.entidades.empresas import Empresas
-from app.entidades.metasOrcamentarias import MetasOrcamentarias
 from app.entidades.agendamentosRelatorio import AgendamentosRelatorio

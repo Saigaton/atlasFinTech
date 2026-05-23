@@ -1,7 +1,6 @@
-from datetime import datetime
 from decimal import Decimal
 from typing import Optional
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
 
 class ProjecaoCaixaResposta(BaseModel):
@@ -86,39 +85,6 @@ class PrevisaoMesResposta(BaseModel):
     receitaProjetada: Decimal
     despesaProjetada: Decimal
     diasRestantes:    int
-
-
-class MetaOrcamentariaResposta(BaseModel):
-    id:            int
-    mes:           int
-    ano:           int
-    nomeCategoria: str
-    corCategoria:  str
-    valorMeta:     Decimal
-    gasto:         Decimal
-    excedido:      bool
-    percentual:    float
-
-
-class CriarMetaOrcamentaria(BaseModel):
-    category_id: int
-    amount:      Decimal = Field(..., gt=0)
-    month:       Optional[int] = Field(None, ge=1, le=12)
-    year:        Optional[int] = Field(None, ge=2000, le=2100)
-
-
-class ItemLogAuditoriaResposta(BaseModel):
-    id:        int
-    acao:      str
-    recurso:   str
-    criado_em: datetime
-
-
-class PaginaLogAuditoriaResposta(BaseModel):
-    total:      int
-    pagina:     int
-    por_pagina: int
-    itens:      list[ItemLogAuditoriaResposta]
 
 
 class RequisicaoChatbot(BaseModel):

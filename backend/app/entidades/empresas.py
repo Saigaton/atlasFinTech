@@ -30,5 +30,4 @@ class Empresas(Base):
     transacoes:           Mapped[List["Transacoes"]]       = relationship(back_populates="empresa", cascade="all, delete-orphan")
     contas_pagar:         Mapped[List["ContasPagar"]]      = relationship(back_populates="empresa", cascade="all, delete-orphan")
     contas_receber:       Mapped[List["ContasReceber"]]    = relationship(back_populates="empresa", cascade="all, delete-orphan")
-    metas_orcamentarias:  Mapped[List["MetasOrcamentarias"]]  = relationship(back_populates="empresa", cascade="all, delete-orphan")
     agendamento_relatorio: Mapped[Optional["AgendamentosRelatorio"]] = relationship(back_populates="empresa", uselist=False, cascade="all, delete-orphan")

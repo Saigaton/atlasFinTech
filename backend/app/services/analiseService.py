@@ -2,20 +2,15 @@ import calendar as _cal
 from datetime import date, datetime, timezone
 from decimal import Decimal
 
-from app.entidades.metasOrcamentarias import MetasOrcamentarias
 from app.exceptions.businessException import BusinessException
 from app.repositories.analiseRepository import AnaliseRepository
 from app.schemas.analise import (
     AlertaResposta,
     AnaliseFinanceiraResposta,
     CategoriaTopResposta,
-    CriarMetaOrcamentaria,
     DadosCalendarioResposta,
     DadosFluxoCaixaResposta,
     EventoCalendarioResposta,
-    ItemLogAuditoriaResposta,
-    MetaOrcamentariaResposta,
-    PaginaLogAuditoriaResposta,
     PagavelCalendarioResposta,
     PrevisaoMesResposta,
     ProjecaoCaixaResposta,
@@ -253,62 +248,6 @@ class AnaliseService:
             despesaProjetada=round(media_d, 2),
             diasRestantes=dias_rest,
         )
-
-    # ── Metas orçamentárias ───────────────────────────────────────────────
-
-    def listarMetas(self, empresa_id: int, usuario_id: int, mes: int | None, ano: int | None) -> list[MetaOrcamentariaResposta]:
-        metas     = self.repository.listarMetas(empresa_id, usuario_id, mes, ano)
-        resultado = []
-        for m in metas:
-            gasto = self.repository.totalMensalPorCategoria(empresa_id, usuario_id, m.categoria_id, m.mes, m.ano)
-            pct   = round(float(gasto) / float(m.valor) * 100, 1) if m.valor > 0 else 0.0
-            cat   = m.categoria
-            resultado.append(MetaOrcamentariaResposta(
-                id=m.id,
-                mes=m.mes,
-                ano=m.ano,
-                nomeCategoria=cat.nome if cat else f"Cat. #{m.categoria_id}",
-                corCategoria=(cat.cor or "#64748b") if cat else "#64748b",
-                valorMeta=m.valor,
-                gasto=gasto,
-                excedido=gasto > m.valor,
-                percentual=min(pct, 100.0),
-            ))
-        return resultado
-
-    def criarMeta(self, empresa_id: int, usuario_id: int, dados: CriarMetaOrcamentaria) -> MetaOrcamentariaResposta:
-        hoje = datetime.now(timezone.utc)
-        meta = MetasOrcamentarias(
-            empresa_id=empresa_id,
-            categoria_id=dados.category_id,
-            valor=dados.amount,
-            mes=dados.month or hoje.month,
-            ano=dados.year or hoje.year,
-        )
-        try:
-            meta = self.repository.criarMeta(meta)
-            self.repository.session.commit()
-            self.repository.session.refresh(meta)
-            return MetaOrcamentariaResposta.model_validate(meta)
-        except Exception:
-            self.repository.session.rollback()
-            raise BusinessException("Erro ao salvar meta orçamentária.", status_code=400)
-
-    def excluirMeta(self, empresa_id: int, usuario_id: int, meta_id: int) -> None:
-        meta = self.repository.buscarMetaPorId(meta_id, empresa_id, usuario_id)
-        if not meta:
-            raise BusinessException("Meta orçamentária não encontrada.", status_code=404)
-        try:
-            self.repository.deletarMeta(meta)
-            self.repository.session.commit()
-        except Exception:
-            self.repository.session.rollback()
-            raise BusinessException("Erro ao excluir meta orçamentária.", status_code=400)
-
-    # ── Log de auditoria (stub) ───────────────────────────────────────────
-
-    def logAuditoria(self, empresa_id: int, usuario_id: int, pagina: int, por_pagina: int) -> PaginaLogAuditoriaResposta:
-        return PaginaLogAuditoriaResposta(total=0, pagina=pagina, por_pagina=por_pagina, itens=[])
 
     # ── Chatbot ───────────────────────────────────────────────────────────
 

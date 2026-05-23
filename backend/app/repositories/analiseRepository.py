@@ -2,13 +2,11 @@ import calendar
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from sqlalchemy import extract, func
-from sqlalchemy.orm import joinedload
 
 from app.entidades.contas import Contas
 from app.entidades.contasPagar import ContasPagar
 from app.entidades.contasReceber import ContasReceber
 from app.entidades.empresas import Empresas
-from app.entidades.metasOrcamentarias import MetasOrcamentarias
 from app.entidades.transacoes import Transacoes
 from app.enums.tipoSituacaoContaEnum import TipoSituacaoContaEnum
 from app.enums.tipoTransacaoEnum import TipoTransacaoEnum
@@ -210,55 +208,6 @@ class AnaliseRepository:
             .order_by(Transacoes.data.desc())
             .limit(limite)
             .all()
-        )
-
-    # ── Metas Orçamentárias ────────────────────────────────────────────────
-
-    def listarMetas(self, empresa_id: int, usuario_id: int, mes: int | None, ano: int | None) -> list[MetasOrcamentarias]:
-        q = (
-            self.session.query(MetasOrcamentarias)
-            .options(joinedload(MetasOrcamentarias.categoria))
-            .join(Empresas, MetasOrcamentarias.empresa_id == Empresas.id)
-            .filter(MetasOrcamentarias.empresa_id == empresa_id, Empresas.usuario_id == usuario_id)
-        )
-        if mes:
-            q = q.filter(MetasOrcamentarias.mes == mes)
-        if ano:
-            q = q.filter(MetasOrcamentarias.ano == ano)
-        return q.all()
-
-    def criarMeta(self, meta: MetasOrcamentarias) -> MetasOrcamentarias:
-        self.session.add(meta)
-        return meta
-
-    def buscarMetaPorId(self, meta_id: int, empresa_id: int, usuario_id: int) -> MetasOrcamentarias | None:
-        return (
-            self.session.query(MetasOrcamentarias)
-            .join(Empresas, MetasOrcamentarias.empresa_id == Empresas.id)
-            .filter(
-                MetasOrcamentarias.id == meta_id,
-                MetasOrcamentarias.empresa_id == empresa_id,
-                Empresas.usuario_id == usuario_id,
-            )
-            .first()
-        )
-
-    def deletarMeta(self, meta: MetasOrcamentarias) -> None:
-        self.session.delete(meta)
-
-    def totalMensalPorCategoria(self, empresa_id: int, usuario_id: int, categoria_id: int, mes: int, ano: int) -> Decimal:
-        return (
-            self.session.query(func.coalesce(func.sum(Transacoes.valor), 0))
-            .join(Empresas, Transacoes.empresa_id == Empresas.id)
-            .filter(
-                Transacoes.empresa_id == empresa_id,
-                Empresas.usuario_id == usuario_id,
-                Transacoes.categoria_id == categoria_id,
-                Transacoes.transacao_id == TipoTransacaoEnum.DESPESA,
-                extract("month", Transacoes.data) == mes,
-                extract("year", Transacoes.data) == ano,
-            )
-            .scalar() or Decimal("0.00")
         )
 
     def topCategorias(self, empresa_id: int, usuario_id: int, tipo: TipoTransacaoEnum, mes: int, ano: int, limite: int = 5) -> list[dict]:
