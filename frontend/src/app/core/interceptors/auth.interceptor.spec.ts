@@ -1,9 +1,7 @@
 import { TestBed } from '@angular/core/testing';
-import {
-  HttpClientTestingModule, HttpTestingController,
-} from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
-import { RouterTestingModule } from '@angular/router/testing';
+import { provideRouter } from '@angular/router';
 import { authInterceptor } from './auth.interceptor';
 import { AuthService } from '../services/auth.service';
 import { of, throwError } from 'rxjs';
@@ -28,10 +26,10 @@ describe('authInterceptor', () => {
 
   function setupWith(authMock: any) {
     TestBed.configureTestingModule({
-      imports: [RouterTestingModule],
       providers: [
+        provideRouter([]),
         provideHttpClient(withInterceptors([authInterceptor])),
-        { provide: HttpClientTestingModule, useValue: {} },
+        provideHttpClientTesting(),
         { provide: AuthService, useValue: authMock },
       ],
     });
