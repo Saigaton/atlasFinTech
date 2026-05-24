@@ -11,9 +11,6 @@ from app.schemas.resposta_api import RespostaApi
 
 router = APIRouter()
 
-
-
-
 @router.get(
     "/empresas/{empresaId}/analises/fluxo-caixa",
     status_code=status.HTTP_200_OK,
