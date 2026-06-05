@@ -24,7 +24,7 @@ class DashboardRepository:
         q = (
             self.session.query(func.coalesce(func.sum(Transacoes.valor), 0))
             .join(Empresas, Transacoes.empresa_id == Empresas.id)
-            .filter(Transacoes.empresa_id == empresa_id, Empresas.usuario_id == usuario_id, Transacoes.transacao_id == tipo)
+            .filter(Transacoes.empresa_id == empresa_id, Empresas.usuario_id == usuario_id, Transacoes.tipo_transacao_id == tipo)
         )
         if mes:
             q = q.filter(extract("month", Transacoes.data) == mes)
@@ -52,7 +52,7 @@ class DashboardRepository:
         rows = (
             self.session.query(
                 extract("month", Transacoes.data).label("mes"),
-                Transacoes.transacao_id,
+                Transacoes.tipo_transacao_id,
                 func.sum(Transacoes.valor).label("total"),
             )
             .join(Empresas, Transacoes.empresa_id == Empresas.id)
@@ -61,10 +61,10 @@ class DashboardRepository:
                 Empresas.usuario_id == usuario_id,
                 extract("year", Transacoes.data) == ano,
             )
-            .group_by("mes", Transacoes.transacao_id)
+            .group_by("mes", Transacoes.tipo_transacao_id)
             .all()
         )
-        return [{"mes": int(r.mes), "tipo": r.transacao_id, "total": r.total} for r in rows]
+        return [{"mes": int(r.mes), "tipo": r.tipo_transacao_id, "total": r.total} for r in rows]
 
     def graficoPorConta(self, empresa_id: int, usuario_id: int, ano: int | None = None) -> list[dict]:
         contas = (
@@ -76,14 +76,14 @@ class DashboardRepository:
         for c in contas:
             q = (
                 self.session.query(
-                    Transacoes.transacao_id,
+                    Transacoes.tipo_transacao_id,
                     func.coalesce(func.sum(Transacoes.valor), 0).label("total"),
                 )
                 .filter(Transacoes.conta_id == c.id, Transacoes.empresa_id == empresa_id)
             )
             if ano:
                 q = q.filter(extract("year", Transacoes.data) == ano)
-            q = q.group_by(Transacoes.transacao_id)
+            q = q.group_by(Transacoes.tipo_transacao_id)
             rows = {int(r.transacao_id): r.total for r in q.all()}
             resultado.append({
                 "contaId":   c.id,

@@ -49,7 +49,7 @@ def make_empresa(**kwargs):
 def make_categoria(**kwargs):
     defaults = dict(
         id=1, nome="Alimentação", empresa_id=1,
-        tipo_id=int(TipoCategoriaEnum.DESPESA), cor="#FF0000", esta_ativo=True,
+        tipo_categoria_id=int(TipoCategoriaEnum.DESPESA), cor="#FF0000", esta_ativo=True,
     )
     defaults.update(kwargs)
     return SimpleNamespace(**defaults)

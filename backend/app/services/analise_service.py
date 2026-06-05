@@ -66,8 +66,8 @@ class AnaliseService:
         a = ano or hoje.year
 
         transacoes = self.repository.transacoesPorMes(empresa_id, usuario_id, m, a)
-        receitas = [t.valor for t in transacoes if t.transacao_id == TipoTransacaoEnum.RECEITA]
-        despesas = [t.valor for t in transacoes if t.transacao_id == TipoTransacaoEnum.DESPESA]
+        receitas = [t.valor for t in transacoes if t.tipo_transacao_id == TipoTransacaoEnum.RECEITA]
+        despesas = [t.valor for t in transacoes if t.tipo_transacao_id == TipoTransacaoEnum.DESPESA]
 
         total_r  = sum(receitas, Decimal("0.00"))
         total_d  = sum(despesas, Decimal("0.00"))
@@ -124,14 +124,14 @@ class AnaliseService:
             ))
 
         for t in self.repository.transacoesVencidas(empresa_id, usuario_id):
-            if int(t.transacao_id) == TipoTransacaoEnum.DESPESA:
+            if int(t.tipo_transacao_id) == TipoTransacaoEnum.DESPESA:
                 resultado.append(AlertaResposta(
                     tipo=0,
                     titulo="Transação de despesa inadimplente",
                     mensagem=f"{t.descricao} — venceu em {t.data.strftime('%d/%m/%Y')}",
                     rotaAcao="/transacoes",
                 ))
-            elif int(t.transacao_id) == TipoTransacaoEnum.RECEITA:
+            elif int(t.tipo_transacao_id) == TipoTransacaoEnum.RECEITA:
                 resultado.append(AlertaResposta(
                     tipo=0,
                     titulo="Transação de receita inadimplente",
@@ -299,8 +299,8 @@ class AnaliseService:
         hoje = datetime.now(timezone.utc)
         m, a = hoje.month, hoje.year
         transacoes = self.repository.transacoesPorMes(empresa_id, usuario_id, m, a)
-        receitas = [t for t in transacoes if int(t.transacao_id) == TipoTransacaoEnum.RECEITA]
-        despesas = [t for t in transacoes if int(t.transacao_id) == TipoTransacaoEnum.DESPESA]
+        receitas = [t for t in transacoes if int(t.tipo_transacao_id) == TipoTransacaoEnum.RECEITA]
+        despesas = [t for t in transacoes if int(t.tipo_transacao_id) == TipoTransacaoEnum.DESPESA]
         total_r  = sum((t.valor for t in receitas), Decimal("0.00"))
         total_d  = sum((t.valor for t in despesas), Decimal("0.00"))
         lucro    = total_r - total_d
@@ -375,7 +375,7 @@ class AnaliseService:
         linhas = ["**Últimas 5 transações**\n"]
         for t in transacoes:
             data = t.data.strftime("%d/%m") if hasattr(t.data, "strftime") else str(t.data)
-            tipo = "Receita" if int(t.transacao_id) == TipoTransacaoEnum.RECEITA else "Despesa"
+            tipo = "Receita" if int(t.tipo_transacao_id) == TipoTransacaoEnum.RECEITA else "Despesa"
             linhas.append(f"• {data} — {t.descricao} — {tipo} — {self._fmt(t.valor)}")
         return "\n".join(linhas)
 

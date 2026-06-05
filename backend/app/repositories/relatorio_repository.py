@@ -33,7 +33,7 @@ class RelatorioRepository:
         rows = (
             self._filtrar_transacoes(empresa_id, usuario_id, mes, ano)
             .with_entities(Transacoes.categoria_id, func.sum(Transacoes.valor).label("total"))
-            .filter(Transacoes.transacao_id == TipoTransacaoEnum.DESPESA)
+            .filter(Transacoes.tipo_transacao_id == TipoTransacaoEnum.DESPESA)
             .group_by(Transacoes.categoria_id)
             .all()
         )

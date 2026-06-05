@@ -30,7 +30,7 @@ class TransacaoRecenteResposta(BaseModel):
     descricao: str
     valor:     Decimal
     data:      datetime
-    tipo:      int = Field(validation_alias="transacao_id")
+    tipo:      int = Field(validation_alias="tipo_transacao_id")
     situacao:  int
     categoria: Optional[CategoriaRecenteResposta] = None
 

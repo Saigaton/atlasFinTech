@@ -31,8 +31,8 @@ class RelatorioService:
     def fluxoCaixa(self, empresa_id: int, usuario_id: int, mes: int | None, ano: int | None) -> FluxoCaixaResposta:
         transacoes = self.repository.fluxoCaixa(empresa_id, usuario_id, mes, ano)
 
-        total_receitas = sum((t.valor for t in transacoes if t.transacao_id == TipoTransacaoEnum.RECEITA), Decimal("0.00"))
-        total_despesas = sum((t.valor for t in transacoes if t.transacao_id == TipoTransacaoEnum.DESPESA), Decimal("0.00"))
+        total_receitas = sum((t.valor for t in transacoes if t.tipo_transacao_id == TipoTransacaoEnum.RECEITA), Decimal("0.00"))
+        total_despesas = sum((t.valor for t in transacoes if t.tipo_transacao_id == TipoTransacaoEnum.DESPESA), Decimal("0.00"))
 
         return FluxoCaixaResposta(
             total_receitas=total_receitas,
@@ -148,8 +148,8 @@ class RelatorioService:
     def relatorioPdf(self, empresa_id: int, usuario_id: int, mes: int | None, ano: int | None) -> bytes:
         transacoes = self.repository.fluxoCaixa(empresa_id, usuario_id, mes, ano)
 
-        receitas = [t for t in transacoes if int(t.transacao_id) == TipoTransacaoEnum.RECEITA]
-        despesas = [t for t in transacoes if int(t.transacao_id) == TipoTransacaoEnum.DESPESA]
+        receitas = [t for t in transacoes if int(t.tipo_transacao_id) == TipoTransacaoEnum.RECEITA]
+        despesas = [t for t in transacoes if int(t.tipo_transacao_id) == TipoTransacaoEnum.DESPESA]
         total_receitas = sum((t.valor for t in receitas), Decimal("0.00"))
         total_despesas = sum((t.valor for t in despesas), Decimal("0.00"))
         saldo = total_receitas - total_despesas
@@ -303,7 +303,7 @@ class RelatorioService:
                 id=t.id,
                 data=(t.data.date() if hasattr(t.data, "date") else t.data).strftime("%d/%m/%Y"),
                 descricao=t.descricao,
-                tipo="receita" if int(t.transacao_id) == TipoTransacaoEnum.RECEITA else "despesa",
+                tipo="receita" if int(t.tipo_transacao_id) == TipoTransacaoEnum.RECEITA else "despesa",
                 valor=float(t.valor),
             )
             for t in transacoes if t.id not in usadas

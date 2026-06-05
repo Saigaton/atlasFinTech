@@ -30,7 +30,7 @@ class AnaliseRepository:
             .filter(
                 Transacoes.empresa_id == empresa_id,
                 Empresas.usuario_id == usuario_id,
-                Transacoes.transacao_id == tipo,
+                Transacoes.tipo_transacao_id == tipo,
                 extract("month", Transacoes.data) == mes,
                 extract("year", Transacoes.data) == ano,
             )
@@ -220,7 +220,7 @@ class AnaliseRepository:
             .filter(
                 Transacoes.empresa_id == empresa_id,
                 Empresas.usuario_id == usuario_id,
-                Transacoes.transacao_id == tipo,
+                Transacoes.tipo_transacao_id == tipo,
                 extract("month", Transacoes.data) == mes,
                 extract("year", Transacoes.data) == ano,
             )

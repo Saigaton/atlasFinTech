@@ -51,7 +51,7 @@ class TransacaoRepository:
             .filter(Transacoes.empresa_id == empresa_id, Empresas.usuario_id == usuario_id)
         )
         if tipo is not None:
-            q = q.filter(Transacoes.transacao_id == tipo)
+            q = q.filter(Transacoes.tipo_transacao_id == tipo)
         if situacao is not None:
             q = q.filter(Transacoes.situacao == situacao)
         if pesquisa:

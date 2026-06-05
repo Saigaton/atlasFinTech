@@ -12,7 +12,7 @@ class Categorias(Base):
     cor:        Mapped[Optional[str]] = mapped_column(String(7), nullable=True)
     esta_ativo: Mapped[bool]          = mapped_column(Boolean, default=True)
 
-    tipo_id: Mapped[int] = mapped_column(Integer, ForeignKey("tipo_categorias.id"), default=1)
+    tipo_categoria_id: Mapped[int] = mapped_column(Integer, ForeignKey("tipo_categorias.id"), default=1)
     tipo_categoria: Mapped["TipoCategorias"] = relationship(back_populates="categorias")
 
     empresa_id: Mapped[int]      = mapped_column(ForeignKey("empresas.id"))

@@ -52,7 +52,7 @@ class TransacaoResposta(BaseModel):
     data:        datetime
     notas:       Optional[str] = None
     recorrencia: str           = "nenhuma"
-    tipo:        TipoTransacaoEnum    = Field(validation_alias="transacao_id")
+    tipo:        TipoTransacaoEnum    = Field(validation_alias="tipo_transacao_id")
     situacao:    SituacaoTransacaoEnum
     conta:       Optional[_ContaSimples]    = None
     categoria:   Optional[_CategoriaSimples] = None

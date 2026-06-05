@@ -19,7 +19,7 @@ class CategoriaResposta(BaseModel):
     id:          int
     nome:        str
     empresa_id:  int
-    tipo:        TipoCategoriaEnum = Field(TipoCategoriaEnum.DESPESA, validation_alias="tipo_id")
+    tipo:        TipoCategoriaEnum = Field(TipoCategoriaEnum.DESPESA, validation_alias="tipo_categoria_id")
     cor:         Optional[str]     = None
     estaAtivado: bool              = Field(True, validation_alias="esta_ativo")
 

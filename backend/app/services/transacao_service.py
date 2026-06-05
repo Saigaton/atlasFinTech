@@ -25,7 +25,7 @@ class TransacaoService:
             data=dados.data,
             conta_id=dados.conta_id,
             categoria_id=dados.categoria_id,
-            transacao_id=dados.tipo,
+            tipo_transacao_id=dados.tipo,
             situacao=int(dados.situacao),
             notas=dados.notas,
             recorrencia=dados.recorrencia,
@@ -109,7 +109,7 @@ class TransacaoService:
 
         campos = dados.model_dump(exclude_none=True)
         if "tipo" in campos:
-            campos["transacao_id"] = int(campos.pop("tipo"))
+            campos["tipo_transacao_id"] = int(campos.pop("tipo"))
         if "situacao" in campos:
             campos["situacao"] = int(campos["situacao"])
 
@@ -120,7 +120,7 @@ class TransacaoService:
         try:
             self.repository.atualizarTransacao(transacao, campos)
 
-            tipo_transacao = int(transacao.transacao_id)
+            tipo_transacao = int(transacao.tipo_transacao_id)
             sinal = -1 if tipo_transacao == TipoTransacaoEnum.DESPESA else (1 if tipo_transacao == TipoTransacaoEnum.RECEITA else 0)
             if sinal != 0:
                 era_confirmado   = situacao_anterior     == SituacaoTransacaoEnum.CONFIRMADO
@@ -134,7 +134,7 @@ class TransacaoService:
                     if cb:
                         cb.saldo_atual += sinal * transacao.valor
 
-            tipo_transacao = int(transacao.transacao_id)
+            tipo_transacao = int(transacao.tipo_transacao_id)
             if tipo_transacao == TipoTransacaoEnum.DESPESA:
                 conta_vinculada = self.repository.session.query(ContasPagar).filter_by(
                     transacao_id=transacao.id, empresa_id=empresa_id
@@ -182,7 +182,7 @@ class TransacaoService:
             raise BusinessException("Transação não encontrada.", status_code=404)
 
         try:
-            tipo = int(transacao.transacao_id)
+            tipo = int(transacao.tipo_transacao_id)
             sinal = -1 if tipo == TipoTransacaoEnum.DESPESA else (1 if tipo == TipoTransacaoEnum.RECEITA else 0)
             if sinal != 0 and int(transacao.situacao) == SituacaoTransacaoEnum.CONFIRMADO and transacao.conta_id:
                 cb = self.repository.session.get(Contas, transacao.conta_id)

@@ -12,7 +12,7 @@ class CategoriaService:
         categoria = Categorias(
             nome=dados.nome,
             empresa_id=empresa_id,
-            tipo_id=int(dados.tipo),
+            tipo_categoria_id=int(dados.tipo),
             cor=dados.cor,
         )
         try:
@@ -28,7 +28,7 @@ class CategoriaService:
         categorias = self.repository.listarPorEmpresa(empresa_id, usuario_id)
         return [CategoriaResposta.model_validate(c) for c in categorias]
 
-    _CAMPO_ENTIDADE = {"tipo": "tipo_id"}
+    _CAMPO_ENTIDADE = {"tipo": "tipo_categoria_id"}
 
     def atualizarCategoria(self, empresa_id: int, categoria_id: int, usuario_id: int, dados: AtualizarCategoria) -> CategoriaResposta:
         categoria = self.repository.buscarPorId(categoria_id, empresa_id, usuario_id)
