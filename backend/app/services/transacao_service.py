@@ -228,7 +228,7 @@ class TransacaoService:
                 data=nova_data,
                 conta_id=origem.conta_id,
                 categoria_id=origem.categoria_id,
-                transacao_id=origem.transacao_id,
+                tipo_transacao_id=origem.tipo_transacao_id,
                 situacao=origem.situacao,
                 empresa_id=empresa_id,
                 recorrencia=origem.recorrencia,

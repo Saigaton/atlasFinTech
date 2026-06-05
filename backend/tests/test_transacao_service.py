@@ -77,7 +77,7 @@ class TestCriarTransacao:
         repo.criarTransacao.return_value = transacao_criada
         repo.session.get.return_value = conta_banco
         repo.buscarComRelacionamentos.return_value = make_transacao(
-            id=1, transacao_id=int(TipoTransacaoEnum.RECEITA)
+            id=1, tipo_transacao_id=int(TipoTransacaoEnum.RECEITA)
         )
 
         service.criarTransacao(1, 1, _dados_transacao(
@@ -135,7 +135,7 @@ class TestDeletarTransacao:
     def test_despesa_confirmada_reverte_saldo_ao_deletar(self, service, repo):
         transacao = make_transacao(
             id=1,
-            transacao_id=int(TipoTransacaoEnum.DESPESA),
+            tipo_transacao_id=int(TipoTransacaoEnum.DESPESA),
             situacao=int(SituacaoTransacaoEnum.CONFIRMADO),
             conta_id=1,
             valor=Decimal("100.00"),
@@ -156,7 +156,7 @@ class TestDeletarTransacao:
     def test_receita_confirmada_reverte_saldo_ao_deletar(self, service, repo):
         transacao = make_transacao(
             id=1,
-            transacao_id=int(TipoTransacaoEnum.RECEITA),
+            tipo_transacao_id=int(TipoTransacaoEnum.RECEITA),
             situacao=int(SituacaoTransacaoEnum.CONFIRMADO),
             conta_id=1,
             valor=Decimal("200.00"),
@@ -175,7 +175,7 @@ class TestDeletarTransacao:
     def test_transacao_pendente_nao_altera_saldo_ao_deletar(self, service, repo):
         transacao = make_transacao(
             id=1,
-            transacao_id=int(TipoTransacaoEnum.DESPESA),
+            tipo_transacao_id=int(TipoTransacaoEnum.DESPESA),
             situacao=int(SituacaoTransacaoEnum.PENDENTE),
             conta_id=1,
             valor=Decimal("100.00"),

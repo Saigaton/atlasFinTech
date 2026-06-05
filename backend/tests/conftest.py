@@ -73,7 +73,7 @@ def make_transacao(**kwargs):
         valor=Decimal("100.00"),
         data=datetime(2025, 6, 1, tzinfo=timezone.utc),
         notas=None, recorrencia="nenhuma",
-        transacao_id=int(TipoTransacaoEnum.DESPESA),
+        tipo_transacao_id=int(TipoTransacaoEnum.DESPESA),
         situacao=int(SituacaoTransacaoEnum.PENDENTE),
         conta_id=1, categoria_id=None, conta=None, categoria=None,
     )
