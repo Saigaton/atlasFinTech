@@ -351,6 +351,12 @@ export class DashboardComponent implements OnInit {
     return maxVal > 0 ? (valor / maxVal) * 100 : 0;
   }
 
+  get contasTop3(): Conta[] {
+    return [...this.contas]
+      .sort((a, b) => b.saldoAtual - a.saldoAtual)
+      .slice(0, 3);
+  }
+
   corConta(conta: Conta): string { return conta.cor || '#3b82f6'; }
 
   labelTipoConta(tipo: number): string {

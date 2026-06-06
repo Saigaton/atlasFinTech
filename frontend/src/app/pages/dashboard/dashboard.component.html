@@ -409,7 +409,7 @@
           </div>
         } @else {
           <div class="acc-list">
-            @for (conta of contas; track conta.id) {
+            @for (conta of contasTop3; track conta.id) {
               <div class="acc-item">
                 <div class="acc-dot" [style.background]="corConta(conta)"></div>
                 <div class="acc-info">
@@ -422,6 +422,13 @@
               </div>
             }
           </div>
+          @if (contas.length > 3) {
+            <div class="acc-list-footer">
+              <a routerLink="/contas" class="acc-list-more">
+                +{{ contas.length - 3 }} conta{{ contas.length - 3 > 1 ? 's' : '' }} · Ver todas →
+              </a>
+            </div>
+          }
         }
       </div>
 
