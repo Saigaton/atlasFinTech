@@ -25,10 +25,12 @@ export class ContasReceberComponent implements OnInit {
   carregando     = true;
   enviando       = false;
   recebendo      = false;
-  showModal      = false;
-  showRecModal   = false;
-  editandoId:    number | null       = null;
-  recebendoItem: ContaReceber | null = null;
+  showModal         = false;
+  showRecModal      = false;
+  showConfirmCancel = false;
+  editandoId:               number | null       = null;
+  recebendoItem:            ContaReceber | null = null;
+  contaReceberParaCancelar: ContaReceber | null = null;
 
   items:      ContaReceber[]              = [];
   resumo:     ResumoContasAReceber | null = null;
@@ -264,15 +266,31 @@ export class ContasReceberComponent implements OnInit {
     });
   }
 
-  aoCancelar(item: ContaReceber): void {
-    if (!confirm(`Cancelar "${item.descricao}"?`)) return;
-    const id = this.empresaService.ativoId();
-    if (!id) return;
+  abrirConfirmCancel(item: ContaReceber): void {
+    this.contaReceberParaCancelar = item;
+    this.showConfirmCancel        = true;
+  }
 
+  fecharConfirmCancel(): void {
+    this.showConfirmCancel        = false;
+    this.contaReceberParaCancelar = null;
+  }
+
+  confirmarCancelamento(): void {
+    const item = this.contaReceberParaCancelar;
+    const id   = this.empresaService.ativoId();
+    if (!item || !id) return;
+    this.enviando = true;
     this.contaReceberService.deletarContaReceber(id, Number(item.id)).pipe(
       handleApiError(this.toast, 'Erro ao cancelar.')
     ).subscribe({
-      next: () => { this.toast.success('Conta cancelada.'); this._carregar(); },
+      next: () => {
+        this.toast.success('Conta cancelada.');
+        this.enviando = false;
+        this.fecharConfirmCancel();
+        this._carregar();
+      },
+      error: () => { this.enviando = false; },
     });
   }
 

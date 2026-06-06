@@ -25,10 +25,12 @@ export class ContasPagarComponent implements OnInit {
   carregando   = true;
   enviando     = false;
   pagando      = false;
-  showModal    = false;
-  showPayModal = false;
-  editandoId:  number | null  = null;
-  pagandoItem: ContaPagar | null = null;
+  showModal         = false;
+  showPayModal      = false;
+  showConfirmCancel = false;
+  editandoId:             number | null  = null;
+  pagandoItem:            ContaPagar | null = null;
+  contaPagarParaCancelar: ContaPagar | null = null;
 
   items:      ContaPagar[]             = [];
   resumo:     ResumoContasAPagar | null = null;
@@ -268,15 +270,31 @@ export class ContasPagarComponent implements OnInit {
     });
   }
 
-  aoCancelar(item: ContaPagar): void {
-    if (!confirm(`Cancelar "${item.descricao}"?`)) return;
-    const id = this.empresaService.ativoId();
-    if (!id) return;
+  abrirConfirmCancel(item: ContaPagar): void {
+    this.contaPagarParaCancelar = item;
+    this.showConfirmCancel      = true;
+  }
 
+  fecharConfirmCancel(): void {
+    this.showConfirmCancel      = false;
+    this.contaPagarParaCancelar = null;
+  }
+
+  confirmarCancelamento(): void {
+    const item = this.contaPagarParaCancelar;
+    const id   = this.empresaService.ativoId();
+    if (!item || !id) return;
+    this.enviando = true;
     this.contaPagarService.deletarContaPagar(id, Number(item.id)).pipe(
       handleApiError(this.toast, 'Erro ao cancelar.')
     ).subscribe({
-      next: () => { this.toast.success('Conta cancelada.'); this._carregar(); },
+      next: () => {
+        this.toast.success('Conta cancelada.');
+        this.enviando = false;
+        this.fecharConfirmCancel();
+        this._carregar();
+      },
+      error: () => { this.enviando = false; },
     });
   }
 

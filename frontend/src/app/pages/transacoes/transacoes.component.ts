@@ -28,8 +28,10 @@ export class TransacoesComponent extends UnsubscriberBase implements OnInit {
   // ── Estado ───────────────────────────────────────────────────────────────
   carregando = true;
   enviando   = false;
-  showModal  = false;
-  editandoTransacao: Transacao | null = null;
+  showModal         = false;
+  showConfirmCancel = false;
+  editandoTransacao:   Transacao | null = null;
+  transacaoParaCancelar: Transacao | null = null;
 
   transacoes: Transacao[] = [];
   contas:     Conta[]     = [];
@@ -195,18 +197,35 @@ export class TransacoesComponent extends UnsubscriberBase implements OnInit {
     }
   }
 
-  // ── Deletar ───────────────────────────────────────────────────────────────
+  // ── Cancelar transação ────────────────────────────────────────────────────
 
-  onDelete(transacao: Transacao): void {
-    if (!confirm(`Cancelar a transação "${transacao.descricao}"?`)) return;
-    const id = this.empresaService.ativoId();
-    if (!id) return;
+  abrirConfirmCancel(transacao: Transacao): void {
+    this.transacaoParaCancelar = transacao;
+    this.showConfirmCancel     = true;
+  }
+
+  fecharConfirmCancel(): void {
+    this.showConfirmCancel     = false;
+    this.transacaoParaCancelar = null;
+  }
+
+  confirmarCancelamento(): void {
+    const transacao = this.transacaoParaCancelar;
+    const id        = this.empresaService.ativoId();
+    if (!transacao || !id) return;
+
+    this.enviando = true;
     this._subscriptions.push(
       this.transacaoService.deletarTransacao(id, transacao.id).pipe(
         handleApiError(this.toast, 'Erro ao cancelar transação.')
       ).subscribe({
-        next: () => { this.toast.success('Transação cancelada.'); this._carregarTransacoes(); },
-        error: () => {},
+        next: () => {
+          this.toast.success('Transação cancelada.');
+          this.enviando = false;
+          this.fecharConfirmCancel();
+          this._carregarTransacoes();
+        },
+        error: () => { this.enviando = false; },
       })
     );
   }

@@ -36,9 +36,12 @@ export class ContasComponent extends UnsubscriberBase implements OnInit {
   // ── Estado de carregamento ───────────────────────────────────────────────
   carregando      = true;
   enviando   = false;
-  showModal    = false;
-  showTransfer = false;
-  transferindo = false;
+  showModal         = false;
+  showTransfer      = false;
+  showConfirmDelete = false;
+  transferindo      = false;
+
+  contaParaDesativar: Conta | null = null;
 
   modoEdicao       = false;
   contaEditandoId: number | null = null;
@@ -214,16 +217,33 @@ export class ContasComponent extends UnsubscriberBase implements OnInit {
     );
   }
 
-  onDelete(conta: Conta): void {
-    if (!confirm(`Desativar a conta "${conta.nome}"? Esta ação não pode ser desfeita.`)) return;
-    const id = this.empresaService.ativoId();
-    if (!id) return;
+  abrirConfirmDelete(conta: Conta): void {
+    this.contaParaDesativar = conta;
+    this.showConfirmDelete  = true;
+  }
 
+  fecharConfirmDelete(): void {
+    this.showConfirmDelete  = false;
+    this.contaParaDesativar = null;
+  }
+
+  confirmarDesativacao(): void {
+    const conta = this.contaParaDesativar;
+    const id    = this.empresaService.ativoId();
+    if (!conta || !id) return;
+
+    this.enviando = true;
     this._subscriptions.push(
       this.contaService.deletarConta(id, conta.id).pipe(
         handleApiError(this.toast, 'Erro ao desativar conta.')
       ).subscribe({
-        next: () => { this.toast.success('Conta desativada.'); this._load(); },
+        next: () => {
+          this.toast.success('Conta desativada.');
+          this.enviando = false;
+          this.fecharConfirmDelete();
+          this._load();
+        },
+        error: () => { this.enviando = false; },
       })
     );
   }

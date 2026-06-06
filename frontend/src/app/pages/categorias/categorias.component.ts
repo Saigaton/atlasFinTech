@@ -25,13 +25,15 @@ export class CategoriasComponent implements OnInit {
     '#f97316', '#dc2626',
   ];
 
-  carregando   = true;
-  enviando     = false;
-  exibirModal  = false;
-  categorias:  Categoria[] = [];
+  carregando        = true;
+  enviando          = false;
+  exibirModal       = false;
+  showConfirmDelete = false;
+  categorias: Categoria[] = [];
 
-  modoEdicao       = false;
-  categoriaEditandoId: number | null = null;
+  modoEdicao:           boolean       = false;
+  categoriaEditandoId:  number | null = null;
+  categoriaParaExcluir: Categoria | null = null;
 
   formulario!: FormGroup;
 
@@ -119,18 +121,31 @@ export class CategoriasComponent implements OnInit {
     });
   }
 
-  excluir(categoria: Categoria): void {
-    if (!confirm(`Excluir categoria "${categoria.nome}"?`)) return;
-    const id = this.empresaService.ativoId();
-    if (!id) return;
+  abrirConfirmDelete(categoria: Categoria): void {
+    this.categoriaParaExcluir = categoria;
+    this.showConfirmDelete    = true;
+  }
 
+  fecharConfirmDelete(): void {
+    this.showConfirmDelete    = false;
+    this.categoriaParaExcluir = null;
+  }
+
+  confirmarExclusao(): void {
+    const categoria = this.categoriaParaExcluir;
+    const id        = this.empresaService.ativoId();
+    if (!categoria || !id) return;
+    this.enviando = true;
     this.categoriaService.deletarCategoria(id, Number(categoria.id)).pipe(
       handleApiError(this.toast, 'Erro ao excluir.')
     ).subscribe({
       next: () => {
         this.toast.success('Categoria excluída.');
         this.categorias = this.categorias.filter(c => c.id !== categoria.id);
+        this.enviando = false;
+        this.fecharConfirmDelete();
       },
+      error: () => { this.enviando = false; },
     });
   }
 
