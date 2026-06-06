@@ -348,7 +348,7 @@
 
         @if (carregandoTransacoes) {
           <div class="skeleton-list">
-            @for (i of [1,2,3,4,5]; track i) { <div class="skeleton-tx"></div> }
+            @for (i of [1,2,3]; track i) { <div class="skeleton-tx"></div> }
           </div>
         } @else if (transacoes.length === 0) {
           <div class="empty-state">

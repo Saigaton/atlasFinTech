@@ -127,7 +127,7 @@ export class DashboardComponent implements OnInit {
 
   private _carregarTransacoes(id: number): void {
     this.carregandoTransacoes = true;
-    this.transacaoService.obterTransacoesRecente(id, 8).pipe(
+    this.transacaoService.obterTransacoesRecente(id, 3).pipe(
       handleApiError(this.toast, 'Erro ao carregar transações recentes.')
     ).subscribe({
       next: r => { this.transacoes = r ?? []; this.carregandoTransacoes = false; },
