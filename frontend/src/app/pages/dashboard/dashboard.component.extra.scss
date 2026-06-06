@@ -36,10 +36,6 @@
   &.red    { background: #fef2f2; border-color: #fecaca; }
   &.yellow { background: #fffbeb; border-color: #fde68a; }
   &.blue   { background: #eff6ff; border-color: #bfdbfe; }
-
-  [data-theme='dark'] &.red    { background: #1c0f10; border-color: #991b1b; }
-  [data-theme='dark'] &.yellow { background: #1c1408; border-color: #854d0e; }
-  [data-theme='dark'] &.blue   { background: #0c1a2e; border-color: #1e40af; }
 }
 
 .ac-icon {
@@ -72,9 +68,6 @@
   .red &    { color: #dc2626; }
   .yellow & { color: #d97706; }
   .blue &   { color: #2563eb; }
-  [data-theme='dark'] .red &    { color: #f87171; }
-  [data-theme='dark'] .yellow & { color: #fbbf24; }
-  [data-theme='dark'] .blue &   { color: #93c5fd; }
   &:hover { text-decoration: underline; }
 }
 
@@ -467,3 +460,45 @@
 // Implementada via computed no .ts (média móvel 3 meses)
 // Sem mudança de HTML necessária — dados de tendência são sobrepostos pelo
 // componente de gráfico de barras usando o mesmo dataset com linha calculada.
+
+// ── Dark mode — todos os overrides consolidados via :host-context() ───────────
+// :host-context() é a forma correta do Angular para estilizar com base no
+// atributo [data-theme='dark'] aplicado ao <html> pelo ThemeService.
+:host-context([data-theme='dark']) {
+
+  // Alert cards (Contas Vencidas / A Vencer / Recebimentos Atrasados)
+  .alert-card.red    { background: #1c0f10; border-color: #991b1b; }
+  .alert-card.yellow { background: #1c1408; border-color: #854d0e; }
+  .alert-card.blue   { background: #0c1a2e; border-color: #1e40af; }
+
+  .alert-card.red    .ac-icon { background: rgba(220, 38, 38, 0.2); }
+  .alert-card.yellow .ac-icon { background: rgba(217, 119,   6, 0.2); }
+  .alert-card.blue   .ac-icon { background: rgba( 37, 99, 235, 0.2); }
+
+  .alert-card.red    .ac-link { color: #f87171; }
+  .alert-card.yellow .ac-link { color: #fbbf24; }
+  .alert-card.blue   .ac-link { color: #93c5fd; }
+
+  // Previsão de saldo
+  .forecast-card {
+    background: linear-gradient(135deg, #0c1a2e, #0f2240);
+    border-color: #1e40af;
+
+    &.forecast-neg {
+      background: linear-gradient(135deg, #1c0f10, #2d0a0a);
+      border-color: #991b1b;
+    }
+  }
+
+  .forecast-icon {
+    background: rgba(99, 102, 241, 0.2);
+    svg { fill: #818cf8; }
+  }
+  .forecast-neg .forecast-icon {
+    background: rgba(239, 68, 68, 0.2);
+    svg { fill: #f87171; }
+  }
+
+  .forecast-value.pos { color: #818cf8; }
+  .forecast-value.neg { color: #f87171; }
+}
