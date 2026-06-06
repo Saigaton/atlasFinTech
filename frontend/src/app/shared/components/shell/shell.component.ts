@@ -101,10 +101,15 @@ export class ShellComponent extends UnsubscriberBase implements OnInit {
   }
 
   ngOnInit(): void {
-    // Dados do usuário
-    this.iniciaisUsuario  = this.auth.getIniciaisUsuario();
-    this.nomeUsuario = this.auth.getNomeUsuario();
-    this.emailUsuario = this.auth.getEmailUsuario();
+    // Dados do usuário — reativo: atualiza sempre que user$ emitir
+    this._subscriptions.push(
+      this.auth.user$.subscribe(user => {
+        this.nomeUsuario     = user?.nome?.split(' ')[0] ?? '';
+        this.emailUsuario    = user?.email ?? '';
+        this.iniciaisUsuario = (user?.nome ?? '')
+          .split(' ').map((n: string) => n[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
+      })
+    );
 
     // Título da página — reage a cada NavigationEnd
     this._subscriptions.push(

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, tap, BehaviorSubject, map } from 'rxjs';
+import { Observable, tap, BehaviorSubject, map, catchError, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   RespostaToken, AccessTokenResponse,
@@ -172,15 +172,18 @@ export class AuthService extends UnsubscriberBase {
     this.user.next(null);
   }
 
-  loadUser(): void {
-    this.obterUsuario().subscribe({
-      next: res => {
-        this.user.next(res ?? null);
-      },
-      error: (erro: any) => {
-        console.error('Erro ao carregar usuário:', erro);
+  loadUser(): Observable<void> {
+    if (!this.getAccessToken()) {
+      return of(undefined);
+    }
+    return this.obterUsuario().pipe(
+      tap(res => this.user.next(res ?? null)),
+      map(() => undefined),
+      catchError(err => {
+        console.error('Erro ao carregar usuário:', err);
         this.user.next(null);
-      }
-    });
+        return of(undefined);
+      }),
+    );
   }
 }
