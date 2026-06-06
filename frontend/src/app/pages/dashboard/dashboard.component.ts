@@ -213,29 +213,31 @@ export class DashboardComponent implements OnInit {
       const totalReceita: number      = dados?.totalReceita ?? dados?.total_income ?? 0;
 
       this.despesasCategorias = principaisDespesas
-        .filter((c: any) => c.total > 0)
+        .filter((c: any) => c.total != null && !isNaN(Number(c.total)) && Number(c.total) !== 0)
         .map((c: any, i: number): PontoCategoria => {
           const catId = c.categoriaId ?? c.category_id ?? null;
           const cat   = catId != null ? mapa.get(catId) : null;
+          const total = Number(c.total);
           return {
             nome:        cat?.nome ?? (catId != null ? `Cat. #${catId}` : 'Sem categoria'),
             cor:         cat?.cor  ?? PALETA[i % PALETA.length],
-            total:       c.total,
-            percentual:  totalDespesa > 0 ? (c.total / totalDespesa) * 100 : 0,
+            total,
+            percentual:  totalDespesa !== 0 ? Math.abs(total / totalDespesa) * 100 : 0,
             categoriaId: catId,
           };
         });
 
       this.receitasCategorias = principaisReceitas
-        .filter((c: any) => c.total > 0)
+        .filter((c: any) => c.total != null && !isNaN(Number(c.total)) && Number(c.total) !== 0)
         .map((c: any, i: number): PontoCategoria => {
           const catId = c.categoriaId ?? c.category_id ?? null;
           const cat   = catId != null ? mapa.get(catId) : null;
+          const total = Number(c.total);
           return {
             nome:        cat?.nome ?? (catId != null ? `Cat. #${catId}` : 'Sem categoria'),
             cor:         cat?.cor  ?? ['#10b981','#3b82f6','#8b5cf6','#f59e0b','#06b6d4'][i % 5],
-            total:       c.total,
-            percentual:  totalReceita > 0 ? (c.total / totalReceita) * 100 : 0,
+            total,
+            percentual:  totalReceita !== 0 ? Math.abs(total / totalReceita) * 100 : 0,
             categoriaId: catId,
           };
         });
@@ -366,11 +368,11 @@ export class DashboardComponent implements OnInit {
   // ── Totais calculados ─────────────────────────────────────────────────────
 
   get totalDespesasCategorias(): number {
-    return this.despesasCategorias.reduce((s, c) => s + c.total, 0);
+    return this.despesasCategorias.reduce((s, c) => s + (Number(c.total) || 0), 0);
   }
 
   get totalReceitasCategorias(): number {
-    return this.receitasCategorias.reduce((s, c) => s + c.total, 0);
+    return this.receitasCategorias.reduce((s, c) => s + (Number(c.total) || 0), 0);
   }
 
   // ── Formatação ────────────────────────────────────────────────────────────
@@ -382,8 +384,11 @@ export class DashboardComponent implements OnInit {
   }
 
   formatarMoedaCurta(v: number): string {
-    if (v >= 1_000_000) return 'R$ ' + (v / 1_000_000).toFixed(1) + 'M';
-    if (v >= 1_000)     return 'R$ ' + (v / 1_000).toFixed(0) + 'k';
+    if (v == null || isNaN(Number(v))) return 'R$ —';
+    const abs  = Math.abs(v);
+    const sinal = v < 0 ? '-' : '';
+    if (abs >= 1_000_000) return `R$ ${sinal}${(abs / 1_000_000).toFixed(1)}M`;
+    if (abs >= 1_000)     return `R$ ${sinal}${(abs / 1_000).toFixed(0)}k`;
     return this.formatarMoeda(v);
   }
 
