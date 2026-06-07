@@ -333,21 +333,20 @@ class AnaliseService:
         return "\n".join(linhas)
 
     def _chat_problemas(self, empresa_id: int, usuario_id: int) -> str:
-        pagar   = self.repository.contas_pagar_vencidas(empresa_id, usuario_id)
-        receber = self.repository.contas_receber_vencidas(empresa_id, usuario_id)
-        if not pagar and not receber:
+        alertas = self.alertas(empresa_id, usuario_id)
+        if not alertas:
             return "Nenhum alerta encontrado. Suas finanças estão em dia! ✅"
-        linhas = [f"**{len(pagar) + len(receber)} alerta(s) encontrado(s)**\n"]
-        if pagar:
-            linhas.append("⚠️ **Contas a pagar vencidas:**")
-            for c in pagar:
-                venc = c.data_vencimento.date() if hasattr(c.data_vencimento, "date") else c.data_vencimento
-                linhas.append(f"  • {c.descricao} — venceu {venc.strftime('%d/%m/%Y')} — {self._fmt(c.valor)}")
-        if receber:
-            linhas.append("\n⚠️ **Contas a receber vencidas:**")
-            for c in receber:
-                venc = c.data_vencimento.date() if hasattr(c.data_vencimento, "date") else c.data_vencimento
-                linhas.append(f"  • {c.descricao} — venceu {venc.strftime('%d/%m/%Y')} — {self._fmt(c.valor)}")
+        criticos = [a for a in alertas if a.tipo == 0]
+        avisos   = [a for a in alertas if a.tipo == 1]
+        linhas = [f"**{len(alertas)} alerta(s) encontrado(s)**\n"]
+        if criticos:
+            linhas.append("🔴 **Problemas críticos:**")
+            for a in criticos:
+                linhas.append(f"  • {a.titulo} — {a.mensagem}")
+        if avisos:
+            linhas.append("\n🟡 **Avisos:**")
+            for a in avisos:
+                linhas.append(f"  • {a.titulo} — {a.mensagem}")
         return "\n".join(linhas)
 
     def _chat_margem(self, empresa_id: int, usuario_id: int) -> str:
