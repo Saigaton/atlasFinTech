@@ -1,17 +1,18 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ShellComponent } from '../../shared/components/shell/shell.component';
+import { PasswordChecklistComponent } from '../../shared/components/password-checklist/password-checklist.component';
 import { Usuario } from '../../core/models/auth.models';
 import { handleApiError } from '../../core/handlers/handle-api-error';
 
 @Component({
   selector: 'app-configuracoes',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, ShellComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, ShellComponent, PasswordChecklistComponent],
   templateUrl: './configuracoes.component.html',
   styleUrl: './configuracoes.component.scss'
 })
@@ -44,12 +45,12 @@ export class ConfiguracoesComponent implements OnInit {
 
     this.formSenha = this.formBuilder.group({
       senhaAtual:     ['', Validators.required],
-      novaSenha:      ['', [Validators.required, Validators.minLength(8)]],
+      novaSenha:      ['', [Validators.required, this._validadorSenhaForte]],
       confirmarSenha: ['', Validators.required],
     }, { validators: this._senhasConferem });
 
     this.formDefinirSenha = this.formBuilder.group({
-      novaSenha:      ['', [Validators.required, Validators.minLength(8)]],
+      novaSenha:      ['', [Validators.required, this._validadorSenhaForte]],
       confirmarSenha: ['', Validators.required],
     }, { validators: this._senhasConferem });
   }
@@ -124,6 +125,16 @@ export class ConfiguracoesComponent implements OnInit {
     const np = group.get('novaSenha')?.value;
     const cp = group.get('confirmarSenha')?.value;
     return np === cp ? null : { mismatch: true };
+  }
+
+  private _validadorSenhaForte(control: AbstractControl): ValidationErrors | null {
+    const v = control.value ?? '';
+    const valid =
+      v.length >= 8 &&
+      /[A-Z]/.test(v) &&
+      /[0-9]/.test(v) &&
+      /[^A-Za-z0-9]/.test(v);
+    return valid ? null : { passwordStrength: true };
   }
 
   formatarData(iso?: string | Date): string {
