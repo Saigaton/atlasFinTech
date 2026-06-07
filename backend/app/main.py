@@ -25,19 +25,24 @@ app = FastAPI(
     lifespan=lifespan,
     title="API Atlas FinTech",
     description="""
-        ### API de Gestão Financeira Pessoal 💰
+        ### API de Gestão Financeira Empresarial
 
-        Esta API permite o controle total de finanças, ajudando usuários a monitorar receitas, despesas e planejar orçamentos de forma eficiente.
+        API completa para controle financeiro de empresas, cobrindo desde o registro de transações até análises preditivas e exportação de relatórios.
 
-        #### Principais Funcionalidades:
-        *   **Transações**: Registro de entradas e saídas com categorias.
-        *   **Categorias**: Gerenciamento de categorias personalizadas (Ex: Alimentação, Lazer, Salário).
-        *   **Relatórios**: Resumo mensal de gastos e saldo acumulado.
-        *   **Contas**: Suporte a múltiplas contas (Carteira, Banco, Investimentos).
-        *   **Autenticação**: Segurança de dados com JWT (JSON Web Tokens).
+        #### Módulos disponíveis:
+        * **Autenticação** — Registro, login, verificação de e-mail, recuperação de senha e login social via Google (JWT + refresh token).
+        * **Empresas** — Cada usuário gerencia sua própria empresa com dados financeiros isolados.
+        * **Contas Bancárias** — Cadastro de múltiplas contas, controle de saldo e transferências entre contas.
+        * **Categorias** — Categorias personalizadas de receita e despesa por empresa.
+        * **Transações** — Registro de receitas e despesas com suporte a recorrência mensal automática.
+        * **Contas a Pagar** — Lançamento de despesas futuras com parcelamento, marcação de pagamento e controle de vencidos.
+        * **Contas a Receber** — Lançamento de receitas futuras com marcação de recebimento.
+        * **Dashboard** — KPIs do período, gráficos mensais, gráfico por conta e transações recentes.
+        * **Relatórios** — Fluxo de caixa, gastos por categoria, exportação em CSV e PDF, backup completo, envio por e-mail, agendamento mensal e conciliação bancária via upload de extrato.
+        * **Análises** — Projeção de fluxo de caixa, análise financeira comparativa, alertas automáticos, calendário financeiro, previsão do mês e chatbot financeiro.
 
         ---
-        *Desenvolvido para facilitar a saúde financeira e automação de orçamentos.*
+        *Desenvolvido por: Davi Pereira dos Santos, Eduardo Roberto Lucena Silva e Thalisson Costa Mesquita Coelho.*
     """,
     version="1.0.0",
     docs_url="/docs",
@@ -57,7 +62,7 @@ app.include_router(empresa_controller.router, prefix="/api/v1", tags=["Empresa"]
 app.include_router(categoria_controller.router, prefix="/api/v1", tags=["Categoria"])
 app.include_router(conta_bancaria_controller.router, prefix="/api/v1", tags=["Conta Bancária"])
 app.include_router(conta_pagar_controller.router, prefix="/api/v1", tags=["Conta Pagar"])
-app.include_router(conta_receber_controller.router, prefix="/api/v1", tags=["Conta Pagar"])
+app.include_router(conta_receber_controller.router, prefix="/api/v1", tags=["Conta Receber"])
 app.include_router(transacao_controller.router, prefix="/api/v1", tags=["Transação"])
 app.include_router(dashboard_controller.router, prefix="/api/v1", tags=["Dashboard"])
 app.include_router(relatorio_controller.router, prefix="/api/v1", tags=["Relatório"])
