@@ -97,8 +97,7 @@ class RelatorioService:
         writer = csv.writer(out, delimiter=";")
         writer.writerow(cabecalho)
         writer.writerows(linhas)
-        conteudo = "sep=;\n" + out.getvalue()
-        return conteudo.encode("utf-8-sig")
+        return out.getvalue().encode("utf-8-sig")
 
     def transacoesCsv(self, empresa_id: int, usuario_id: int, mes: int | None, ano: int | None) -> bytes:
         transacoes = self.repository.fluxoCaixa(empresa_id, usuario_id, mes, ano)
@@ -106,7 +105,7 @@ class RelatorioService:
             [
                 t.id, t.descricao, f"{t.valor:.2f}".replace(".", ","),
                 t.data.strftime("%d/%m/%Y"),
-                self._TIPO_LABEL.get(int(t.transacao_id), str(t.transacao_id)),
+                self._TIPO_LABEL.get(int(t.tipo_transacao_id), str(t.tipo_transacao_id)),
                 t.categoria_id or "",
             ]
             for t in transacoes
