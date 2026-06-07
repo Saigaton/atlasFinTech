@@ -31,9 +31,10 @@ class ContaPagarService:
             data_parcela = base_data.replace(year=ano, month=mes, day=dia)
 
             descricao = dados.descricao if n == 1 else f"{dados.descricao} ({i + 1}/{n})"
+            valor = dados.valor - valor_parcela * (n - 1) if i == n - 1 else valor_parcela
             parcelas.append(ContasPagar(
                 descricao=descricao,
-                valor=valor_parcela,
+                valor=valor,
                 data_vencimento=data_parcela,
                 conta_id=dados.conta_id,
                 categoria_id=dados.categoria_id,

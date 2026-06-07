@@ -33,7 +33,7 @@ def _dados_criar(**kwargs) -> CriarContaPagar:
     defaults = dict(
         descricao="Aluguel",
         valor=Decimal("1200.00"),
-        data_vencimento=datetime(2025, 7, 1, tzinfo=timezone.utc),
+        data_vencimento=datetime(2027, 7, 1, tzinfo=timezone.utc),
         total_parcelas=1,
     )
     defaults.update(kwargs)
@@ -67,7 +67,7 @@ class TestCriarContaPagar:
 
         with patch.object(ContaPagarResposta, "model_validate", side_effect=capturar):
             service.criarContaPagar(1, 1, _dados_criar(
-                data_vencimento=datetime(2025, 1, 15, tzinfo=timezone.utc),
+                data_vencimento=datetime(2027, 1, 15, tzinfo=timezone.utc),
                 total_parcelas=3,
             ))
 

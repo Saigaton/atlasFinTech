@@ -30,12 +30,12 @@ class ContaResposta(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 class ContaAtualizar(BaseModel):
-    nome:             Optional[str]   = Field(None, min_length=2, max_length=80)
-    tipo:    TipoContaEnum
-    saldoAtual:   Decimal = Field(Decimal("0.00"), ge=0)
-    nomeBanco:       Optional[str]   = Field(None, max_length=80)
-    agencia:          Optional[str]   = Field(None, max_length=20)
-    cor:              Optional[str]   = Field(None, max_length=7)
+    nome:       Optional[str]     = Field(None, min_length=2, max_length=80)
+    tipo:       TipoContaEnum
+    saldoAtual: Optional[Decimal] = Field(None, ge=0)
+    nomeBanco:  Optional[str]     = Field(None, max_length=80)
+    agencia:    Optional[str]     = Field(None, max_length=20)
+    cor:        Optional[str]     = Field(None, max_length=7)
 
 
 class TransferirConta(BaseModel):

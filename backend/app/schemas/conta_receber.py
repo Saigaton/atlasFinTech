@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Optional
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.enums.tipo_situacao_conta_enum import TipoSituacaoContaEnum
 
@@ -28,6 +28,13 @@ class CriarContaReceber(BaseModel):
     cliente:         Optional[str] = Field(None, max_length=100)
     notas:           Optional[str] = Field(None, max_length=500)
 
+    @field_validator("data_vencimento")
+    @classmethod
+    def data_vencimento_nao_no_passado(cls, v: datetime) -> datetime:
+        if v.date() < date.today():
+            raise ValueError("A data de vencimento não pode estar no passado.")
+        return v
+
 
 class AtualizarContaReceber(BaseModel):
     descricao:       Optional[str]      = Field(None, min_length=2, max_length=100)
@@ -44,6 +51,13 @@ class RecebimentoContaReceber(BaseModel):
     conta_id:         int               = Field(..., alias="contaId")
     data_recebimento: datetime          = Field(..., alias="dataRecebimento")
     valor_recebido:   Optional[Decimal] = Field(None, alias="valor", gt=0)
+
+    @field_validator("data_recebimento")
+    @classmethod
+    def data_recebimento_nao_futura(cls, v: datetime) -> datetime:
+        if v.date() > date.today():
+            raise ValueError("A data de recebimento não pode ser no futuro.")
+        return v
 
 
 class ContaReceberResposta(BaseModel):

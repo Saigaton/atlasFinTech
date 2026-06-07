@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Optional
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.enums.tipo_situacao_conta_enum import TipoSituacaoContaEnum
 
@@ -11,6 +11,13 @@ class PagamentoContaPagar(BaseModel):
     conta_id:       int               = Field(..., alias="contaId")
     data_pagamento: datetime          = Field(..., alias="dataPagamento")
     valor_pago:     Optional[Decimal] = Field(None,  alias="valorPago", gt=0)
+
+    @field_validator("data_pagamento")
+    @classmethod
+    def data_pagamento_nao_futura(cls, v: datetime) -> datetime:
+        if v.date() > date.today():
+            raise ValueError("A data de pagamento não pode ser no futuro.")
+        return v
 
 
 class _ContaSimples(BaseModel):
@@ -34,6 +41,13 @@ class CriarContaPagar(BaseModel):
     categoria_id:    Optional[int] = None
     notas:           Optional[str] = Field(None, max_length=500)
     total_parcelas:  int           = Field(1, ge=1, le=360)
+
+    @field_validator("data_vencimento")
+    @classmethod
+    def data_vencimento_nao_no_passado(cls, v: datetime) -> datetime:
+        if v.date() < date.today():
+            raise ValueError("A data de vencimento não pode estar no passado.")
+        return v
 
 
 class AtualizarContaPagar(BaseModel):
