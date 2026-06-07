@@ -43,4 +43,4 @@ class TransferirConta(BaseModel):
     paraContaId: int
     valor:       Decimal = Field(..., gt=0)
     descricao:   Optional[str] = Field(None, max_length=100)
-    data:        str
+    data:        datetime

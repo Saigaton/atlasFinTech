@@ -11,10 +11,10 @@ class RequisicaoEmail(BaseModel):
     email: EmailStr
 
 class RequisicaoRegistroUsuario(BaseModel):
-    nome: str
+    nome: str = Field(..., min_length=2, max_length=100)
     email: EmailStr
-    senha: str
-    confirmarSenha: str
+    senha: str = Field(..., min_length=8, max_length=128)
+    confirmarSenha: str = Field(..., min_length=8, max_length=128)
 
 class RespostaTokenUsuario(BaseModel):
     access_token: str

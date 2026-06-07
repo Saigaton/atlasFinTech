@@ -1,6 +1,6 @@
 from decimal import Decimal
 from typing import Optional
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ProjecaoCaixaResposta(BaseModel):
@@ -88,7 +88,7 @@ class PrevisaoMesResposta(BaseModel):
 
 
 class RequisicaoChatbot(BaseModel):
-    message: str
+    message: str = Field(..., min_length=1, max_length=2000)
 
 
 class RespostaChatbot(BaseModel):
