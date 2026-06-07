@@ -142,13 +142,16 @@
           <input type="email" formControlName="email" placeholder="destinatario@email.com"
             [class.bad]="formularioEmail.get('email')?.invalid && formularioEmail.get('email')?.touched">
         </div>
-        <button type="submit" class="btn-send" [disabled]="enviandoEmail">
-          @if (enviandoEmail) { <span class="spin"></span> Enviando... }
-          @else {
-            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-            Enviar relatório
-          }
-        </button>
+        <div class="fld">
+          <span class="fld-lbl" aria-hidden="true" style="visibility:hidden">-</span>
+          <button type="submit" class="btn-send" [disabled]="enviandoEmail">
+            @if (enviandoEmail) { <span class="spin"></span> Enviando... }
+            @else {
+              <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+              Enviar relatório
+            }
+          </button>
+        </div>
       </form>
     </div>
 

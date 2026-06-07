@@ -50,8 +50,9 @@
 }
 
 .email-card { margin-top:4px }
-.email-form { display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end }
-.email-fld  { flex:1;min-width:220px }
+.email-form { display:grid;grid-template-columns:1fr auto;gap:10px;
+  @media (max-width:480px) { grid-template-columns:1fr } }
+.email-fld  { min-width:0 }
 .btn-send {
   display:inline-flex;align-items:center;gap:6px;padding:10px 20px;
   background:var(--grad);color:#fff;border:none;border-radius:10px;
