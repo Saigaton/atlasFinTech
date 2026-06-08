@@ -131,11 +131,31 @@ class TransacaoService:
         try:
             self.repository.atualizarTransacao(transacao, campos)
 
-            tipo_transacao = int(transacao.tipo_transacao_id)
-            sinal = -1 if tipo_transacao == TipoTransacaoEnum.DESPESA else (1 if tipo_transacao == TipoTransacaoEnum.RECEITA else 0)
-            if sinal != 0:
-                era_confirmado   = situacao_anterior     == SituacaoTransacaoEnum.CONFIRMADO
-                agora_confirmado = int(transacao.situacao) == SituacaoTransacaoEnum.CONFIRMADO
+            tipo_transacao   = int(transacao.tipo_transacao_id)
+            era_confirmado   = situacao_anterior == SituacaoTransacaoEnum.CONFIRMADO
+            agora_confirmado = int(transacao.situacao) == SituacaoTransacaoEnum.CONFIRMADO
+
+            if tipo_transacao == TipoTransacaoEnum.TRANSFERENCIA:
+                if era_confirmado:
+                    if conta_id_anterior:
+                        origem = self.repository.session.get(Contas, conta_id_anterior)
+                        if origem:
+                            origem.saldo_atual += valor_anterior
+                    if transacao.transferencia_para_conta_id:
+                        destino = self.repository.session.get(Contas, transacao.transferencia_para_conta_id)
+                        if destino:
+                            destino.saldo_atual -= valor_anterior
+                if agora_confirmado:
+                    if transacao.conta_id:
+                        origem = self.repository.session.get(Contas, transacao.conta_id)
+                        if origem:
+                            origem.saldo_atual -= transacao.valor
+                    if transacao.transferencia_para_conta_id:
+                        destino = self.repository.session.get(Contas, transacao.transferencia_para_conta_id)
+                        if destino:
+                            destino.saldo_atual += transacao.valor
+            else:
+                sinal = -1 if tipo_transacao == TipoTransacaoEnum.DESPESA else 1
                 if era_confirmado and conta_id_anterior:
                     cb = self.repository.session.get(Contas, conta_id_anterior)
                     if cb:

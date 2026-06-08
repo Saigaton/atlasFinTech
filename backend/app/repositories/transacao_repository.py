@@ -12,6 +12,7 @@ class TransacaoRepository:
             self.session.query(Transacoes)
             .options(
                 joinedload(Transacoes.conta),
+                joinedload(Transacoes.transferencia_para_conta),
                 joinedload(Transacoes.categoria),
             )
         )

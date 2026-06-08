@@ -20,10 +20,10 @@ class Transacoes(Base):
     situacao:  Mapped[int]     = mapped_column(Integer, default=SituacaoTransacaoEnum.PENDENTE)
 
     conta_id: Mapped[Optional[int]] = mapped_column(ForeignKey("contas.id"), nullable=True)
-    conta:    Mapped[Optional["Contas"]] = relationship(foreign_keys="Transacoes.conta_id")
+    conta:    Mapped[Optional["Contas"]] = relationship(foreign_keys="[Transacoes.conta_id]")
 
     transferencia_para_conta_id: Mapped[Optional[int]] = mapped_column(ForeignKey("contas.id"), nullable=True)
-    transferencia_para_conta:    Mapped[Optional["Contas"]] = relationship(foreign_keys="Transacoes.transferencia_para_conta_id")
+    transferencia_para_conta:    Mapped[Optional["Contas"]] = relationship(foreign_keys="[Transacoes.transferencia_para_conta_id]")
 
     categoria_id: Mapped[Optional[int]] = mapped_column(ForeignKey("categorias.id"), nullable=True)
     categoria:    Mapped[Optional["Categorias"]] = relationship(back_populates="transacoes")

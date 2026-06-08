@@ -150,7 +150,7 @@ export class TransacoesComponent extends UnsubscriberBase implements OnInit {
         valor:        Number(v.valor),
         data:         v.data,
         conta_id:     Number(v.contaId),
-        categoria_id: Number(v.categoriaId),
+        categoria_id: v.categoriaId != null ? Number(v.categoriaId) : undefined,
         tipo:         Number(v.tipo) as TipoTransacao,
         situacao:     Number(v.situacao) as SituacaoTransacao,
         notas:        v.notas || null,
