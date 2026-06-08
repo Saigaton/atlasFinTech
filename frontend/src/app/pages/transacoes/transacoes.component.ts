@@ -171,15 +171,16 @@ export class TransacoesComponent extends UnsubscriberBase implements OnInit {
     } else {
       const isTransf = Number(v.tipo) === TipoTransacao.Transferencia;
       const payload: CriarTransacaoDto = {
-        descricao:    v.descricao,
-        valor:        Number(v.valor),
-        data:         v.data,
-        conta_id:     Number(v.contaId),
-        categoria_id: isTransf ? null : Number(v.categoriaId),
-        tipo:         Number(v.tipo) as TipoTransacao,
-        situacao:     Number(v.situacao) as SituacaoTransacao,
-        notas:        v.notas || null,
-        recorrencia:  v.recorrencia || 'nenhuma',
+        descricao:                   v.descricao,
+        valor:                       Number(v.valor),
+        data:                        v.data,
+        conta_id:                    Number(v.contaId),
+        categoria_id:                isTransf ? null : Number(v.categoriaId),
+        tipo:                        Number(v.tipo) as TipoTransacao,
+        situacao:                    Number(v.situacao) as SituacaoTransacao,
+        notas:                       v.notas || null,
+        recorrencia:                 v.recorrencia || 'nenhuma',
+        transferencia_para_conta_id: isTransf && v.transferenciaParaContaId ? Number(v.transferenciaParaContaId) : null,
       };
       this._subscriptions.push(
         this.transacaoService.criarTransacao(empresaId, payload).pipe(

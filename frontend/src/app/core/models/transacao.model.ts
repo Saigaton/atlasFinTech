@@ -27,15 +27,16 @@ export interface Transacao {
 }
 
 export interface CriarTransacaoDto {
-  descricao:     string;
-  valor:         number;
-  data:          string;
-  conta_id:      number;
-  categoria_id?: number | null;
-  tipo:          TipoTransacao;
-  situacao:      SituacaoTransacao;
-  notas?:        string | null;
-  recorrencia:   string;
+  descricao:                   string;
+  valor:                       number;
+  data:                        string;
+  conta_id:                    number;
+  categoria_id?:               number | null;
+  tipo:                        TipoTransacao;
+  situacao:                    SituacaoTransacao;
+  notas?:                      string | null;
+  recorrencia:                 string;
+  transferencia_para_conta_id?: number | null;
 }
 
 export interface AtualizarTransacaoDto {

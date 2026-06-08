@@ -70,11 +70,21 @@ class TransacaoService:
                 )
                 self.repository.session.add(conta_receber)
 
-            if ja_pago and dados.conta_id:
-                sinal = -1 if int(dados.tipo) == TipoTransacaoEnum.DESPESA else 1
-                cb = self.repository.session.get(Contas, dados.conta_id)
-                if cb:
-                    cb.saldo_atual += sinal * dados.valor
+            if ja_pago:
+                if int(dados.tipo) == TipoTransacaoEnum.TRANSFERENCIA:
+                    if dados.conta_id:
+                        origem = self.repository.session.get(Contas, dados.conta_id)
+                        if origem:
+                            origem.saldo_atual -= dados.valor
+                    if dados.transferencia_para_conta_id:
+                        destino = self.repository.session.get(Contas, dados.transferencia_para_conta_id)
+                        if destino:
+                            destino.saldo_atual += dados.valor
+                elif dados.conta_id:
+                    sinal = -1 if int(dados.tipo) == TipoTransacaoEnum.DESPESA else 1
+                    cb = self.repository.session.get(Contas, dados.conta_id)
+                    if cb:
+                        cb.saldo_atual += sinal * dados.valor
 
             self.repository.session.commit()
             self.repository.session.refresh(transacao)

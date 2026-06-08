@@ -22,15 +22,16 @@ class _CategoriaSimples(BaseModel):
 
 
 class CriarTransacao(BaseModel):
-    descricao:    str                    = Field(..., min_length=2, max_length=100)
-    valor:        Decimal                = Field(..., gt=0)
-    data:         datetime
-    conta_id:     int
-    categoria_id: Optional[int] = None
-    tipo:         TipoTransacaoEnum
-    situacao:     SituacaoTransacaoEnum  = SituacaoTransacaoEnum.PENDENTE
-    notas:        Optional[str]          = Field(None, max_length=500)
-    recorrencia:  str                    = "nenhuma"
+    descricao:                    str                    = Field(..., min_length=2, max_length=100)
+    valor:                        Decimal                = Field(..., gt=0)
+    data:                         datetime
+    conta_id:                     int
+    categoria_id:                 Optional[int]          = None
+    tipo:                         TipoTransacaoEnum
+    situacao:                     SituacaoTransacaoEnum  = SituacaoTransacaoEnum.PENDENTE
+    notas:                        Optional[str]          = Field(None, max_length=500)
+    recorrencia:                  str                    = "nenhuma"
+    transferencia_para_conta_id:  Optional[int]          = None
 
     @field_validator("tipo", mode="before")
     @classmethod
