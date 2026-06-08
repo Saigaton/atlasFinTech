@@ -214,6 +214,7 @@ export class DashboardComponent implements OnInit {
 
       this.despesasCategorias = principaisDespesas
         .filter((c: any) => c.total != null && !isNaN(Number(c.total)) && Number(c.total) !== 0)
+        .slice(0, 3)
         .map((c: any, i: number): PontoCategoria => {
           const catId = c.categoriaId ?? c.category_id ?? null;
           const cat   = catId != null ? mapa.get(catId) : null;
@@ -229,6 +230,7 @@ export class DashboardComponent implements OnInit {
 
       this.receitasCategorias = principaisReceitas
         .filter((c: any) => c.total != null && !isNaN(Number(c.total)) && Number(c.total) !== 0)
+        .slice(0, 3)
         .map((c: any, i: number): PontoCategoria => {
           const catId = c.categoriaId ?? c.category_id ?? null;
           const cat   = catId != null ? mapa.get(catId) : null;

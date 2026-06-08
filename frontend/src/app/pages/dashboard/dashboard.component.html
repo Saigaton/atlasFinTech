@@ -172,8 +172,8 @@
           <span class="card-title">Receitas por categoria</span>
           <a routerLink="/analise" class="card-action">Ver análise completa →</a>
         </div>
-        <div class="cat-wrap">
-          <div style="display:flex;align-items:center;justify-content:center">
+        <div class="cat-chart-wrap">
+          <div class="donut-wrap">
             <svg class="donut-svg" viewBox="0 0 100 100" id="donut-income-svg">
               <circle class="donut-bg" cx="50" cy="50" r="35"/>
               @for (seg of segmentosDonutReceita; track seg.cor) {
