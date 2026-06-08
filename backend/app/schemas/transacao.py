@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 from typing import Optional
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.enums.tipo_transacao_enum import TipoTransacaoEnum
 from app.enums.situacao_transacao_enum import SituacaoTransacaoEnum
@@ -31,15 +31,6 @@ class CriarTransacao(BaseModel):
     situacao:     SituacaoTransacaoEnum  = SituacaoTransacaoEnum.PENDENTE
     notas:        Optional[str]          = Field(None, max_length=500)
     recorrencia:  str                    = "nenhuma"
-
-    @field_validator("tipo")
-    @classmethod
-    def tipo_nao_transferencia(cls, v: TipoTransacaoEnum) -> TipoTransacaoEnum:
-        if v == TipoTransacaoEnum.TRANSFERENCIA:
-            raise ValueError(
-                "Transações do tipo transferência devem ser registradas pelo endpoint de transferência entre contas."
-            )
-        return v
 
 
 class AtualizarTransacao(BaseModel):

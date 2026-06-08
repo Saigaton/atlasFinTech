@@ -28,13 +28,6 @@ class CriarContaReceber(BaseModel):
     cliente:         Optional[str] = Field(None, max_length=100)
     notas:           Optional[str] = Field(None, max_length=500)
 
-    @field_validator("data_vencimento")
-    @classmethod
-    def data_vencimento_nao_no_passado(cls, v: datetime) -> datetime:
-        if v.date() < date.today():
-            raise ValueError("A data de vencimento não pode estar no passado.")
-        return v
-
 
 class AtualizarContaReceber(BaseModel):
     descricao:       Optional[str]      = Field(None, min_length=2, max_length=100)
