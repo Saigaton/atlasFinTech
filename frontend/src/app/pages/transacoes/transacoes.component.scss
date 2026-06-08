@@ -62,7 +62,7 @@
 .td-conta { font-size: 13px; color: var(--text-muted); white-space: nowrap; }
 
 .cat-tag  { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
-.cat-tag--none { background: var(--border); color: var(--text-muted); }
+.cat-tag--none { background: transparent; color: var(--text-muted); padding-inline: 0; }
 
 .val-pos     { font-size: 13px; font-weight: 700; color: #16a34a; white-space: nowrap; }
 .val-neg     { font-size: 13px; font-weight: 700; color: #dc2626; white-space: nowrap; }
