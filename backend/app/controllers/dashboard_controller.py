@@ -35,11 +35,11 @@ async def obterKPIs(
 )
 async def transacoesRecentes(
     empresaId: int,
-    limite: int = Query(8, ge=1, le=20),
+    limit: int = Query(3, ge=1, le=20),
     service: DashboardService = Depends(obterDashboardService),
     usuario: Usuarios = Depends(obterUsuarioAtualDB),
 ):
-    dados = service.transacoesRecentes(empresaId, usuario.id, limite)
+    dados = service.transacoesRecentes(empresaId, usuario.id, limit)
     return RespostaApi(conteudo=dados)
 
 
