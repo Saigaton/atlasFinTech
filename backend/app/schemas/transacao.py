@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 from typing import Optional
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.enums.tipo_transacao_enum import TipoTransacaoEnum
 from app.enums.situacao_transacao_enum import SituacaoTransacaoEnum
@@ -31,6 +31,24 @@ class CriarTransacao(BaseModel):
     situacao:     SituacaoTransacaoEnum  = SituacaoTransacaoEnum.PENDENTE
     notas:        Optional[str]          = Field(None, max_length=500)
     recorrencia:  str                    = "nenhuma"
+
+    @field_validator("tipo", mode="before")
+    @classmethod
+    def tipo_valido(cls, v) -> TipoTransacaoEnum:
+        try:
+            return TipoTransacaoEnum(int(v))
+        except (ValueError, TypeError):
+            valores_aceitos = [e.value for e in TipoTransacaoEnum]
+            raise ValueError(f"Tipo de transação inválido. Valores aceitos: {valores_aceitos}")
+
+    @field_validator("situacao", mode="before")
+    @classmethod
+    def situacao_valida(cls, v) -> SituacaoTransacaoEnum:
+        try:
+            return SituacaoTransacaoEnum(int(v))
+        except (ValueError, TypeError):
+            valores_aceitos = [e.value for e in SituacaoTransacaoEnum]
+            raise ValueError(f"Situação inválida. Valores aceitos: {valores_aceitos}")
 
 
 class AtualizarTransacao(BaseModel):
