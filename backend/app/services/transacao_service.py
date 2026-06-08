@@ -30,6 +30,7 @@ class TransacaoService:
             notas=dados.notas,
             recorrencia=dados.recorrencia,
             empresa_id=empresa_id,
+            transferencia_para_conta_id=dados.transferencia_para_conta_id,
         )
         try:
             transacao = self.repository.criarTransacao(transacao)
@@ -193,11 +194,21 @@ class TransacaoService:
 
         try:
             tipo = int(transacao.tipo_transacao_id)
-            sinal = -1 if tipo == TipoTransacaoEnum.DESPESA else (1 if tipo == TipoTransacaoEnum.RECEITA else 0)
-            if sinal != 0 and int(transacao.situacao) == SituacaoTransacaoEnum.CONFIRMADO and transacao.conta_id:
-                cb = self.repository.session.get(Contas, transacao.conta_id)
-                if cb:
-                    cb.saldo_atual -= sinal * transacao.valor
+            if int(transacao.situacao) == SituacaoTransacaoEnum.CONFIRMADO:
+                if tipo == TipoTransacaoEnum.TRANSFERENCIA:
+                    if transacao.conta_id:
+                        origem = self.repository.session.get(Contas, transacao.conta_id)
+                        if origem:
+                            origem.saldo_atual += transacao.valor
+                    if transacao.transferencia_para_conta_id:
+                        destino = self.repository.session.get(Contas, transacao.transferencia_para_conta_id)
+                        if destino:
+                            destino.saldo_atual -= transacao.valor
+                elif transacao.conta_id:
+                    sinal = -1 if tipo == TipoTransacaoEnum.DESPESA else 1
+                    cb = self.repository.session.get(Contas, transacao.conta_id)
+                    if cb:
+                        cb.saldo_atual -= sinal * transacao.valor
 
             if tipo == TipoTransacaoEnum.DESPESA:
                 conta_pagar = self.repository.session.query(ContasPagar).filter_by(
