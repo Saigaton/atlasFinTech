@@ -33,9 +33,9 @@
   border: 1px solid;
   transition: background .2s;
 
-  &.red    { background: #fef2f2; border-color: #fecaca; }
-  &.yellow { background: #fffbeb; border-color: #fde68a; }
-  &.blue   { background: #eff6ff; border-color: #bfdbfe; }
+  &.red    { background: var(--bg-form); border-color: var(--border); }
+  &.yellow { background: var(--bg-form); border-color: var(--border); }
+  &.blue   { background: var(--bg-form); border-color: var(--border); }
 }
 
 .ac-icon {
@@ -65,9 +65,9 @@
   font-size: 13px;
   font-weight: 700;
   text-decoration: none;
-  .red &    { color: #dc2626; }
-  .yellow & { color: #d97706; }
-  .blue &   { color: #2563eb; }
+  .red &    { color: var(--text-h); }
+  .yellow & { color: var(--text-h); }
+  .blue &   { color: var(--text-h); }
   &:hover { text-decoration: underline; }
 }
 
@@ -266,15 +266,15 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  background: linear-gradient(135deg, #eff6ff, #dbeafe);
-  border: 0.5px solid #bfdbfe;
-  border-radius: var(--border-radius-lg);
+  background: var(--bg-form);
+  border: 1px solid var(--border);
+  border-radius: 14px;
   padding: 14px 18px;
   margin-bottom: 14px;
 
   &.forecast-neg {
-    background: linear-gradient(135deg, #fef2f2, #fee2e2);
-    border-color: #fecaca;
+    background: var(--bg-form);
+    border-color: var(--border);
   }
 }
 
@@ -311,8 +311,8 @@
   letter-spacing: -0.5px;
   margin-bottom: 5px;
 
-  &.pos { color: #2563eb; }
-  &.neg { color: #dc2626; }
+  &.pos { color: var(--text-h); }
+  &.neg { color: var(--text-h); }
 }
 
 .forecast-detail {
@@ -467,29 +467,9 @@
 // atributo [data-theme='dark'] aplicado ao <html> pelo ThemeService.
 :host-context([data-theme='dark']) {
 
-  // Alert cards (Contas Vencidas / A Vencer / Recebimentos Atrasados)
-  .alert-card.red    { background: #1c0f10; border-color: #991b1b; }
-  .alert-card.yellow { background: #1c1408; border-color: #854d0e; }
-  .alert-card.blue   { background: #0c1a2e; border-color: #1e40af; }
-
-  .alert-card.red    .ac-icon { background: rgba(220, 38, 38, 0.2); }
-  .alert-card.yellow .ac-icon { background: rgba(217, 119,   6, 0.2); }
-  .alert-card.blue   .ac-icon { background: rgba( 37, 99, 235, 0.2); }
-
-  .alert-card.red    .ac-link { color: #f87171; }
-  .alert-card.yellow .ac-link { color: #fbbf24; }
-  .alert-card.blue   .ac-link { color: #93c5fd; }
-
-  // Previsão de saldo
-  .forecast-card {
-    background: linear-gradient(135deg, #0c1a2e, #0f2240);
-    border-color: #1e40af;
-
-    &.forecast-neg {
-      background: linear-gradient(135deg, #1c0f10, #2d0a0a);
-      border-color: #991b1b;
-    }
-  }
+  .alert-card.red    .ac-icon { background: rgba(220, 38, 38, 0.2);  svg { fill: #f87171; } }
+  .alert-card.yellow .ac-icon { background: rgba(217, 119,  6, 0.2); svg { fill: #fbbf24; } }
+  .alert-card.blue   .ac-icon { background: rgba( 37, 99, 235, 0.2); svg { fill: #93c5fd; } }
 
   .forecast-icon {
     background: rgba(99, 102, 241, 0.2);
@@ -499,7 +479,4 @@
     background: rgba(239, 68, 68, 0.2);
     svg { fill: #f87171; }
   }
-
-  .forecast-value.pos { color: #818cf8; }
-  .forecast-value.neg { color: #f87171; }
 }
