@@ -46,11 +46,9 @@ $transition:     0.22s ease;
 
 .logo-mark {
   width: 32px; height: 32px;
-  background: var(--grad);
-  border-radius: 9px;
-  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  display: block;
   flex-shrink: 0;
-  svg { width: 17px; height: 17px; fill: #fff; }
 }
 
 .logo-text { display: flex; flex-direction: column; flex: 1; overflow: hidden; }

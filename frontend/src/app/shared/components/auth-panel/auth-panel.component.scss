@@ -30,9 +30,7 @@
 
 .brand { display:flex;align-items:center;gap:10px;position:relative;z-index:2; }
 .brand-mark {
-  width:34px;height:34px;background:rgba(255,255,255,.18);border-radius:9px;
-  display:flex;align-items:center;justify-content:center;
-  svg { width:18px;height:18px;fill:#fff; }
+  width:36px;height:36px;border-radius:50%;display:block;flex-shrink:0;
 }
 .brand-name { font-size:17px;font-weight:700;color:#fff;letter-spacing:-.3px;line-height:1; }
 .brand-sub  { font-size:9px;font-weight:600;color:rgba(255,255,255,.5);letter-spacing:1.2px;text-transform:uppercase; }
