@@ -11,16 +11,6 @@ import { AuthPanelComponent } from '../../shared/components/auth-panel/auth-pane
 import { UnsubscriberBase } from '../../core/unsubscriber';
 import { environment } from '../../../environments/environment';
 
-declare const google: {
-  accounts: {
-    id: {
-      initialize: (config: object) => void;
-      prompt:     (callback?: (notification: { isNotDisplayed: () => boolean; isSkippedMoment: () => boolean }) => void) => void;
-      cancel:     () => void;
-    };
-  };
-};
-
 @Component({
   selector: 'app-login',
   standalone: true,
@@ -35,6 +25,9 @@ export class LoginComponent extends UnsubscriberBase implements OnInit {
   destacarGoogle   = false;
   formLogin!: FormGroup;
 
+  private _popup:      Window | null = null;
+  private _msgHandler: ((e: MessageEvent) => void) | null = null;
+
   constructor(
     private authService: AuthService,
     private router: Router,
@@ -47,7 +40,12 @@ export class LoginComponent extends UnsubscriberBase implements OnInit {
 
   ngOnInit(): void {
     this.criarFormulario();
-    this._initGoogle();
+  }
+
+  override ngOnDestroy(): void {
+    super.ngOnDestroy();
+    if (this._msgHandler) window.removeEventListener('message', this._msgHandler);
+    this._popup?.close();
   }
 
   criarFormulario(): void {
@@ -87,47 +85,60 @@ export class LoginComponent extends UnsubscriberBase implements OnInit {
 
   onGoogleClick(): void {
     if (this.googleCarregando || this.carregando) return;
-    this._initGoogle(); // reinicializa para limpar supressão de fechamentos anteriores
-    google.accounts.id.prompt((notification) => {
-      if (notification.isNotDisplayed()) {
-        this.ngZone.run(() =>
-          this.toast.error('Não foi possível abrir o popup do Google. Verifique se popups estão permitidos.')
-        );
-      }
+
+    if (this._popup && !this._popup.closed) {
+      this._popup.focus();
+      return;
+    }
+
+    const nonce  = Math.random().toString(36).substring(2);
+    const params = new URLSearchParams({
+      client_id:     environment.googleClientId,
+      redirect_uri:  `${window.location.origin}/oauth-callback`,
+      response_type: 'id_token',
+      scope:         'openid email profile',
+      nonce,
+      prompt:        'select_account',
     });
+
+    this._popup = window.open(
+      `https://accounts.google.com/o/oauth2/v2/auth?${params}`,
+      'google-auth',
+      'width=520,height=620,left=200,top=80'
+    );
+
+    if (!this._popup) {
+      this.toast.error('Popup bloqueado pelo navegador. Permita popups para este site.');
+      return;
+    }
+
+    if (this._msgHandler) window.removeEventListener('message', this._msgHandler);
+
+    this._msgHandler = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type === 'google-auth-success') {
+        window.removeEventListener('message', this._msgHandler!);
+        this._msgHandler = null;
+        this.ngZone.run(() => this._handleGoogleCredential(event.data.id_token));
+      } else if (event.data?.type === 'google-auth-error') {
+        window.removeEventListener('message', this._msgHandler!);
+        this._msgHandler = null;
+        this.ngZone.run(() => this.toast.error('Erro ao autenticar com Google. Tente novamente.'));
+      }
+    };
+
+    window.addEventListener('message', this._msgHandler);
   }
 
   alternarMostrarSenha(): void {
     this.mostrarSenha = !this.mostrarSenha;
   }
 
-  private _initGoogle(): void {
-    const tentarInit = () => {
-      if (typeof google !== 'undefined') {
-        google.accounts.id.initialize({
-          client_id: environment.googleClientId,
-          callback:  (response: { credential: string }) => {
-            this.ngZone.run(() => this._handleGoogleCredential(response.credential));
-          },
-          auto_select: false,
-          cancel_on_tap_outside: true,
-        });
-      }
-    };
-
-    if (typeof google !== 'undefined') {
-      tentarInit();
-    } else {
-      const script = document.querySelector('script[src*="accounts.google.com/gsi/client"]');
-      script?.addEventListener('load', tentarInit);
-    }
-  }
-
   private _handleGoogleCredential(idToken: string): void {
     this.googleCarregando = true;
     this.authService.googleLogin(idToken).subscribe({
       next: (res) => {
-        this.toast.success(`Bem-vindo, ${res.usuario.nome.split(' ')[0]}! 👋`);
+        this.toast.success(`Bem-vindo de volta, ${res.usuario.nome.split(' ')[0]}! 👋`);
         this.authService.navigateAfterLogin();
       },
       error: () => {

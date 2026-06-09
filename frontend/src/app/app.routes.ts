@@ -37,6 +37,11 @@ export const routes: Routes = [
       import('./pages/verificacao-pendente/verificacao-pendente.component').then(m => m.VerificacaoPendenteComponent),
   },
   {
+    path: 'oauth-callback',
+    loadComponent: () =>
+      import('./pages/oauth-callback/oauth-callback.component').then(m => m.OAuthCallbackComponent),
+  },
+  {
     path: 'empresa/nova',
     canActivate: [authGuard],
     loadComponent: () => import('./pages/empresas/empresas.component').then(m => m.EmpresasComponent),
