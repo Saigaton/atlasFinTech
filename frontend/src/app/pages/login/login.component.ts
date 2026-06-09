@@ -87,8 +87,9 @@ export class LoginComponent extends UnsubscriberBase implements OnInit {
 
   onGoogleClick(): void {
     if (this.googleCarregando || this.carregando) return;
+    this._initGoogle(); // reinicializa para limpar supressão de fechamentos anteriores
     google.accounts.id.prompt((notification) => {
-      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+      if (notification.isNotDisplayed()) {
         this.ngZone.run(() =>
           this.toast.error('Não foi possível abrir o popup do Google. Verifique se popups estão permitidos.')
         );
