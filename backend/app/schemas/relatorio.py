@@ -63,23 +63,19 @@ class EnviarEmailRelatorioRequisicao(BaseModel):
 
 
 class ItemConciliadoResposta(BaseModel):
-    dataExtrato:        str
-    descricaoExtrato:   str
-    valorExtrato:       float
-    idTransacao:        int
-    descricaoTransacao: str
+    dataExtrato:  str
+    valorExtrato: float
+    idTransacao:  int
 
 class ItemExtratoResposta(BaseModel):
-    data:      str
-    descricao: str
-    valor:     float
+    data:  str
+    valor: float
 
 class ItemTransacaoSistemaResposta(BaseModel):
-    id:        int
-    data:      str
-    descricao: str
-    tipo:      str
-    valor:     float
+    id:    int
+    data:  str
+    tipo:  str
+    valor: float
 
 class ResultadoConciliacaoResposta(BaseModel):
     conciliadas:           int

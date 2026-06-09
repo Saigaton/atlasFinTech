@@ -234,9 +234,6 @@ class RelatorioService:
                 row_lower = {k.lower().strip(): v.strip() for k, v in row.items()}
                 data_str  = row_lower.get("data", "")
                 valor_str = row_lower.get("valor", "")
-                descricao = (row_lower.get("descricao") or row_lower.get("histórico")
-                             or row_lower.get("historico") or row_lower.get("memo") or "")
-
                 if not data_str or not valor_str:
                     erros.append(f"Linha {i + 2}: colunas 'data' e 'valor' são obrigatórias")
                     continue
@@ -263,7 +260,7 @@ class RelatorioService:
                     erros.append(f"Linha {i + 2}: valor inválido '{valor_str}'")
                     continue
 
-                itens_extrato.append({"data": data, "descricao": descricao.strip(), "valor": valor})
+                itens_extrato.append({"data": data, "valor": valor})
             except Exception:
                 erros.append(f"Linha {i + 2}: erro ao processar linha")
 
@@ -285,15 +282,12 @@ class RelatorioService:
                 usadas.add(match.id)
                 conciliadas.append(ItemConciliadoResposta(
                     dataExtrato=item["data"].strftime("%d/%m/%Y"),
-                    descricaoExtrato=item["descricao"],
                     valorExtrato=float(item["valor"]),
                     idTransacao=match.id,
-                    descricaoTransacao=match.descricao,
                 ))
             else:
                 so_extrato.append(ItemExtratoResposta(
                     data=item["data"].strftime("%d/%m/%Y"),
-                    descricao=item["descricao"],
                     valor=float(item["valor"]),
                 ))
 
@@ -301,7 +295,6 @@ class RelatorioService:
             ItemTransacaoSistemaResposta(
                 id=t.id,
                 data=(t.data.date() if hasattr(t.data, "date") else t.data).strftime("%d/%m/%Y"),
-                descricao=t.descricao,
                 tipo="receita" if int(t.tipo_transacao_id) == TipoTransacaoEnum.RECEITA else "despesa",
                 valor=float(t.valor),
             )

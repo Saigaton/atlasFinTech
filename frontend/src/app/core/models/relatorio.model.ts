@@ -6,25 +6,21 @@ export interface StatusAgendamento {
 }
 
 export interface ItemConciliado {
-  dataExtrato:        string;
-  descricaoExtrato:   string;
-  valorExtrato:       number;
-  idTransacao:        number;
-  descricaoTransacao: string;
+  dataExtrato:  string;
+  valorExtrato: number;
+  idTransacao:  number;
 }
 
 export interface ItemExtrato {
-  data:      string;
-  descricao: string;
-  valor:     number;
+  data:  string;
+  valor: number;
 }
 
 export interface ItemTransacao {
-  id:        number;
-  data:      string;
-  descricao: string;
-  tipo:      'receita' | 'despesa';
-  valor:     number;
+  id:    number;
+  data:  string;
+  tipo:  'receita' | 'despesa';
+  valor: number;
 }
 
 export interface ResultadoConciliacao {
