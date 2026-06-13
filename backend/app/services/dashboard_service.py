@@ -16,11 +16,14 @@ _MESES = [
     "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
 ]
 
-
+# Autor: Davi Santos
 class DashboardService:
     def __init__(self, repository: DashboardRepository):
         self.repository = repository
 
+    # Calcula os KPIs do período informado (mês/ano) ou do ano corrente se omitidos.
+    # Agrega receitas, despesas, lucro líquido e saldo total das contas bancárias.
+    # Gera também os rótulos de período e as datas de início/fim para exibição no frontend.
     def obterKPIs(self, empresa_id: int, usuario_id: int, mes: int | None, ano: int | None) -> KPIsResposta:
         hoje  = date.today()
         m     = mes or hoje.month
@@ -48,10 +51,13 @@ class DashboardService:
             fimPeriodo=fim,
         )
 
+    # Retorna as N transações mais recentes da empresa, ordenadas por data decrescente.
     def transacoesRecentes(self, empresa_id: int, usuario_id: int, limite: int) -> list[TransacaoRecenteResposta]:
         transacoes = self.repository.transacoesRecentes(empresa_id, usuario_id, limite)
         return [TransacaoRecenteResposta.model_validate(t) for t in transacoes]
 
+    # Agrupa receitas e despesas por mês para o ano informado (ou ano atual), retornando
+    # um ponto por mês com os totais. Meses sem transações são omitidos do resultado.
     def graficoMensal(self, empresa_id: int, usuario_id: int, ano: int | None) -> list[PontoGraficoResposta]:
         ano_ref = ano or date.today().year
         rows    = self.repository.graficoMensal(empresa_id, usuario_id, ano_ref)
@@ -68,6 +74,8 @@ class DashboardService:
 
         return [PontoGraficoResposta(**v) for v in sorted(pontos.values(), key=lambda x: x["mes"])]
 
+    # Calcula o total de receitas e despesas agrupado por conta bancária, permitindo
+    # visualizar a distribuição financeira entre as diferentes contas da empresa.
     def graficoPorConta(self, empresa_id: int, usuario_id: int, ano: int | None = None) -> list[PontoGraficoPorContaResposta]:
         contas = self.repository.graficoPorConta(empresa_id, usuario_id, ano)
         return [PontoGraficoPorContaResposta(**c) for c in contas]

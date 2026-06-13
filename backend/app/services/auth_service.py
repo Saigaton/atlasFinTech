@@ -16,16 +16,17 @@ from app.repositories.auth_repository import AuthRepository
 from app.entidades.usuarios import Usuarios
 from datetime import datetime, timezone
 
+# Autor: Davi Santos
 class AuthService:
     def __init__(self, repository: AuthRepository):
         self.repository  = repository
 
+    # Cria um novo usuário validando que as senhas coincidem, que o e-mail ainda não
+    # está cadastrado e gerando o hash bcrypt antes de persistir no banco.
     def criarUsuario(self, dados: dict) -> RespostaUsuario:
-        # Validação de senha
         if dados["senha"] != dados["confirmarSenha"]:
             raise BusinessException("As senhas não coincidem", status_code=400)
 
-        # Verificação de e-mail existente
         if self.repository.existeUsuarioPorEmail(dados["email"]):
             raise BusinessException("Este e-mail já existe no sistema", status_code=422)
 
@@ -36,13 +37,12 @@ class AuthService:
 
         dados["data_criacao"] = datetime.now(timezone.utc)
 
-        # 4. Preparar objeto para o banco
         novo_usuario = Usuarios(**dados)
 
         try:
             novo_usuario = self.repository.salvarUsuario(novo_usuario)
 
-            self.repository.session.commit() 
+            self.repository.session.commit()
             self.repository.session.refresh(novo_usuario)
 
             return RespostaUsuario.model_validate(novo_usuario)
@@ -50,6 +50,8 @@ class AuthService:
             self.repository.session.rollback()
             raise BusinessException("Erro ao salvar novo usuário.", status_code=400)
 
+    # Autentica o usuário por e-mail e senha. Bloqueia o login com senha em contas
+    # criadas exclusivamente via Google para evitar confusão de fluxos de autenticação.
     def loginUsuario(self, dados: dict) -> RespostaUsuario:
         usuario = self.repository.buscarUsuarioPorEmail(dados["email"])
 
@@ -67,20 +69,22 @@ class AuthService:
 
         return RespostaUsuario.model_validate(usuario)
 
+    # Compara a senha em texto puro com o hash bcrypt armazenado no banco.
     def validarSenha(self, senhaPura: str, senhaHash: str) -> bool:
         return bcrypt.checkpw(
         senhaPura.encode('utf-8'),
         senhaHash.encode('utf-8')
     )
 
+    # Gera um hash bcrypt com salt aleatório para armazenamento seguro da senha.
     def criarSenhaHash(self, senha: str) -> str:
-         # Bcrypt espera bytes, então codificamos a string
         pwd_bytes = senha.encode('utf-8')
         salt = bcrypt.gensalt()
         hashed = bcrypt.hashpw(pwd_bytes, salt)
-
         return hashed.decode('utf-8')
-    
+
+    # Invalida tokens de recuperação anteriores do usuário e gera um novo token
+    # de redefinição de senha com prazo de expiração.
     def solicitarRecuperacaoSenha(self, dados: dict) -> TokenResetSenha:
         usuario = self.repository.buscarUsuarioPorEmail(dados["email"])
 
@@ -96,6 +100,8 @@ class AuthService:
         except Exception:
             raise BusinessException("Erro ao processar recuperação de senha.", status_code=400)
 
+    # Decodifica o token JWT de verificação de e-mail e marca a conta como verificada.
+    # Rejeita tokens inválidos, expirados ou já utilizados.
     def verificarEmail(self, token: str) -> RespostaApi:
         payload = decodificarTokenVerificacaoEmail(token)
         if not payload:
@@ -116,7 +122,8 @@ class AuthService:
         except Exception:
             self.repository.session.rollback()
             raise BusinessException("Erro ao verificar e-mail.", status_code=400)
-    
+
+    # Persiste o refresh token no banco após um login bem-sucedido para controle de sessões ativas.
     def salvarTokenRefresh(self, usuarioId: int, jti: str, expiracao: datetime) -> None:
         token = AtualizacaoTokens(
             jti=jti,
@@ -130,6 +137,8 @@ class AuthService:
             self.repository.session.rollback()
             raise BusinessException("Erro ao salvar token de atualização.", status_code=400)
 
+    # Revoga o refresh token no banco, encerrando a sessão do usuário. Impede reuso
+    # de tokens já revogados mesmo que ainda estejam dentro do prazo de validade.
     def logoutUsuario(self, refresh_token: str) -> None:
         payload = decodificarTokenAtualizacao(refresh_token)
         if not payload:
@@ -147,6 +156,8 @@ class AuthService:
             self.repository.session.rollback()
             raise BusinessException("Erro ao realizar logout.", status_code=400)
 
+    # Valida o refresh token e emite um novo access token sem exigir nova autenticação,
+    # permitindo que sessões permaneçam ativas além do tempo de vida do access token.
     def tokenAtualizacao(self, refresh_token: str) -> RespostaTokenUsuario:
         payload = decodificarTokenAtualizacao(refresh_token)
         if not payload:
@@ -168,7 +179,9 @@ class AuthService:
             token_type="bearer",
             expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         )
-    
+
+    # Gera um token de recuperação de senha para o e-mail informado. Retorna None sem
+    # erro quando o e-mail não existe (evita enumeração de usuários por timing).
     def esqueceuSenha(self, email: str) -> str | None:
         usuario = self.repository.buscarUsuarioPorEmail(email.lower())
         if not usuario:
@@ -184,12 +197,16 @@ class AuthService:
             self.repository.session.rollback()
             raise BusinessException("Erro ao processar recuperação de senha.", status_code=400)
 
+    # Reenvia o token de verificação de e-mail apenas se a conta existir e ainda não
+    # estiver verificada. Retorna None silenciosamente nos demais casos.
     def reenviarVerificacaoEmail(self, email: str) -> str | None:
         usuario = self.repository.buscarUsuarioPorEmail(email.lower())
         if not usuario or usuario.esta_verificado:
             return None
         return criarTokenVerificacaoEmail(usuario.id)
-    
+
+    # Permite que contas criadas via Google sem senha própria definam uma pela primeira vez.
+    # Revoga todas as sessões ativas após a definição para forçar novo login com a nova senha.
     def definirSenha(self, usuarioId: int, novaSenha: str) -> RespostaApi:
         usuario = self.repository.buscarUsuarioPorId(usuarioId)
         if not usuario:
@@ -207,6 +224,8 @@ class AuthService:
             self.repository.session.rollback()
             raise BusinessException("Erro ao definir senha.", status_code=400)
 
+    # Valida a senha atual antes de substituí-la pela nova. Revoga todas as sessões ativas
+    # para forçar novo login em outros dispositivos após a troca.
     def trocarSenha(self, usuarioId: int, senhaAtual: str, novaSenha: str) -> RespostaApi:
         usuario = self.repository.buscarUsuarioPorId(usuarioId)
         if not self.validarSenha(senhaAtual, usuario.senha_hash):
@@ -222,6 +241,7 @@ class AuthService:
             self.repository.session.rollback()
             raise BusinessException("Erro ao alterar senha.", status_code=400)
 
+    # Atualiza o nome do usuário autenticado no perfil.
     def atualizarPerfil(self, usuarioId: int, nome: str) -> RespostaUsuario:
         try:
             self.repository.atualizarNomeUsuario(usuarioId, nome)
@@ -232,6 +252,10 @@ class AuthService:
             self.repository.session.rollback()
             raise BusinessException("Erro ao atualizar perfil.", status_code=400)
 
+    # Verifica o id_token emitido pelo Google OAuth. Cria a conta automaticamente na
+    # primeira vez (usando e-mail e nome do payload) e emite tokens JWT próprios da aplicação.
+    # Aceita tokens sem verificação de assinatura quando GOOGLE_CLIENT_ID não está configurado
+    # (útil em ambiente de desenvolvimento).
     def loginGoogle(self, idToken: str) -> RespostaLogin:
         try:
             if settings.GOOGLE_CLIENT_ID:
@@ -276,6 +300,8 @@ class AuthService:
             usuario=RespostaUsuario.model_validate(usuario),
         )
 
+    # Valida o token de redefinição de senha (verifica existência, uso anterior e expiração),
+    # aplica o hash da nova senha e revoga todas as sessões ativas do usuário.
     def redefinirSenha(self, tokenStr: str, novaSenha: str) -> RespostaApi:
         tokenReset = self.repository.buscarTokenResetPorToken(tokenStr)
         if not tokenReset or tokenReset.usado:

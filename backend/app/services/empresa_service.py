@@ -5,15 +5,18 @@ from app.exceptions.business_exception import BusinessException
 from app.repositories.empresa_repository import EmpresaRepository
 from app.schemas.empresa import CriarEmpresa, EmpresaResposta
 
-
+# Autor: Davi Santos
 class EmpresaService:
     def __init__(self, repository: EmpresaRepository):
         self.repository = repository
 
+    # Lista todas as empresas vinculadas ao usuário autenticado.
     def listarEmpresas(self, usuario_id: int) -> list[EmpresaResposta]:
         empresas = self.repository.listarEmpresasPorUsuario(usuario_id)
         return [EmpresaResposta.model_validate(e) for e in empresas]
 
+    # Cria uma empresa para o usuário, limitando a 1 empresa por conta. Impede criação
+    # de múltiplas empresas para manter o escopo do sistema como gestão financeira pessoal/MEI.
     def criarEmpresa(self, dados: CriarEmpresa, usuario_id: int) -> EmpresaResposta:
         empresas_existentes = self.repository.listarEmpresasPorUsuario(usuario_id)
         if empresas_existentes:

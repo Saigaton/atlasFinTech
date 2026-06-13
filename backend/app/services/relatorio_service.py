@@ -23,11 +23,13 @@ from app.schemas.relatorio import (
     StatusAgendamentoResposta,
 )
 
-
+# Autor: Davi Santos
 class RelatorioService:
     def __init__(self, repository: RelatorioRepository):
         self.repository = repository
 
+    # Consolida as transações do período em receitas totais, despesas totais e saldo,
+    # retornando também o detalhamento de cada transação para exibição no relatório.
     def fluxoCaixa(self, empresa_id: int, usuario_id: int, mes: int | None, ano: int | None) -> FluxoCaixaResposta:
         transacoes = self.repository.fluxoCaixa(empresa_id, usuario_id, mes, ano)
 
@@ -41,26 +43,33 @@ class RelatorioService:
             transacoes=[ItemFluxoCaixaResposta.model_validate(t) for t in transacoes],
         )
 
+    # Agrupa o total de transações por categoria no período, útil para análise de gastos por área.
     def porCategoria(self, empresa_id: int, usuario_id: int, mes: int | None, ano: int | None) -> list[ItemPorCategoriaResposta]:
         rows = self.repository.totalPorCategoria(empresa_id, usuario_id, mes, ano)
         return [ItemPorCategoriaResposta(**r) for r in rows]
 
+    # Retorna totais agregados de contas a pagar por situação (pendente, pago, atrasado).
     def resumoContasPagar(self, empresa_id: int, usuario_id: int) -> ContasPagarResumoResposta:
         dados = self.repository.resumoContasPagar(empresa_id, usuario_id)
         return ContasPagarResumoResposta(**dados)
 
+    # Retorna totais agregados de contas a receber por situação (pendente, recebido, atrasado).
     def resumoContasReceber(self, empresa_id: int, usuario_id: int) -> ContasReceberResumoResposta:
         dados = self.repository.resumoContasReceber(empresa_id, usuario_id)
         return ContasReceberResumoResposta(**dados)
 
     # ── Agendamento de relatório ───────────────────────────────────────────
 
+    # Verifica se a empresa possui um agendamento de relatório periódico ativo e retorna
+    # seus dados (e-mail, dia do mês e hora de envio).
     def statusAgendamento(self, empresa_id: int, usuario_id: int) -> StatusAgendamentoResposta:
         ag = self.repository.buscarAgendamento(empresa_id, usuario_id)
         if not ag:
             return StatusAgendamentoResposta(inscrito=False)
         return StatusAgendamentoResposta(inscrito=True, email=ag.email, diaMes=ag.dia_mes, hora=ag.hora)
 
+    # Cria ou atualiza o agendamento de relatório periódico da empresa. Se já existe,
+    # atualiza e-mail, dia do mês e hora; caso contrário, cria um novo registro.
     def inscreverAgendamento(self, empresa_id: int, usuario_id: int, dados: InscricaoAgendamentoRequisicao) -> StatusAgendamentoResposta:
         ag = self.repository.buscarAgendamento(empresa_id, usuario_id)
         try:
@@ -79,6 +88,7 @@ class RelatorioService:
             self.repository.session.rollback()
             raise BusinessException("Erro ao salvar agendamento.", status_code=400)
 
+    # Cancela o agendamento de relatório periódico da empresa.
     def cancelarAgendamento(self, empresa_id: int, usuario_id: int) -> None:
         try:
             self.repository.cancelarAgendamento(empresa_id, usuario_id)
@@ -92,6 +102,8 @@ class RelatorioService:
     _TIPO_LABEL = {0: "Receita", 1: "Despesa", 3: "Transferência"}
     _SITUACAO_LABEL = {0: "Pendente", 1: "Pago", 2: "Atrasado"}
 
+    # Gera os bytes de um CSV com separador ponto-e-vírgula e BOM UTF-8 para garantir
+    # compatibilidade com o Excel brasileiro ao abrir diretamente.
     def _csv_bytes(self, cabecalho: list[str], linhas: list[list]) -> bytes:
         out = io.StringIO()
         writer = csv.writer(out, delimiter=";")
@@ -99,6 +111,8 @@ class RelatorioService:
         writer.writerows(linhas)
         return out.getvalue().encode("utf-8-sig")
 
+    # Exporta todas as transações do período em formato CSV com ID, descrição, valor,
+    # data, tipo e categoria.
     def transacoesCsv(self, empresa_id: int, usuario_id: int, mes: int | None, ano: int | None) -> bytes:
         transacoes = self.repository.fluxoCaixa(empresa_id, usuario_id, mes, ano)
         linhas = [
@@ -112,6 +126,7 @@ class RelatorioService:
         ]
         return self._csv_bytes(["ID", "Descrição", "Valor (R$)", "Data", "Tipo", "Categoria"], linhas)
 
+    # Exporta as contas a pagar em formato CSV com situação, parcelas e datas de vencimento/pagamento.
     def contas_pagarCsv(self, empresa_id: int, usuario_id: int, mes: int | None = None, ano: int | None = None) -> bytes:
         contas = self.repository.listarContasPagar(empresa_id, usuario_id, mes, ano)
         linhas = [
@@ -127,6 +142,7 @@ class RelatorioService:
         ]
         return self._csv_bytes(["ID", "Descrição", "Valor (R$)", "Vencimento", "Pagamento", "Parcelas", "Situação", "Observações"], linhas)
 
+    # Exporta as contas a receber em formato CSV com cliente, situação e datas de vencimento/recebimento.
     def contas_receberCsv(self, empresa_id: int, usuario_id: int, mes: int | None = None, ano: int | None = None) -> bytes:
         contas = self.repository.listarContasReceber(empresa_id, usuario_id, mes, ano)
         linhas = [
@@ -144,6 +160,9 @@ class RelatorioService:
 
     # ── Relatório texto ───────────────────────────────────────────────────
 
+    # Gera um relatório financeiro em texto puro formatado com colunas fixas (60 chars),
+    # contendo resumo de receitas/despesas/saldo e listagem detalhada por tipo.
+    # Retornado como bytes UTF-8 para download direto pelo frontend.
     def relatorioPdf(self, empresa_id: int, usuario_id: int, mes: int | None, ano: int | None) -> bytes:
         transacoes = self.repository.fluxoCaixa(empresa_id, usuario_id, mes, ano)
 
@@ -198,6 +217,8 @@ class RelatorioService:
 
     # ── Backup ZIP ────────────────────────────────────────────────────────
 
+    # Empacota os três CSVs (transações, contas a pagar, contas a receber) em um único
+    # arquivo ZIP comprimido para backup completo dos dados financeiros da empresa.
     def backupZip(self, empresa_id: int, usuario_id: int) -> bytes:
         import zipfile
         buf = io.BytesIO()
@@ -209,6 +230,10 @@ class RelatorioService:
 
     # ── Conciliação bancária ──────────────────────────────────────────────
 
+    # Compara um extrato bancário importado em CSV com as transações registradas no sistema.
+    # Auto-detecta o delimitador (;, ,, tab, |) e suporta múltiplos formatos de data.
+    # Cruza os itens por data+valor (tolerância de R$ 0,01) e classifica cada registro como:
+    # conciliado (encontrado nos dois lados), somente no extrato ou somente no sistema.
     def conciliar(self, empresa_id: int, usuario_id: int, conteudo: str) -> ResultadoConciliacaoResposta:
         from datetime import date as date_type
 

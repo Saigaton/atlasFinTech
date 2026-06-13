@@ -13,11 +13,15 @@ from app.exceptions.business_exception import BusinessException
 from app.repositories.transacao_repository import TransacaoRepository
 from app.schemas.transacao import AtualizarTransacao, CriarTransacao, TransacaoResposta
 
-
+# Autor: Davi Santos
 class TransacaoService:
     def __init__(self, repository: TransacaoRepository):
         self.repository = repository
 
+    # Cria a transação e gera automaticamente um registro vinculado em ContasPagar (DESPESA)
+    # ou ContasReceber (RECEITA). Se a situação for CONFIRMADO, ajusta o saldo da conta
+    # bancária imediatamente: debita para despesa, credita para receita, e para transferências
+    # debita da conta de origem e credita na conta de destino.
     def criarTransacao(self, empresa_id: int, usuario_id: int, dados: CriarTransacao) -> TransacaoResposta:
         transacao = Transacoes(
             descricao=dados.descricao,
@@ -96,6 +100,7 @@ class TransacaoService:
             self.repository.session.rollback()
             raise BusinessException("Erro ao criar transação.", status_code=400)
 
+    # Lista as transações da empresa aplicando filtros opcionais de tipo, situação e pesquisa textual.
     def listarTransacoes(
         self,
         empresa_id: int,
@@ -107,12 +112,17 @@ class TransacaoService:
         transacoes = self.repository.listarComFiltros(empresa_id, usuario_id, tipo, situacao, pesquisa)
         return [TransacaoResposta.model_validate(t) for t in transacoes]
 
+    # Busca uma transação pelo ID validando que pertence à empresa e ao usuário autenticado.
     def buscarTransacao(self, empresa_id: int, transacao_id: int, usuario_id: int) -> TransacaoResposta:
         transacao = self.repository.buscarComRelacionamentos(transacao_id, empresa_id, usuario_id)
         if not transacao:
             raise BusinessException("Transação não encontrada.", status_code=404)
         return TransacaoResposta.model_validate(transacao)
 
+    # Atualiza a transação revertendo o efeito financeiro anterior no saldo e aplicando
+    # o novo. Para transferências, reverte débito/crédito das contas antigas e aplica nas
+    # novas. Para receitas/despesas usa sinal (+/-) conforme o tipo. Sincroniza os campos
+    # alterados na ContaPagar ou ContaReceber vinculada, incluindo situação e data de pagamento.
     def atualizarTransacao(self, empresa_id: int, transacao_id: int, usuario_id: int, dados: AtualizarTransacao) -> TransacaoResposta:
         transacao = self.repository.buscarPorId(transacao_id, empresa_id, usuario_id)
         if not transacao:
@@ -207,6 +217,9 @@ class TransacaoService:
             self.repository.session.rollback()
             raise BusinessException("Erro ao atualizar transação.", status_code=400)
 
+    # Remove a transação e o registro vinculado (ContaPagar ou ContaReceber). Se estava
+    # CONFIRMADA, estorna o efeito no saldo bancário: credita para despesas, debita para
+    # receitas e inverte o fluxo para transferências.
     def deletarTransacao(self, empresa_id: int, transacao_id: int, usuario_id: int) -> None:
         transacao = self.repository.buscarPorId(transacao_id, empresa_id, usuario_id)
         if not transacao:
@@ -249,6 +262,9 @@ class TransacaoService:
             self.repository.session.rollback()
             raise BusinessException("Erro ao deletar transação.", status_code=400)
 
+    # Gera N cópias mensais da transação de origem (padrão 11, completando 12 meses no total
+    # com a origem). As datas são calculadas somando meses um a um com ajuste para meses mais
+    # curtos (ex: 31/jan → 28/fev). As cópias são inseridas em lote sem alterar saldos.
     def gerarRecorrencia(self, empresa_id: int, transacao_id: int, usuario_id: int, parcelas: int = 11) -> list[TransacaoResposta]:
         origem = self.repository.buscarPorId(transacao_id, empresa_id, usuario_id)
         if not origem:

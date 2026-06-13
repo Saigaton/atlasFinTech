@@ -11,11 +11,14 @@ from app.exceptions.business_exception import BusinessException
 from app.repositories.conta_receber_repository import ContaReceberRepository
 from app.schemas.conta_receber import AtualizarContaReceber, ContaReceberResposta, CriarContaReceber, RecebimentoContaReceber, ResumoContasReceberResposta
 
-
+# Autor: Davi Santos
 class ContaReceberService:
     def __init__(self, repository: ContaReceberRepository):
         self.repository = repository
 
+    # Varre todas as contas PENDENTES da empresa e muda o status para ATRASADO quando
+    # a data de vencimento é anterior a hoje. Executado automaticamente antes de listagens
+    # para manter os status sempre atualizados sem depender de agendamentos externos.
     def _atualizar_vencidas(self, empresa_id: int, usuario_id: int) -> None:
         hoje = datetime.now(timezone.utc).date()
         contas = self.repository.listarPorEmpresa(empresa_id, usuario_id)
@@ -29,6 +32,8 @@ class ContaReceberService:
                 c.situacao_id = TipoSituacaoContaEnum.ATRASADO
             self.repository.session.commit()
 
+    # Cria uma conta a receber com status PENDENTE e gera automaticamente uma Transacao
+    # vinculada de tipo RECEITA para manter a consistência com o módulo de transações.
     def criarContaReceber(self, empresa_id: int, usuario_id: int, dados: CriarContaReceber) -> ContaReceberResposta:
         conta = ContasReceber(
             descricao=dados.descricao,
@@ -69,6 +74,8 @@ class ContaReceberService:
             self.repository.session.rollback()
             raise BusinessException("Erro ao criar conta a receber.", status_code=400)
 
+    # Atualiza vencidas antes de retornar, garantindo que o cliente veja status corretos.
+    # Aplica filtros opcionais de situação e busca textual na descrição.
     def listarContasReceber(self, empresa_id: int, usuario_id: int, situacao: Optional[int] = None, pesquisa: Optional[str] = None) -> list[ContaReceberResposta]:
         self._atualizar_vencidas(empresa_id, usuario_id)
         contas = self.repository.listarPorEmpresa(empresa_id, usuario_id)
@@ -78,6 +85,9 @@ class ContaReceberService:
             contas = [c for c in contas if pesquisa.lower() in (c.descricao or "").lower()]
         return [ContaReceberResposta.model_validate(c) for c in contas]
 
+    # Edita uma conta a receber que ainda não foi recebida. Após aplicar os novos dados,
+    # recalcula automaticamente o status (PENDENTE ou ATRASADO) com base na nova data
+    # de vencimento. Sincroniza os campos alterados na Transacao vinculada.
     def atualizarContaReceber(self, empresa_id: int, conta_id: int, usuario_id: int, dados: AtualizarContaReceber) -> ContaReceberResposta:
         conta = self.repository.buscarPorId(conta_id, empresa_id, usuario_id)
         if not conta:
@@ -115,6 +125,9 @@ class ContaReceberService:
             self.repository.session.rollback()
             raise BusinessException("Erro ao atualizar conta a receber.", status_code=400)
 
+    # Registra o recebimento de uma conta: muda status para PAGO, confirma a Transacao
+    # vinculada e credita o valor recebido (ou o valor original se não especificado) no
+    # saldo da conta bancária informada. Cria a Transacao se ela não existir.
     def receberConta(self, empresa_id: int, conta_id: int, usuario_id: int, dados: RecebimentoContaReceber) -> ContaReceberResposta:
         conta = self.repository.buscarPorId(conta_id, empresa_id, usuario_id)
         if not conta:
@@ -163,11 +176,14 @@ class ContaReceberService:
             self.repository.session.rollback()
             raise BusinessException("Erro ao registrar recebimento.", status_code=400)
 
+    # Atualiza vencidas e retorna totais agregados por situação (pendente, recebido, atrasado).
     def resumoContasReceber(self, empresa_id: int, usuario_id: int) -> ResumoContasReceberResposta:
         self._atualizar_vencidas(empresa_id, usuario_id)
         dados = self.repository.resumo(empresa_id, usuario_id)
         return ResumoContasReceberResposta(**dados)
 
+    # Remove a conta a receber e sua Transacao vinculada. Se a conta já estava recebida,
+    # estorna o valor no saldo da conta bancária para manter a consistência financeira.
     def deletarContaReceber(self, empresa_id: int, conta_id: int, usuario_id: int) -> None:
         conta = self.repository.buscarPorId(conta_id, empresa_id, usuario_id)
         if not conta:

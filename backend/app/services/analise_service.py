@@ -19,7 +19,7 @@ from app.schemas.analise import (
 )
 from app.enums.tipo_transacao_enum import TipoTransacaoEnum
 
-
+# Autor: Davi Santos
 class AnaliseService:
     def __init__(self, repository: AnaliseRepository):
         self.repository = repository
@@ -28,6 +28,9 @@ class AnaliseService:
 
     _MESES_ROTULO = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
 
+    # Calcula a projeção de fluxo de caixa para os próximos N meses (padrão 3) com base
+    # na média de receitas e despesas dos últimos 3 meses. O saldo projetado é acumulado
+    # mês a mês somando o líquido projetado ao saldo do último mês histórico.
     def fluxoCaixa(self, empresa_id: int, usuario_id: int, meses_frente: int = 3) -> DadosFluxoCaixaResposta:
         historico_raw = self.repository.historicoPorMes(empresa_id, usuario_id, 3)
 
@@ -60,6 +63,9 @@ class AnaliseService:
 
     # ── Análise financeira do período ─────────────────────────────────────
 
+    # Calcula métricas financeiras completas do período (mês/ano ou mês atual por padrão):
+    # receitas, despesas, lucro líquido, margem de lucro (%), ticket médio por tipo e
+    # as top categorias de receita e despesa ordenadas por volume.
     def analiseFinanceira(self, empresa_id: int, usuario_id: int, mes: int | None, ano: int | None) -> AnaliseFinanceiraResposta:
         hoje = datetime.now(timezone.utc)
         m = mes or hoje.month
@@ -96,6 +102,9 @@ class AnaliseService:
 
     # ── Alertas ───────────────────────────────────────────────────────────
 
+    # Varre a empresa em busca de problemas financeiros e gera alertas em dois níveis:
+    # crítico (tipo 0) para contas bancárias com saldo negativo, contas vencidas e
+    # transações inadimplentes; aviso (tipo 1) para contas que vencem hoje.
     def alertas(self, empresa_id: int, usuario_id: int) -> list[AlertaResposta]:
         resultado: list[AlertaResposta] = []
 
@@ -163,6 +172,9 @@ class AnaliseService:
                        "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"]
     _SITUACAO_CAL   = {0: "Pendente", 1: "Pago", 2: "Atrasado"}
 
+    # Monta o calendário financeiro do mês com todas as contas a pagar e a receber agrupadas
+    # por data de vencimento. Retorna também metadados do mês (total de dias, primeiro dia da
+    # semana) necessários para renderizar a grade do calendário no frontend.
     def calendario(self, empresa_id: int, usuario_id: int, mes: int | None, ano: int | None) -> DadosCalendarioResposta:
         hoje = datetime.now(timezone.utc)
         m = mes or hoje.month
@@ -223,6 +235,8 @@ class AnaliseService:
 
     # ── Previsão do mês atual ─────────────────────────────────────────────
 
+    # Projeta receitas e despesas do mês atual baseando-se na média dos últimos 3 meses.
+    # Retorna também o número de dias restantes no mês para contextualizar a previsão.
     def previsaoMes(self, empresa_id: int, usuario_id: int) -> PrevisaoMesResposta:
         historico  = self.repository.historicoPorMes(empresa_id, usuario_id, 3)
         hoje       = datetime.now(timezone.utc)
@@ -258,6 +272,9 @@ class AnaliseService:
     def _fmt(v) -> str:
         return f"R$ {float(v):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
+    # Roteador de perguntas em linguagem natural: analisa palavras-chave na mensagem e
+    # delega para o método de análise correspondente. Retorna uma resposta formatada
+    # em Markdown pronta para exibição no frontend.
     def chatbot(self, empresa_id: int, usuario_id: int, mensagem: str) -> RespostaChatbot:
         msg = mensagem.strip().lower()
 
@@ -280,6 +297,7 @@ class AnaliseService:
 
         return RespostaChatbot(resposta=self._chat_padrao())
 
+    # Retorna o resumo financeiro do mês atual: receitas, despesas e saldo do período.
     def _chat_saldo(self, empresa_id: int, usuario_id: int) -> str:
         hoje = datetime.now(timezone.utc)
         m, a = hoje.month, hoje.year
@@ -295,6 +313,7 @@ class AnaliseService:
             f"Saldo do período: {self._fmt(saldo)} ({sinal})"
         )
 
+    # Retorna o desempenho detalhado do mês atual com receitas, despesas, lucro e margem.
     def _chat_mes(self, empresa_id: int, usuario_id: int) -> str:
         hoje = datetime.now(timezone.utc)
         m, a = hoje.month, hoje.year
@@ -316,6 +335,7 @@ class AnaliseService:
             f"Total de transações: {len(transacoes)}"
         )
 
+    # Lista as contas a pagar pendentes com valores, datas e indicação de atraso.
     def _chat_pagar(self, empresa_id: int, usuario_id: int) -> str:
         contas = self.repository.contas_pagar_pendentes(empresa_id, usuario_id)
         if not contas:
@@ -332,6 +352,7 @@ class AnaliseService:
         linhas.append(f"\n**Total pendente: {self._fmt(total)}**")
         return "\n".join(linhas)
 
+    # Reutiliza o método alertas() para listar problemas críticos e avisos formatados.
     def _chat_problemas(self, empresa_id: int, usuario_id: int) -> str:
         alertas = self.alertas(empresa_id, usuario_id)
         if not alertas:
@@ -349,6 +370,7 @@ class AnaliseService:
                 linhas.append(f"  • {a.titulo} — {a.mensagem}")
         return "\n".join(linhas)
 
+    # Calcula e classifica a margem de lucro do mês atual em excelente (≥20%), boa (≥0%) ou negativa.
     def _chat_margem(self, empresa_id: int, usuario_id: int) -> str:
         hoje = datetime.now(timezone.utc)
         m, a = hoje.month, hoje.year
@@ -367,6 +389,7 @@ class AnaliseService:
             f"Margem: **{margem}%** ({avaliacao})"
         )
 
+    # Lista as últimas 5 transações da empresa com data, descrição, tipo e valor.
     def _chat_transacoes(self, empresa_id: int, usuario_id: int) -> str:
         transacoes = self.repository.ultimasTransacoes(empresa_id, usuario_id, 5)
         if not transacoes:
@@ -378,6 +401,7 @@ class AnaliseService:
             linhas.append(f"• {data} — {t.descricao} — {tipo} — {self._fmt(t.valor)}")
         return "\n".join(linhas)
 
+    # Usa a previsaoMes() para gerar uma projeção formatada do próximo mês.
     def _chat_projecao(self, empresa_id: int, usuario_id: int) -> str:
         previsao = self.previsaoMes(empresa_id, usuario_id)
         hoje     = datetime.now(timezone.utc)
@@ -392,6 +416,7 @@ class AnaliseService:
             f"Saldo projetado: {self._fmt(previsao.saldoProjetado)} ({sinal})"
         )
 
+    # Lista as contas a receber pendentes com valores, datas e indicação de atraso.
     def _chat_receber(self, empresa_id: int, usuario_id: int) -> str:
         contas = self.repository.contas_receber_pendentes(empresa_id, usuario_id)
         if not contas:
@@ -408,6 +433,7 @@ class AnaliseService:
         linhas.append(f"\n**Total a receber: {self._fmt(total)}**")
         return "\n".join(linhas)
 
+    # Resposta padrão para perguntas não reconhecidas, orientando o usuário aos tópicos suportados.
     @staticmethod
     def _chat_padrao() -> str:
         return (
@@ -425,4 +451,3 @@ class AnaliseService:
             "• Últimas transações\n"
             "• Projeção do próximo mês"
         )
-

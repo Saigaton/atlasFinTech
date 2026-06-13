@@ -12,11 +12,15 @@ from app.exceptions.business_exception import BusinessException
 from app.repositories.conta_pagar_repository import ContaPagarRepository
 from app.schemas.conta_pagar import AtualizarContaPagar, ContaPagarResposta, CriarContaPagar, PagamentoContaPagar, ResumoContasPagarResposta
 
-
+# Autor: Davi Santos
 class ContaPagarService:
     def __init__(self, repository: ContaPagarRepository):
         self.repository = repository
 
+    # Cria N parcelas mensais a partir da data de vencimento informada. O valor de cada
+    # parcela é calculado por divisão simples (arredondado em 2 casas) e a última parcela
+    # absorve o centavo residual para que a soma exata bata com o valor total. Para cada
+    # parcela é criada uma Transacao vinculada de tipo DESPESA com status PENDENTE.
     def criarContaPagar(self, empresa_id: int, usuario_id: int, dados: CriarContaPagar) -> list[ContaPagarResposta]:
         parcelas: list[ContasPagar] = []
         base_data = dados.data_vencimento
@@ -75,6 +79,9 @@ class ContaPagarService:
             self.repository.session.rollback()
             raise BusinessException("Erro ao criar conta a pagar.", status_code=400)
 
+    # Varre todas as contas PENDENTES da empresa e muda o status para ATRASADO quando
+    # a data de vencimento é anterior a hoje. Executado automaticamente antes de listagens
+    # para manter os status sempre atualizados sem depender de agendamentos externos.
     def _atualizar_vencidas(self, empresa_id: int, usuario_id: int) -> None:
         hoje = datetime.now(timezone.utc).date()
         contas = self.repository.listarPorEmpresa(empresa_id, usuario_id)
@@ -88,6 +95,8 @@ class ContaPagarService:
                 c.situacao_id = TipoSituacaoContaEnum.ATRASADO
             self.repository.session.commit()
 
+    # Atualiza vencidas antes de retornar, garantindo que o cliente veja status corretos.
+    # Aplica filtros opcionais de situação e busca textual na descrição.
     def listarContasPagar(self, empresa_id: int, usuario_id: int, situacao: Optional[int] = None, pesquisa: Optional[str] = None) -> list[ContaPagarResposta]:
         self._atualizar_vencidas(empresa_id, usuario_id)
         contas = self.repository.listarPorEmpresa(empresa_id, usuario_id)
@@ -97,6 +106,9 @@ class ContaPagarService:
             contas = [c for c in contas if pesquisa.lower() in (c.descricao or "").lower()]
         return [ContaPagarResposta.model_validate(c) for c in contas]
 
+    # Edita uma conta a pagar que ainda não foi paga. Após aplicar os novos dados,
+    # recalcula automaticamente o status (PENDENTE ou ATRASADO) com base na nova data
+    # de vencimento. Sincroniza os campos alterados na Transacao vinculada.
     def atualizarContaPagar(self, empresa_id: int, conta_id: int, usuario_id: int, dados: AtualizarContaPagar) -> ContaPagarResposta:
         conta = self.repository.buscarPorId(conta_id, empresa_id, usuario_id)
         if not conta:
@@ -134,6 +146,9 @@ class ContaPagarService:
             self.repository.session.rollback()
             raise BusinessException("Erro ao atualizar conta a pagar.", status_code=400)
 
+    # Registra o pagamento de uma conta: muda status para PAGO, confirma a Transacao
+    # vinculada e debita o valor pago (ou o valor original se não especificado) do saldo
+    # da conta bancária informada. Cria a Transacao se ela não existir.
     def pagarConta(self, empresa_id: int, conta_id: int, usuario_id: int, dados: PagamentoContaPagar) -> ContaPagarResposta:
         conta = self.repository.buscarPorId(conta_id, empresa_id, usuario_id)
         if not conta:
@@ -183,11 +198,14 @@ class ContaPagarService:
             self.repository.session.rollback()
             raise BusinessException("Erro ao registrar pagamento.", status_code=400)
 
+    # Atualiza vencidas e retorna totais agregados por situação (pendente, pago, atrasado).
     def resumoContasPagar(self, empresa_id: int, usuario_id: int) -> ResumoContasPagarResposta:
         self._atualizar_vencidas(empresa_id, usuario_id)
         dados = self.repository.resumo(empresa_id, usuario_id)
         return ResumoContasPagarResposta(**dados)
 
+    # Remove a conta a pagar e sua Transacao vinculada. Se a conta já estava paga,
+    # estorna o valor no saldo da conta bancária para manter a consistência financeira.
     def deletarContaPagar(self, empresa_id: int, conta_id: int, usuario_id: int) -> None:
         conta = self.repository.buscarPorId(conta_id, empresa_id, usuario_id)
         if not conta:
