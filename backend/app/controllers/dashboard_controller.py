@@ -4,7 +4,7 @@ from app.configuracoes.dependencies import obterDashboardService
 from app.configuracoes.security import obterUsuarioAtualDB
 from app.entidades.usuarios import Usuarios
 from app.services.dashboard_service import DashboardService
-from app.schemas.dashboard import KPIsResposta, PontoGraficoPorContaResposta, PontoGraficoResposta, TransacaoRecenteResposta
+from app.schemas.dashboard import KPIsResposta, PontoGraficoResposta, TransacaoRecenteResposta
 from app.schemas.resposta_api import RespostaApi
 
 router = APIRouter()
@@ -58,16 +58,3 @@ async def graficoMensal(
     return RespostaApi(conteudo=dados)
 
 
-@router.get(
-    "/empresas/{empresaId}/dashboard/grafico-por-conta",
-    status_code=status.HTTP_200_OK,
-    summary="Receita e despesa por conta",
-)
-async def graficoPorConta(
-    empresaId: int,
-    ano: int | None = Query(None, ge=2000, le=2100),
-    service: DashboardService = Depends(obterDashboardService),
-    usuario: Usuarios = Depends(obterUsuarioAtualDB),
-):
-    dados = service.graficoPorConta(empresaId, usuario.id, ano)
-    return RespostaApi(conteudo=dados)

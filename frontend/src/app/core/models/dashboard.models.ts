@@ -41,9 +41,3 @@ export interface PrevisaoMes {
   diasRestantes:    number;
 }
 
-export interface GraficoPorConta {
-  contaId:   number;
-  nomeConta: string;
-  receita:   number;
-  despesa:   number;
-}

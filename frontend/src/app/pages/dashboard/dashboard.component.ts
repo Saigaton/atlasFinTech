@@ -12,7 +12,7 @@ import { ContaReceberService } from '../../core/services/conta-receber.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ShellComponent } from '../../shared/components/shell/shell.component';
 import {
-  DashboardKPI, GraficoPorConta, MesGrafico,
+  DashboardKPI, MesGrafico,
   PontoCategoria, PrevisaoMes, SegmentoDonut,
 } from '../../core/models/dashboard.models';
 import { Transacao, TipoTransacao, SituacaoTransacao } from '../../core/models/transacao.model';
@@ -45,7 +45,6 @@ export class DashboardComponent implements OnInit {
   despesasCategorias:    PontoCategoria[]     = [];
   receitasCategorias:    PontoCategoria[]     = [];
   previsaoMes:           PrevisaoMes | null   = null;
-  graficoPorConta:       GraficoPorConta[]    = [];
   segmentosDonut:        SegmentoDonut[]      = [];
   segmentosDonutReceita: SegmentoDonut[]      = [];
 
@@ -111,7 +110,6 @@ export class DashboardComponent implements OnInit {
     this._carregarAlertasCards(id);
     this._carregarCategorias(id);
     this._carregarPrevisaoMes(id);
-    this._carregarGraficoPorConta(id);
   }
 
   private _carregarKpis(id: number): void {
@@ -294,19 +292,6 @@ export class DashboardComponent implements OnInit {
     } catch { this.previsaoMes = null; }
   }
 
-  private async _carregarGraficoPorConta(id: number): Promise<void> {
-    try {
-      const res  = await firstValueFrom(this.transacaoService.obterGraficoPorConta(id, this.anoSelecionado));
-      const lista: any[] = res ?? [];
-      this.graficoPorConta = lista.map((a: any): GraficoPorConta => ({
-        contaId:   a.account_id   ?? a.contaId   ?? 0,
-        nomeConta: a.account_name ?? a.nomeConta  ?? '',
-        receita:   a.income       ?? a.receita    ?? 0,
-        despesa:   a.expense      ?? a.despesa    ?? 0,
-      }));
-    } catch { this.graficoPorConta = []; }
-  }
-
   // ── Período ──────────────────────────────────────────────────────────────
 
   definirPeriodo(periodo: 'mes' | 'ultimos30' | 'ano'): void {
@@ -343,16 +328,6 @@ export class DashboardComponent implements OnInit {
   alturaBarra(valor: number): string {
     const MAX_PX = 88;
     return Math.max((valor / this.maxGrafico) * MAX_PX, valor > 0 ? 3 : 0).toFixed(0) + 'px';
-  }
-
-  // ── Distribuição por conta ────────────────────────────────────────────────
-
-  pctBarraConta(valor: number, tipo: 'receita' | 'despesa'): number {
-    if (!this.graficoPorConta.length) return 0;
-    const maxVal = Math.max(
-      ...this.graficoPorConta.map(a => tipo === 'receita' ? a.receita : a.despesa)
-    );
-    return maxVal > 0 ? (valor / maxVal) * 100 : 0;
   }
 
   get contasTop3(): Conta[] {

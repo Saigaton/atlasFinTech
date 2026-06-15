@@ -41,10 +41,3 @@ class PontoGraficoResposta(BaseModel):
     mes:      int
     receitas: Decimal
     despesas: Decimal
-
-
-class PontoGraficoPorContaResposta(BaseModel):
-    contaId:   int
-    nomeConta: str
-    receita:   Decimal
-    despesa:   Decimal

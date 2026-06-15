@@ -122,12 +122,4 @@ describe('TransacaoService', () => {
     expect(req.request.params.get('ano')).toBe('2024');
     req.flush(mockApi([]));
   });
-
-  it('obterGraficoPorConta() deve GET na rota /dashboard/grafico-por-conta', (done) => {
-    service.obterGraficoPorConta(EID).subscribe(res => {
-      expect(res).toEqual([]);
-      done();
-    });
-    http.expectOne(r => r.url.includes('/dashboard/grafico-por-conta')).flush(mockApi([]));
-  });
 });

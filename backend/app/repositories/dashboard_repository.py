@@ -66,29 +66,3 @@ class DashboardRepository:
         )
         return [{"mes": int(r.mes), "tipo": r.tipo_transacao_id, "total": r.total} for r in rows]
 
-    def graficoPorConta(self, empresa_id: int, usuario_id: int, ano: int | None = None) -> list[dict]:
-        contas = (
-            self.session.query(Contas)
-            .filter(Contas.empresa_id == empresa_id, Contas.usuario_id == usuario_id)
-            .all()
-        )
-        resultado = []
-        for c in contas:
-            q = (
-                self.session.query(
-                    Transacoes.tipo_transacao_id,
-                    func.coalesce(func.sum(Transacoes.valor), 0).label("total"),
-                )
-                .filter(Transacoes.conta_id == c.id, Transacoes.empresa_id == empresa_id)
-            )
-            if ano:
-                q = q.filter(extract("year", Transacoes.data) == ano)
-            q = q.group_by(Transacoes.tipo_transacao_id)
-            rows = {int(r.transacao_id): r.total for r in q.all()}
-            resultado.append({
-                "contaId":   c.id,
-                "nomeConta": c.nome,
-                "receita":   Decimal(str(rows.get(TipoTransacaoEnum.RECEITA, "0.00"))),
-                "despesa":   Decimal(str(rows.get(TipoTransacaoEnum.DESPESA, "0.00"))),
-            })
-        return resultado

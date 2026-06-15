@@ -207,33 +207,6 @@
       </div>
     }
 
-    <!-- ── Distribuição por conta bancária ──────────────────────────────────── -->
-    @if (graficoPorConta.length > 1) {
-      <div class="card account-dist-card">
-        <div class="card-header">
-          <span class="card-title">Distribuição por conta bancária</span>
-          <a routerLink="/contas" class="card-action">Gerenciar →</a>
-        </div>
-        <div class="acc-dist-list">
-          @for (acc of graficoPorConta; track acc.contaId) {
-            <div class="acc-dist-row">
-              <div class="acc-dist-name">{{ acc.nomeConta }}</div>
-              <div class="acc-dist-bars">
-                <div class="acc-dist-bar-wrap">
-                  <div class="acc-dist-bar income" [style.width.%]="pctBarraConta(acc.receita, 'receita')"></div>
-                  <span class="acc-dist-val income-txt">+{{ formatarMoedaCurta(acc.receita) }}</span>
-                </div>
-                <div class="acc-dist-bar-wrap">
-                  <div class="acc-dist-bar expense" [style.width.%]="pctBarraConta(acc.despesa, 'despesa')"></div>
-                  <span class="acc-dist-val expense-txt">−{{ formatarMoedaCurta(acc.despesa) }}</span>
-                </div>
-              </div>
-            </div>
-          }
-        </div>
-      </div>
-    }
-
     <!-- ── Despesas por categoria ────────────────────────────────────────────── -->
     <div class="card cat-expense-card">
       <div class="card-header">

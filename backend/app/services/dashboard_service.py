@@ -6,7 +6,6 @@ from app.enums.tipo_transacao_enum import TipoTransacaoEnum
 from app.repositories.dashboard_repository import DashboardRepository
 from app.schemas.dashboard import (
     KPIsResposta,
-    PontoGraficoPorContaResposta,
     PontoGraficoResposta,
     TransacaoRecenteResposta,
 )
@@ -74,8 +73,3 @@ class DashboardService:
 
         return [PontoGraficoResposta(**v) for v in sorted(pontos.values(), key=lambda x: x["mes"])]
 
-    # Calcula o total de receitas e despesas agrupado por conta bancária, permitindo
-    # visualizar a distribuição financeira entre as diferentes contas da empresa.
-    def graficoPorConta(self, empresa_id: int, usuario_id: int, ano: int | None = None) -> list[PontoGraficoPorContaResposta]:
-        contas = self.repository.graficoPorConta(empresa_id, usuario_id, ano)
-        return [PontoGraficoPorContaResposta(**c) for c in contas]

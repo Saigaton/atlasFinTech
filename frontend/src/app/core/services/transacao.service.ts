@@ -78,11 +78,4 @@ export class TransacaoService {
     ).pipe(map(r => r.conteudo));
   }
 
-  obterGraficoPorConta(empresaId: number, ano?: number): Observable<any[]> {
-    let params = new HttpParams();
-    if (ano) params = params.set('ano', ano);
-    return this.http.get<RespostaApi<any[]>>(
-      `${this.API}/empresas/${empresaId}/dashboard/grafico-por-conta`, { params }
-    ).pipe(map(r => r.conteudo));
-  }
 }
