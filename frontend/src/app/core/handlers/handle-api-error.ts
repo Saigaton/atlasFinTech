@@ -19,11 +19,15 @@ export function handleApiError<T>(
   return (source: Observable<T>): Observable<T> =>
     source.pipe(
       catchError((err: HttpErrorResponse) => {
+        const detail = err.error?.detail;
+        const detailMsg = Array.isArray(detail)
+          ? (detail[0]?.msg as string | undefined)?.replace(/^Value error,\s*/i, '')
+          : detail;
         const mensagem =
           err.error?.erro ??
           err.error?.mensagem ??
           err.error?.message ??
-          err.error?.detail ??
+          detailMsg ??
           mensagemPadrao;
         toast.error(mensagem);
         return throwError(() => err);
