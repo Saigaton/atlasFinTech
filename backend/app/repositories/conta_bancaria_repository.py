@@ -1,4 +1,7 @@
+from sqlalchemy import or_, select
+
 from app.entidades.contas import Contas
+from app.entidades.transacoes import Transacoes
 
 
 class ContaBancariaRepository:
@@ -31,6 +34,17 @@ class ContaBancariaRepository:
         for campo, valor in dados.items():
             setattr(conta, campo, valor)
         return conta
+
+    def temTransacoesVinculadas(self, conta_id: int) -> bool:
+        resultado = self.session.execute(
+            select(Transacoes.id).where(
+                or_(
+                    Transacoes.conta_id == conta_id,
+                    Transacoes.transferencia_para_conta_id == conta_id,
+                )
+            ).limit(1)
+        ).first()
+        return resultado is not None
 
     def deletarConta(self, conta: Contas) -> None:
         self.session.delete(conta)

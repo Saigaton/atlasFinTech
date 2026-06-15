@@ -206,10 +206,10 @@
             <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
           </div>
           <p class="confirm-msg">
-            Tem certeza que deseja desativar a conta
+            Tem certeza que deseja excluir a conta
             <strong>{{ contaParaDesativar.nome }}</strong>?
           </p>
-          <p class="confirm-sub">O histórico de transações será mantido, mas a conta não poderá ser usada.</p>
+          <p class="confirm-sub">Esta ação é permanente. Contas com transações vinculadas não podem ser excluídas.</p>
           <div class="modal-footer">
             <button type="button" class="btn-cancel" (click)="fecharConfirmDelete()">Cancelar</button>
             <button type="button" class="btn-danger" [disabled]="enviando" (click)="confirmarDesativacao()">

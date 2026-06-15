@@ -99,6 +99,12 @@ class ContaBancariaService:
         if not conta:
             raise BusinessException("Conta não encontrada.", status_code=404)
 
+        if self.repository.temTransacoesVinculadas(conta_id):
+            raise BusinessException(
+                "Esta conta possui transações vinculadas e não pode ser excluída.",
+                status_code=422,
+            )
+
         try:
             self.repository.deletarConta(conta)
             self.repository.session.commit()
