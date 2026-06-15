@@ -35,10 +35,11 @@ const SUGESTOES: SugestaoChat[] = [
 export class AssistenteIaComponent implements OnInit {
   @ViewChild('fimMensagens') private fimMensagens!: ElementRef;
 
-  mensagens:   MensagemChat[] = [];
-  pensando     = false;
-  textoEntrada = '';
-  sugestoes    = SUGESTOES;
+  mensagens:      MensagemChat[] = [];
+  pensando        = false;
+  textoEntrada    = '';
+  sugestoes       = SUGESTOES;
+  sugestoesAbertas = false;
 
   constructor(
     private empresaService: EmpresaService,

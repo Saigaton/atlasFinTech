@@ -66,8 +66,11 @@
       </div>
 
       <!-- Sugestões -->
-      <div class="suggestions">
-        <p class="sug-label">Sugestões de perguntas:</p>
+      <div class="suggestions" [class.aberto]="sugestoesAbertas">
+        <button class="sug-toggle" (click)="sugestoesAbertas = !sugestoesAbertas">
+          <p class="sug-label">Sugestões de perguntas</p>
+          <svg class="sug-chevron" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+        </button>
         <div class="sug-grid">
           @for (sugestao of sugestoes; track sugestao.texto) {
             <button class="sug-btn" (click)="enviarMensagem(sugestao.texto)" [disabled]="pensando">
