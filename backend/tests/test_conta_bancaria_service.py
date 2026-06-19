@@ -148,6 +148,7 @@ class TestDeletarConta:
 
     def test_sucesso_deleta_conta(self, service, repo):
         repo.buscarContaPorId.return_value = make_conta()
+        repo.temTransacoesVinculadas.return_value = False
         service.deletarConta(empresa_id=1, conta_id=1, usuario_id=1)
         repo.deletarConta.assert_called_once()
         repo.session.commit.assert_called_once()
